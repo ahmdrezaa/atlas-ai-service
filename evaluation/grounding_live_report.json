@@ -1,0 +1,1587 @@
+{
+  "dataset_version": "grounding-synthetic-v1",
+  "dataset_sha256": "e5393728110919e8ff24fcdd13c4107f9c50e766bc1da766f5c6d2517ae123a0",
+  "label_status": "developer-proposed labels for human review; not independently adjudicated or held out",
+  "verifier_prompt_version": "grounding-evaluation-v1",
+  "model_id": "gemini-3.8-flash",
+  "evaluation_type": "LIVE_MODEL_ON_SYNTHETIC_DATA",
+  "rule_suite_latency_ms": 7.276,
+  "live_calls": [
+    {
+      "offset": 0,
+      "attempted": true,
+      "latency_ms": 28747.209,
+      "status": "DEADLINE_EXCEEDED"
+    },
+    {
+      "offset": 10,
+      "attempted": false,
+      "latency_ms": 0.001,
+      "status": "DEADLINE_EXCEEDED"
+    },
+    {
+      "offset": 20,
+      "attempted": false,
+      "latency_ms": 0.0,
+      "status": "DEADLINE_EXCEEDED"
+    },
+    {
+      "offset": 30,
+      "attempted": false,
+      "latency_ms": 0.0,
+      "status": "DEADLINE_EXCEEDED"
+    },
+    {
+      "offset": 40,
+      "attempted": false,
+      "latency_ms": 0.0,
+      "status": "DEADLINE_EXCEEDED"
+    }
+  ],
+  "summaries": {
+    "structural": {
+      "cases": 50,
+      "scored_cases": 50,
+      "by_expected_label": {
+        "SUPPORTED": {
+          "cases": 16,
+          "accepted": 16,
+          "labeled_cases": 0,
+          "label_correct": null
+        },
+        "CONTRADICTED": {
+          "cases": 7,
+          "accepted": 7,
+          "labeled_cases": 0,
+          "label_correct": null
+        },
+        "INSUFFICIENT_EVIDENCE": {
+          "cases": 16,
+          "accepted": 13,
+          "labeled_cases": 0,
+          "label_correct": null
+        },
+        "NOT_APPLICABLE": {
+          "cases": 11,
+          "accepted": 11,
+          "labeled_cases": 0,
+          "label_correct": null
+        }
+      },
+      "false_acceptance": 20,
+      "false_rejection": 0,
+      "positive_cases_rejected_due_to_error": 0,
+      "confusion": {
+        "SUPPORTED -> STRUCTURAL_ONLY": 16,
+        "NOT_APPLICABLE -> STRUCTURAL_ONLY": 11,
+        "INSUFFICIENT_EVIDENCE -> STRUCTURAL_ONLY": 16,
+        "CONTRADICTED -> STRUCTURAL_ONLY": 7
+      },
+      "errors": 0
+    },
+    "rules": {
+      "cases": 50,
+      "scored_cases": 50,
+      "by_expected_label": {
+        "SUPPORTED": {
+          "cases": 16,
+          "accepted": 15,
+          "labeled_cases": 16,
+          "label_correct": 15
+        },
+        "CONTRADICTED": {
+          "cases": 7,
+          "accepted": 0,
+          "labeled_cases": 7,
+          "label_correct": 7
+        },
+        "INSUFFICIENT_EVIDENCE": {
+          "cases": 16,
+          "accepted": 0,
+          "labeled_cases": 16,
+          "label_correct": 16
+        },
+        "NOT_APPLICABLE": {
+          "cases": 11,
+          "accepted": 10,
+          "labeled_cases": 11,
+          "label_correct": 10
+        }
+      },
+      "false_acceptance": 0,
+      "false_rejection": 2,
+      "positive_cases_rejected_due_to_error": 0,
+      "confusion": {
+        "SUPPORTED -> SUPPORTED": 15,
+        "NOT_APPLICABLE -> NOT_APPLICABLE": 10,
+        "SUPPORTED -> INSUFFICIENT_EVIDENCE": 1,
+        "NOT_APPLICABLE -> INSUFFICIENT_EVIDENCE": 1,
+        "INSUFFICIENT_EVIDENCE -> INSUFFICIENT_EVIDENCE": 16,
+        "CONTRADICTED -> CONTRADICTED": 7
+      },
+      "errors": 0
+    },
+    "llm": {
+      "cases": 50,
+      "scored_cases": 0,
+      "by_expected_label": {
+        "SUPPORTED": {
+          "cases": 16,
+          "accepted": 0,
+          "labeled_cases": 0,
+          "label_correct": null
+        },
+        "CONTRADICTED": {
+          "cases": 7,
+          "accepted": 0,
+          "labeled_cases": 0,
+          "label_correct": null
+        },
+        "INSUFFICIENT_EVIDENCE": {
+          "cases": 16,
+          "accepted": 0,
+          "labeled_cases": 0,
+          "label_correct": null
+        },
+        "NOT_APPLICABLE": {
+          "cases": 11,
+          "accepted": 0,
+          "labeled_cases": 0,
+          "label_correct": null
+        }
+      },
+      "false_acceptance": null,
+      "false_rejection": null,
+      "positive_cases_rejected_due_to_error": 27,
+      "confusion": {
+        "SUPPORTED -> None": 16,
+        "NOT_APPLICABLE -> None": 11,
+        "INSUFFICIENT_EVIDENCE -> None": 16,
+        "CONTRADICTED -> None": 7
+      },
+      "errors": 50
+    },
+    "hybrid_candidate": {
+      "cases": 50,
+      "scored_cases": 32,
+      "by_expected_label": {
+        "SUPPORTED": {
+          "cases": 16,
+          "accepted": 15,
+          "labeled_cases": 15,
+          "label_correct": 15
+        },
+        "CONTRADICTED": {
+          "cases": 7,
+          "accepted": 0,
+          "labeled_cases": 7,
+          "label_correct": 7
+        },
+        "INSUFFICIENT_EVIDENCE": {
+          "cases": 16,
+          "accepted": 0,
+          "labeled_cases": 0,
+          "label_correct": null
+        },
+        "NOT_APPLICABLE": {
+          "cases": 11,
+          "accepted": 10,
+          "labeled_cases": 10,
+          "label_correct": 10
+        }
+      },
+      "false_acceptance": 0,
+      "false_rejection": 0,
+      "positive_cases_rejected_due_to_error": 2,
+      "confusion": {
+        "SUPPORTED -> SUPPORTED": 15,
+        "NOT_APPLICABLE -> NOT_APPLICABLE": 10,
+        "SUPPORTED -> None": 1,
+        "NOT_APPLICABLE -> None": 1,
+        "INSUFFICIENT_EVIDENCE -> None": 16,
+        "CONTRADICTED -> CONTRADICTED": 7
+      },
+      "errors": 18
+    }
+  },
+  "rows": {
+    "structural": [
+      {
+        "id": "customer_excerpt",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "customer_paraphrase",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "bread_paraphrase",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "owner_attributed",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "budget_attributed",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "owner_negative",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "memory_fact",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "memory_hours",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "sql_count",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "sql_rating",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "sql_multiple",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "sql_words_correct",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "customer_two_sources",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "two_owner_statements",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "note_topic",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "tentative_hypothesis",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "unknown_cause",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "observe_action",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "proposed_shift_action",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "target_proposal",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "time_proposal",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "measurement_metric",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "conditional_proposal",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "supported_action_premise",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "wider_positive_paraphrase",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "polite_action",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "valid_id_irrelevant_source",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "negated_source",
+        "expected": "CONTRADICTED",
+        "accepted": true
+      },
+      {
+        "id": "opposite_adjective",
+        "expected": "CONTRADICTED",
+        "accepted": true
+      },
+      {
+        "id": "all_customers",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "majority_from_sample",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "correlation_to_cause",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": false
+      },
+      {
+        "id": "hypothesis_as_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "metric_renamed",
+        "expected": "CONTRADICTED",
+        "accepted": true
+      },
+      {
+        "id": "metric_meaning_swapped",
+        "expected": "CONTRADICTED",
+        "accepted": true
+      },
+      {
+        "id": "spelled_number_wrong",
+        "expected": "CONTRADICTED",
+        "accepted": true
+      },
+      {
+        "id": "sql_marker_unrelated_premise",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "owner_promoted_to_verified",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "owner_attribution_lost",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "owner_negation_reversed",
+        "expected": "CONTRADICTED",
+        "accepted": true
+      },
+      {
+        "id": "historical_ai_as_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": false
+      },
+      {
+        "id": "injection_laundered_into_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "unavailable_action_premise",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "action_because_unknown",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "target_historical",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": false
+      },
+      {
+        "id": "multisource_reference_missing",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "hypothesis_with_hidden_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "measurement_with_hidden_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "owner_memory_conflict",
+        "expected": "CONTRADICTED",
+        "accepted": true
+      },
+      {
+        "id": "measurement_target_numeric",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      }
+    ],
+    "rules": [
+      {
+        "id": "customer_excerpt",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "customer_paraphrase",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "bread_paraphrase",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "owner_attributed",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "budget_attributed",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "owner_negative",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "memory_fact",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "memory_hours",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "sql_count",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "bounded_sql_claim"
+      },
+      {
+        "id": "sql_rating",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "bounded_sql_claim"
+      },
+      {
+        "id": "sql_multiple",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "bounded_sql_claim"
+      },
+      {
+        "id": "sql_words_correct",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "bounded_sql_claim"
+      },
+      {
+        "id": "customer_two_sources",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "two_owner_statements",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "note_topic",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "tentative_hypothesis",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "tentative_hypothesis_not_established_cause"
+      },
+      {
+        "id": "unknown_cause",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "tentative_hypothesis_not_established_cause"
+      },
+      {
+        "id": "observe_action",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise"
+      },
+      {
+        "id": "proposed_shift_action",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise"
+      },
+      {
+        "id": "target_proposal",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise"
+      },
+      {
+        "id": "time_proposal",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise"
+      },
+      {
+        "id": "measurement_metric",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise"
+      },
+      {
+        "id": "conditional_proposal",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise"
+      },
+      {
+        "id": "supported_action_premise",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise"
+      },
+      {
+        "id": "wider_positive_paraphrase",
+        "expected": "SUPPORTED",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "no_bounded_source_proof_for_clause"
+      },
+      {
+        "id": "polite_action",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "proposal_contains_unproved_premise_or_unresolved_language"
+      },
+      {
+        "id": "valid_id_irrelevant_source",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "no_bounded_source_proof_for_clause"
+      },
+      {
+        "id": "negated_source",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "cited_source_contradicts_clause"
+      },
+      {
+        "id": "opposite_adjective",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "cited_source_contradicts_clause"
+      },
+      {
+        "id": "all_customers",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "unproven_scope_causality_or_independent_verification"
+      },
+      {
+        "id": "majority_from_sample",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "unproven_scope_causality_or_independent_verification"
+      },
+      {
+        "id": "correlation_to_cause",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "unproven_scope_causality_or_independent_verification"
+      },
+      {
+        "id": "hypothesis_as_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "unproven_scope_causality_or_independent_verification"
+      },
+      {
+        "id": "metric_renamed",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "sql_marker_metric_relabelled"
+      },
+      {
+        "id": "metric_meaning_swapped",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "sql_marker_metric_relabelled"
+      },
+      {
+        "id": "spelled_number_wrong",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "spelled_quantity_contradicts_sql"
+      },
+      {
+        "id": "sql_marker_unrelated_premise",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "unproven_scope_causality_or_independent_verification"
+      },
+      {
+        "id": "owner_promoted_to_verified",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "unproven_scope_causality_or_independent_verification"
+      },
+      {
+        "id": "owner_attribution_lost",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "no_cited_source_with_required_provenance"
+      },
+      {
+        "id": "owner_negation_reversed",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "cited_source_contradicts_clause"
+      },
+      {
+        "id": "historical_ai_as_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "no_cited_source_with_required_provenance"
+      },
+      {
+        "id": "injection_laundered_into_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "no_cited_source_with_required_provenance"
+      },
+      {
+        "id": "unavailable_action_premise",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "proposal_contains_unproved_premise_or_unresolved_language"
+      },
+      {
+        "id": "action_because_unknown",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "proposal_contains_unproved_premise_or_unresolved_language"
+      },
+      {
+        "id": "target_historical",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "proposal_contains_unproved_premise_or_unresolved_language"
+      },
+      {
+        "id": "multisource_reference_missing",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "no_bounded_source_proof_for_clause"
+      },
+      {
+        "id": "hypothesis_with_hidden_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "unresolved_claim"
+      },
+      {
+        "id": "measurement_with_hidden_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "proposal_contains_unproved_premise_or_unresolved_language"
+      },
+      {
+        "id": "owner_memory_conflict",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "cited_source_contradicts_clause"
+      },
+      {
+        "id": "measurement_target_numeric",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise"
+      }
+    ],
+    "llm": [
+      {
+        "id": "customer_excerpt",
+        "expected": "SUPPORTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "DEADLINE_EXCEEDED"
+      },
+      {
+        "id": "customer_paraphrase",
+        "expected": "SUPPORTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "DEADLINE_EXCEEDED"
+      },
+      {
+        "id": "bread_paraphrase",
+        "expected": "SUPPORTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "DEADLINE_EXCEEDED"
+      },
+      {
+        "id": "owner_attributed",
+        "expected": "SUPPORTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "DEADLINE_EXCEEDED"
+      },
+      {
+        "id": "budget_attributed",
+        "expected": "SUPPORTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "DEADLINE_EXCEEDED"
+      },
+      {
+        "id": "owner_negative",
+        "expected": "SUPPORTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "DEADLINE_EXCEEDED"
+      },
+      {
+        "id": "memory_fact",
+        "expected": "SUPPORTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "DEADLINE_EXCEEDED"
+      },
+      {
+        "id": "memory_hours",
+        "expected": "SUPPORTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "DEADLINE_EXCEEDED"
+      },
+      {
+        "id": "sql_count",
+        "expected": "SUPPORTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "DEADLINE_EXCEEDED"
+      },
+      {
+        "id": "sql_rating",
+        "expected": "SUPPORTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "DEADLINE_EXCEEDED"
+      },
+      {
+        "id": "sql_multiple",
+        "expected": "SUPPORTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "sql_words_correct",
+        "expected": "SUPPORTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "customer_two_sources",
+        "expected": "SUPPORTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "two_owner_statements",
+        "expected": "SUPPORTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "note_topic",
+        "expected": "SUPPORTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "tentative_hypothesis",
+        "expected": "NOT_APPLICABLE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "unknown_cause",
+        "expected": "NOT_APPLICABLE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "observe_action",
+        "expected": "NOT_APPLICABLE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "proposed_shift_action",
+        "expected": "NOT_APPLICABLE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "target_proposal",
+        "expected": "NOT_APPLICABLE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "time_proposal",
+        "expected": "NOT_APPLICABLE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "measurement_metric",
+        "expected": "NOT_APPLICABLE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "conditional_proposal",
+        "expected": "NOT_APPLICABLE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "supported_action_premise",
+        "expected": "NOT_APPLICABLE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "wider_positive_paraphrase",
+        "expected": "SUPPORTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "polite_action",
+        "expected": "NOT_APPLICABLE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "valid_id_irrelevant_source",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "negated_source",
+        "expected": "CONTRADICTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "opposite_adjective",
+        "expected": "CONTRADICTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "all_customers",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "majority_from_sample",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "correlation_to_cause",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "hypothesis_as_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "metric_renamed",
+        "expected": "CONTRADICTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "metric_meaning_swapped",
+        "expected": "CONTRADICTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "spelled_number_wrong",
+        "expected": "CONTRADICTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "sql_marker_unrelated_premise",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "owner_promoted_to_verified",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "owner_attribution_lost",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "owner_negation_reversed",
+        "expected": "CONTRADICTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "historical_ai_as_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "injection_laundered_into_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "unavailable_action_premise",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "action_because_unknown",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "target_historical",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "multisource_reference_missing",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "hypothesis_with_hidden_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "measurement_with_hidden_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "owner_memory_conflict",
+        "expected": "CONTRADICTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "measurement_target_numeric",
+        "expected": "NOT_APPLICABLE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      }
+    ],
+    "hybrid_candidate": [
+      {
+        "id": "customer_excerpt",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "customer_paraphrase",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "bread_paraphrase",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "owner_attributed",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "budget_attributed",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "owner_negative",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "memory_fact",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "memory_hours",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "sql_count",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "bounded_sql_claim"
+      },
+      {
+        "id": "sql_rating",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "bounded_sql_claim"
+      },
+      {
+        "id": "sql_multiple",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "bounded_sql_claim"
+      },
+      {
+        "id": "sql_words_correct",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "bounded_sql_claim"
+      },
+      {
+        "id": "customer_two_sources",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "two_owner_statements",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "note_topic",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance"
+      },
+      {
+        "id": "tentative_hypothesis",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "tentative_hypothesis_not_established_cause"
+      },
+      {
+        "id": "unknown_cause",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "tentative_hypothesis_not_established_cause"
+      },
+      {
+        "id": "observe_action",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise"
+      },
+      {
+        "id": "proposed_shift_action",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise"
+      },
+      {
+        "id": "target_proposal",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise"
+      },
+      {
+        "id": "time_proposal",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise"
+      },
+      {
+        "id": "measurement_metric",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise"
+      },
+      {
+        "id": "conditional_proposal",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise"
+      },
+      {
+        "id": "supported_action_premise",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise"
+      },
+      {
+        "id": "wider_positive_paraphrase",
+        "expected": "SUPPORTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "polite_action",
+        "expected": "NOT_APPLICABLE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "valid_id_irrelevant_source",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "negated_source",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "cited_source_contradicts_clause"
+      },
+      {
+        "id": "opposite_adjective",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "cited_source_contradicts_clause"
+      },
+      {
+        "id": "all_customers",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "majority_from_sample",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "correlation_to_cause",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "hypothesis_as_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "metric_renamed",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "sql_marker_metric_relabelled"
+      },
+      {
+        "id": "metric_meaning_swapped",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "sql_marker_metric_relabelled"
+      },
+      {
+        "id": "spelled_number_wrong",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "spelled_quantity_contradicts_sql"
+      },
+      {
+        "id": "sql_marker_unrelated_premise",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "owner_promoted_to_verified",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "owner_attribution_lost",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "owner_negation_reversed",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "cited_source_contradicts_clause"
+      },
+      {
+        "id": "historical_ai_as_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "injection_laundered_into_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "unavailable_action_premise",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "action_because_unknown",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "target_historical",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "multisource_reference_missing",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "hypothesis_with_hidden_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "measurement_with_hidden_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "NOT_ATTEMPTED_AFTER_PROVIDER_FAILURE"
+      },
+      {
+        "id": "owner_memory_conflict",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "cited_source_contradicts_clause"
+      },
+      {
+        "id": "measurement_target_numeric",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise"
+      }
+    ]
+  },
+  "evaluation_report_version": 2,
+  "scoring_note": "Unscored provider failures are not semantic model judgments. They do not contribute to false acceptance/rejection counts."
+}

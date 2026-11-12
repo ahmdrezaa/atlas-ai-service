@@ -1,0 +1,23 @@
+services:
+  atlas-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    image: atlas-ai-service:dev
+    container_name: atlas-ai-service
+
+    ports:
+      - "127.0.0.1:50051:50051"
+
+    environment:
+      GRPC_HOST: "0.0.0.0"
+      GRPC_PORT: "50051"
+      GRPC_AUTH_TOKEN: ${GRPC_AUTH_TOKEN:?GRPC_AUTH_TOKEN is required}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-}
+      GEMINI_TIMEOUT_SECONDS: ${GEMINI_TIMEOUT_SECONDS:-30}
+      GEMINI_MAX_OUTPUT_TOKENS: ${GEMINI_MAX_OUTPUT_TOKENS:-2048}
+      CONSULTATION_MAX_CONTEXT_BYTES: ${CONSULTATION_MAX_CONTEXT_BYTES:-120000}
+      LANGSMITH_TRACING: "false"
+      LANGCHAIN_TRACING_V2: "false"

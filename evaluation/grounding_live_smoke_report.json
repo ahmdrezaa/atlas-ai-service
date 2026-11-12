@@ -1,0 +1,308 @@
+{
+  "dataset_version": "grounding-synthetic-v1-live-smoke-subset",
+  "dataset_sha256": "b2bbee2240211cd5def086b8b10865f36e24f6f91a1f27987ddeefddcb415650",
+  "label_status": "developer-proposed labels for human review; not independently adjudicated or held out",
+  "verifier_prompt_version": "grounding-evaluation-v1",
+  "model_id": "gemini-3.8-flash",
+  "evaluation_type": "LIVE_MODEL_ON_SYNTHETIC_DATA",
+  "rule_suite_latency_ms": 1.526,
+  "rule_only_latency_ms": 0.974,
+  "live_calls": [
+    {
+      "offset": 0,
+      "attempted": true,
+      "latency_ms": 5103.774,
+      "status": "UNAVAILABLE"
+    }
+  ],
+  "summaries": {
+    "structural": {
+      "cases": 4,
+      "scored_cases": 4,
+      "by_expected_label": {
+        "SUPPORTED": {
+          "cases": 1,
+          "accepted": 1,
+          "labeled_cases": 0,
+          "label_correct": null
+        },
+        "CONTRADICTED": {
+          "cases": 1,
+          "accepted": 1,
+          "labeled_cases": 0,
+          "label_correct": null
+        },
+        "INSUFFICIENT_EVIDENCE": {
+          "cases": 1,
+          "accepted": 1,
+          "labeled_cases": 0,
+          "label_correct": null
+        },
+        "NOT_APPLICABLE": {
+          "cases": 1,
+          "accepted": 1,
+          "labeled_cases": 0,
+          "label_correct": null
+        }
+      },
+      "false_acceptance": 2,
+      "false_rejection": 0,
+      "positive_cases_rejected_due_to_error": 0,
+      "confusion": {
+        "SUPPORTED -> STRUCTURAL_ONLY": 1,
+        "NOT_APPLICABLE -> STRUCTURAL_ONLY": 1,
+        "INSUFFICIENT_EVIDENCE -> STRUCTURAL_ONLY": 1,
+        "CONTRADICTED -> STRUCTURAL_ONLY": 1
+      },
+      "errors": 0
+    },
+    "rules": {
+      "cases": 4,
+      "scored_cases": 4,
+      "by_expected_label": {
+        "SUPPORTED": {
+          "cases": 1,
+          "accepted": 1,
+          "labeled_cases": 1,
+          "label_correct": 1
+        },
+        "CONTRADICTED": {
+          "cases": 1,
+          "accepted": 0,
+          "labeled_cases": 1,
+          "label_correct": 1
+        },
+        "INSUFFICIENT_EVIDENCE": {
+          "cases": 1,
+          "accepted": 0,
+          "labeled_cases": 1,
+          "label_correct": 1
+        },
+        "NOT_APPLICABLE": {
+          "cases": 1,
+          "accepted": 1,
+          "labeled_cases": 1,
+          "label_correct": 1
+        }
+      },
+      "false_acceptance": 0,
+      "false_rejection": 0,
+      "positive_cases_rejected_due_to_error": 0,
+      "confusion": {
+        "SUPPORTED -> SUPPORTED": 1,
+        "NOT_APPLICABLE -> NOT_APPLICABLE": 1,
+        "INSUFFICIENT_EVIDENCE -> INSUFFICIENT_EVIDENCE": 1,
+        "CONTRADICTED -> CONTRADICTED": 1
+      },
+      "errors": 0
+    },
+    "llm": {
+      "cases": 4,
+      "scored_cases": 0,
+      "by_expected_label": {
+        "SUPPORTED": {
+          "cases": 1,
+          "accepted": 0,
+          "labeled_cases": 0,
+          "label_correct": null
+        },
+        "CONTRADICTED": {
+          "cases": 1,
+          "accepted": 0,
+          "labeled_cases": 0,
+          "label_correct": null
+        },
+        "INSUFFICIENT_EVIDENCE": {
+          "cases": 1,
+          "accepted": 0,
+          "labeled_cases": 0,
+          "label_correct": null
+        },
+        "NOT_APPLICABLE": {
+          "cases": 1,
+          "accepted": 0,
+          "labeled_cases": 0,
+          "label_correct": null
+        }
+      },
+      "false_acceptance": null,
+      "false_rejection": null,
+      "positive_cases_rejected_due_to_error": 2,
+      "confusion": {
+        "SUPPORTED -> None": 1,
+        "NOT_APPLICABLE -> None": 1,
+        "INSUFFICIENT_EVIDENCE -> None": 1,
+        "CONTRADICTED -> None": 1
+      },
+      "errors": 4
+    },
+    "hybrid_candidate": {
+      "cases": 4,
+      "scored_cases": 3,
+      "by_expected_label": {
+        "SUPPORTED": {
+          "cases": 1,
+          "accepted": 1,
+          "labeled_cases": 1,
+          "label_correct": 1
+        },
+        "CONTRADICTED": {
+          "cases": 1,
+          "accepted": 0,
+          "labeled_cases": 1,
+          "label_correct": 1
+        },
+        "INSUFFICIENT_EVIDENCE": {
+          "cases": 1,
+          "accepted": 0,
+          "labeled_cases": 0,
+          "label_correct": null
+        },
+        "NOT_APPLICABLE": {
+          "cases": 1,
+          "accepted": 1,
+          "labeled_cases": 1,
+          "label_correct": 1
+        }
+      },
+      "false_acceptance": 0,
+      "false_rejection": 0,
+      "positive_cases_rejected_due_to_error": 0,
+      "confusion": {
+        "SUPPORTED -> SUPPORTED": 1,
+        "NOT_APPLICABLE -> NOT_APPLICABLE": 1,
+        "INSUFFICIENT_EVIDENCE -> None": 1,
+        "CONTRADICTED -> CONTRADICTED": 1
+      },
+      "errors": 1
+    }
+  },
+  "rows": {
+    "structural": [
+      {
+        "id": "customer_paraphrase",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "target_proposal",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "valid_id_irrelevant_source",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "opposite_adjective",
+        "expected": "CONTRADICTED",
+        "accepted": true
+      }
+    ],
+    "rules": [
+      {
+        "id": "customer_paraphrase",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance",
+        "latency_ms": 0.5548480003199074
+      },
+      {
+        "id": "target_proposal",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise",
+        "latency_ms": 0.19417300063651055
+      },
+      {
+        "id": "valid_id_irrelevant_source",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "no_bounded_source_proof_for_clause",
+        "latency_ms": 0.15971600078046322
+      },
+      {
+        "id": "opposite_adjective",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "cited_source_contradicts_clause",
+        "latency_ms": 0.06532299812533893
+      }
+    ],
+    "llm": [
+      {
+        "id": "customer_paraphrase",
+        "expected": "SUPPORTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "UNAVAILABLE"
+      },
+      {
+        "id": "target_proposal",
+        "expected": "NOT_APPLICABLE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "UNAVAILABLE"
+      },
+      {
+        "id": "valid_id_irrelevant_source",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "UNAVAILABLE"
+      },
+      {
+        "id": "opposite_adjective",
+        "expected": "CONTRADICTED",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "UNAVAILABLE"
+      }
+    ],
+    "hybrid_candidate": [
+      {
+        "id": "customer_paraphrase",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance",
+        "latency_ms": 0.5548480003199074
+      },
+      {
+        "id": "target_proposal",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise",
+        "latency_ms": 0.19417300063651055
+      },
+      {
+        "id": "valid_id_irrelevant_source",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": null,
+        "accepted": false,
+        "reason": "evaluation_failed",
+        "error": "UNAVAILABLE"
+      },
+      {
+        "id": "opposite_adjective",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "cited_source_contradicts_clause",
+        "latency_ms": 0.06532299812533893
+      }
+    ]
+  },
+  "evaluation_report_version": 2,
+  "scoring_note": "Unscored provider failures are not semantic model judgments. They do not contribute to false acceptance/rejection counts."
+}

@@ -1,0 +1,21 @@
+{
+  "go_repository": "Elioth-Gray/atlas-backend-core",
+  "go_ref": "002472705b76f1f86e0b6628fc07bd6a92fe478d",
+  "go_files": {
+    "internal/aiclient/client.go": {"blob_sha": "043268da183955bd3cc1b6e3df8b81f90a8744b7", "consultation_with_timeout_line": 53},
+    "internal/config/config.go": {"blob_sha": "91af27c36fc0e08039f677d1c6e0bf6f3c561a7d", "consultation_timeout_default_line": 155, "http_write_timeout_line": 81, "validate_ai_timeout_line": 294}
+  },
+  "go_defaults_seconds": {"AI_CONSULTATION_TIMEOUT": 60, "HTTP_WRITE_TIMEOUT": 90, "ConsultationOverhead": 15},
+  "go_deployment_environment_verified": false,
+  "go_effective_deadline": "min(parent context deadline, configured consultation timeout)",
+  "python_defaults_seconds": {"GEMINI_TIMEOUT_SECONDS_shared_turn_budget": 30, "settings_maximum": 55, "per_call_response_margin": 0.25},
+  "test_override_seconds": {"shared_turn_budget": 55, "rpc_client_deadline": 60},
+  "direct_test_time_remaining_argument_seconds": 60,
+  "actual_live_grpc_test_executed": false,
+  "production_deadlines_changed": false,
+  "paths": {
+    "assessment_to_question": "one invocation within the shared turn budget",
+    "assessment_to_solution": "two invocations sharing the same budget; generation only receives the remainder",
+    "generate_now_to_solution": "one invocation; assessment bypassed"
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "milestone": "4C.1",
+  "runs": [
+    {
+      "case": "solution",
+      "model_override": "gemini-3.6-flash",
+      "turn_budget_seconds": 30.0,
+      "output_token_budget": 2048,
+      "thinking": "LOW",
+      "api_version": "v1beta",
+      "synthetic_request": {
+        "session_id": "40000000-0000-4000-8000-000000000001",
+        "request_id": "50000000-0000-4000-8000-000000000001",
+        "event": "CONSULTATION_EVENT_GENERATE_NOW",
+        "context": {
+          "issue": {
+            "id": "60000000-0000-4000-8000-000000000001",
+            "title": "Antrean"
+          },
+          "stats": {
+            "unique_feedback_count": "2",
+            "opinion_count": "2",
+            "average_rating": 3.0,
+            "negative_count": "2",
+            "not_severe_count": "2"
+          },
+          "evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "opinion_text": "Antrean lama",
+              "evidence_text": "Antreannya lama sekali.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Antreannya lama sekali.",
+              "rating": 3.0
+            },
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000002",
+              "opinion_text": "Pelayanan lambat",
+              "evidence_text": "Pelayanannya lambat.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Pelayanannya lambat.",
+              "rating": 3.0
+            }
+          ],
+          "shop": {
+            "id": "70000000-0000-4000-8000-000000000001",
+            "name": "Kedai sintetis 4C",
+            "category": "Kafe",
+            "scale": "Kecil"
+          },
+          "memories": [
+            {
+              "id": "30000000-0000-4000-8000-000000000001",
+              "fact_text": "Jam ramai pukul 17.00 sampai 19.00 setiap hari."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000002",
+              "fact_text": "Anggaran tambahan belum tersedia; langkah awal harus tanpa pembelian alat."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000003",
+              "fact_text": "Waktu observasi tersedia selama satu minggu."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000004",
+              "fact_text": "Owner ingin mengurangi antrean dengan memperbaiki alur kasir."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000005",
+              "fact_text": "Jumlah barista dua orang."
+            }
+          ]
+        },
+        "messages": [
+          {
+            "id": "20000000-0000-4000-8000-000000000001",
+            "role": "MESSAGE_ROLE_OWNER",
+            "content": "Buat langkah observasi tanpa biaya. Penyebab antrean belum diketahui."
+          }
+        ]
+      },
+      "automatic_retries": 0,
+      "bounded_corrections": 0,
+      "rpc_timeout_seconds": 60,
+      "configured_rpc_headroom_seconds": 30.0,
+      "server_entry_time_remaining_seconds": 60,
+      "pipeline_duration_seconds": 29.466015,
+      "status": "FAILED",
+      "category": "PROVIDER_HTTP_504",
+      "grpc_status_equivalent": "DEADLINE_EXCEEDED",
+      "grpc_status_source": "application_exception",
+      "exception_chain": [
+        {
+          "type": "ConsultationFailure",
+          "http_code": null
+        },
+        {
+          "type": "GoogleAPIError",
+          "http_code": 504
+        },
+        {
+          "type": "ServerError",
+          "http_code": 504
+        }
+      ],
+      "application_error": "Solution provider timed out",
+      "duration_seconds": 29.466,
+      "http_events": [
+        {
+          "http_status": 504,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1beta/models/gemini-3.6-flash:generateContent"
+        }
+      ],
+      "provider_errors": [],
+      "effective_requests": [
+        {
+          "api_version": "v1beta",
+          "timeout_seconds": 29.74921063599686,
+          "max_output_tokens": 2048,
+          "thinking_level_requested": "low",
+          "actual_prompt_text_utf8_bytes": 9745,
+          "response_json_schema_utf8_bytes": 2409,
+          "effective_temperature": null,
+          "effective_thinking_config": {
+            "thinking_level": "LOW"
+          },
+          "provider_elapsed_seconds": 29.375
+        }
+      ],
+      "provider_responses": [],
+      "validation": {
+        "structural": "NOT_REACHED",
+        "grounding": "NOT_REACHED"
+      },
+      "id": "A1"
+    }
+  ],
+  "production_model_unchanged": "gemini-3.8-flash",
+  "audit_date_local": "2026-11-13",
+  "timezone": "Asia/Jakarta",
+  "synthetic_only": true,
+  "actual_generation_requests": 1,
+  "automatic_retry_or_correction_enabled": false,
+  "solution_prompt_version_used": "consultation-solution-v4",
+  "grpc_live_test": {
+    "status": "SKIPPED",
+    "reason": "The single direct GENERATE_NOW attempt returned provider HTTP 504; no valid Solution prerequisite."
+  },
+  "primary_objective_achieved": false,
+  "usage_status": "NOT_REPORTED_BY_PROVIDER; not zero-token or zero-cost evidence"
+}

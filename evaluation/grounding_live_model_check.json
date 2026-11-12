@@ -1,0 +1,5 @@
+{
+  "requested_model": "gemini-3.8-flash",
+  "operation": "model_metadata_only_no_customer_data",
+  "status": "AVAILABLE"
+}

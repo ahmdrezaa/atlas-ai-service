@@ -1,0 +1,69 @@
+{
+  "milestone": "4C.1",
+  "type": "OFFLINE_REPLAY_OF_UNMODIFIED_C5_NOT_LIVE_SUCCESS",
+  "source_ledger_sha256": "fd1391443016186e2871b27c80f302321264a606fb7273c50c6f3e854c9c7e37",
+  "raw_C5_output_sha256": "e529bf8ac7dbda78e2f381bf612249af4ed6a67ced7a0cc24cb089d01c4a18cd",
+  "grounding_rule_version": "grounding-rules-v2",
+  "structural_after_alignment": "PASSED",
+  "grounding_decisions": [
+    {
+      "claim_id": "findings[0].statement",
+      "label": "SUPPORTED",
+      "reason": "bounded_sql_claim"
+    },
+    {
+      "claim_id": "findings[1].statement",
+      "label": "SUPPORTED",
+      "reason": "all_clauses_supported_with_provenance"
+    },
+    {
+      "claim_id": "findings[2].statement",
+      "label": "SUPPORTED",
+      "reason": "all_clauses_supported_with_provenance"
+    },
+    {
+      "claim_id": "hypotheses[0].statement",
+      "label": "NOT_APPLICABLE",
+      "reason": "tentative_hypothesis_not_established_cause"
+    },
+    {
+      "claim_id": "recommendations[0].title",
+      "label": "NOT_APPLICABLE",
+      "reason": "proposal_with_no_unproved_factual_premise"
+    },
+    {
+      "claim_id": "recommendations[0].description",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "reason": "proposal_contains_unproved_premise_or_unresolved_language"
+    },
+    {
+      "claim_id": "customer_evidence[0].note",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "reason": "no_bounded_source_proof_for_clause"
+    },
+    {
+      "claim_id": "customer_evidence[1].note",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "reason": "no_bounded_source_proof_for_clause"
+    },
+    {
+      "claim_id": "success_indicators[0].metric",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "reason": "proposal_contains_unproved_premise_or_unresolved_language"
+    },
+    {
+      "claim_id": "success_indicators[0].target",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "reason": "proposal_contains_unproved_premise_or_unresolved_language"
+    },
+    {
+      "claim_id": "success_indicators[0].timeframe",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "reason": "proposal_contains_unproved_premise_or_unresolved_language"
+    }
+  ],
+  "grounding": "REJECTED",
+  "additional_go_compatibility_issue": "findings[0].references empty: Go requires at least one reference",
+  "original_quote_policy": "exact substring allowed; no whole-feedback requirement",
+  "new_quote_context_checks": "word boundaries and bounded preceding negation; no source rewrite"
+}

@@ -1,0 +1,650 @@
+import copy
+import json
+from concurrent import futures
+from types import SimpleNamespace
+from unittest.mock import Mock
+from uuid import uuid4
+
+import grpc
+import pytest
+from httpx import ReadTimeout
+from pydantic import SecretStr, ValidationError
+
+from atlas.ai.v1 import ai_pb2
+from atlas_ai.consultation.assessment import (
+    ConsultationFailure,
+    ContextAssessor,
+    GeminiSettings,
+)
+from atlas_ai.consultation.context import prepare_context
+from atlas_ai.consultation.pipeline import ConsultationPipeline
+from atlas_ai.consultation.prompts import SOLUTION_PROMPT_VERSION
+from atlas_ai.consultation.solution import GeneratedSolution, solution_to_proto
+
+
+@pytest.fixture
+def solution_request(valid_request):
+    request = valid_request
+    request.context.stats.CopyFrom(
+        ai_pb2.IssueStats(
+            opinion_count=10,
+            unique_feedback_count=8,
+            average_rating=3.5,
+            negative_count=6,
+            positive_count=3,
+            neutral_count=1,
+            severe_count=1,
+            not_severe_count=9,
+        )
+    )
+    request.context.evidence.add(
+        opinion_id=str(uuid4()),
+        opinion_text="Antrean lambat",
+        evidence_text="Antreannya lama sekali.",
+        full_feedback="Rotinya enak. Antreannya lama sekali.",
+        sentiment=ai_pb2.SENTIMENT_NEGATIVE,
+        severity=ai_pb2.SEVERITY_NOT_SEVERE,
+    )
+    request.context.memories.add(id=str(uuid4()), fact_text="Jumlah barista 2 orang.")
+    return request
+
+
+@pytest.fixture
+def solution_payload(solution_request):
+    oid = solution_request.context.evidence[0].opinion_id
+    refs = {"opinion_ids": [oid], "owner_message_ids": [], "memory_ids": []}
+    return {
+        "findings": [
+            {"statement": "Pelanggan menyebut antrean lama.", "references": refs},
+            {
+                "statement": "Snapshot mencatat [[stat:opinion_count=10]].",
+                # Related current evidence required by Go. It is not used as
+                # proof of the count: the marker is checked against IssueStats.
+                "references": refs,
+            },
+        ],
+        "customer_evidence": [
+            {
+                "opinion_id": oid,
+                "quote": "Antreannya lama sekali.",
+                "note": "Keluhan antrean.",
+            }
+        ],
+        "hypotheses": [
+            {
+                "statement": "Hipotesis: alur pesanan mungkin menghambat antrean; perlu diverifikasi.",
+                "confidence": "",
+                "references": refs,
+            }
+        ],
+        "recommendations": [
+            {
+                "title": "Amati alur pesanan",
+                "description": "Usulan: amati 2 shift sebelum mengubah alur.",
+                "priority": "medium",
+                "references": refs,
+            }
+        ],
+        "success_indicators": [
+            {
+                "metric": "Durasi antrean yang dicatat owner",
+                "target": "Usulan: catat menit tunggu per pesanan",
+                "timeframe": "Usulan: evaluasi setelah 1 minggu",
+            }
+        ],
+    }
+
+
+@pytest.fixture
+def solution_assessor(solution_payload):
+    factory = Mock()
+
+    def structured(schema, **kwargs):
+        result = Mock()
+        if schema is GeneratedSolution or isinstance(schema, dict):
+            result.invoke.return_value = copy.deepcopy(solution_payload)
+        else:
+            result.invoke.return_value = {
+                "decision": "GENERATE_SOLUTION",
+                "reason": "Cukup untuk langkah observasi.",
+                "problem_evidence_sufficient": True,
+                "missing_operational_information": [],
+                "relevant_business_constraints": [],
+                "additional_question_material": False,
+                "repeats_existing_information": False,
+                "question": None,
+            }
+        return result
+
+    factory.return_value.with_structured_output.side_effect = structured
+    return ContextAssessor(
+        GeminiSettings(model="mock-gemini", api_key=SecretStr("test-only")), factory
+    )
+
+
+def test_valid_solution_all_events(
+    solution_request, solution_payload, solution_assessor
+):
+    before = solution_request.SerializeToString()
+    response = ConsultationPipeline(solution_assessor).run(solution_request)
+    assert response.WhichOneof("result") == "solution"
+    assert all(len(getattr(response.solution, field)) for field in solution_payload)
+    assert (
+        response.solution.findings[1].statement == "Snapshot mencatat jumlah opini: 10."
+    )
+    assert (
+        response.solution.customer_evidence[0].quote
+        == solution_payload["customer_evidence"][0]["quote"]
+    )
+    assert response.model_id == "mock-gemini"
+    assert response.prompt_version == SOLUTION_PROMPT_VERSION
+    assert not response.memory_candidates
+    assert solution_request.SerializeToString() == before
+    expected = (
+        1 if solution_request.event == ai_pb2.CONSULTATION_EVENT_GENERATE_NOW else 2
+    )
+    assert solution_assessor.model_factory.call_count == expected
+    assert (
+        ai_pb2.ProcessConsultationTurnResponse.FromString(response.SerializeToString())
+        == response
+    )
+
+
+@pytest.mark.parametrize(
+    "section,field,bad",
+    [
+        ("customer_evidence", "quote", "Pelanggan tidak pernah menulis ini."),
+        ("customer_evidence", "quote", " "),
+        ("customer_evidence", "opinion_id", "missing"),
+        ("findings", "statement", "Snapshot mencatat [[stat:opinion_count=11]]."),
+        ("findings", "statement", "Snapshot mencatat [[stat:negative_count=10]]."),
+        ("findings", "statement", "Sebanyak 10 opini mengeluh."),
+        ("findings", "statement", "Jumlah [[stat:unknown=10]]."),
+        ("findings", "statement", "Jumlah [[stat:opinion_count=NaN]]."),
+        ("findings", "statement", "Antrean disebabkan kekurangan staf."),
+        ("hypotheses", "statement", "Kekurangan staf terbukti menjadi penyebab."),
+        (
+            "hypotheses",
+            "statement",
+            "Hipotesis: mungkin kekurangan staf terbukti menjadi penyebab.",
+        ),
+        ("hypotheses", "confidence", "0.99"),
+        ("recommendations", "priority", "90%"),
+        ("recommendations", "description", "Hasil sudah meningkat 20%."),
+        ("success_indicators", "target", "Telah meningkat 20%"),
+        ("success_indicators", "timeframe", "Sudah tercapai minggu lalu"),
+        ("success_indicators", "metric", " "),
+        ("findings", "statement", " "),
+    ],
+)
+def test_invalid_output_rejected(
+    solution_request, solution_payload, section, field, bad
+):
+    solution_payload[section][0][field] = bad
+    with pytest.raises((ConsultationFailure, ValidationError)):
+        solution_to_proto(
+            GeneratedSolution.model_validate(solution_payload),
+            prepare_context(solution_request),
+        )
+
+
+@pytest.mark.parametrize(
+    "namespace", ["opinion_ids", "owner_message_ids", "memory_ids"]
+)
+def test_reference_namespaces_not_interchangeable(
+    solution_request, solution_payload, namespace
+):
+    # A valid UUID from a different namespace must not pass.
+    wrong = (
+        solution_request.context.memories[0].id
+        if namespace == "opinion_ids"
+        else solution_request.context.evidence[0].opinion_id
+    )
+    solution_payload["findings"][0]["references"] = {namespace: [wrong]}
+    with pytest.raises(ConsultationFailure, match="namespace"):
+        solution_to_proto(
+            GeneratedSolution.model_validate(solution_payload),
+            prepare_context(solution_request),
+        )
+
+
+def test_owner_and_memory_references_and_numeric_excerpt(
+    solution_request, solution_payload
+):
+    if (
+        not solution_request.messages
+        or solution_request.messages[-1].role != ai_pb2.MESSAGE_ROLE_OWNER
+    ):
+        solution_request.messages.add(
+            id=str(uuid4()),
+            role=ai_pb2.MESSAGE_ROLE_OWNER,
+            content="Shift sore 2 orang.",
+        )
+    owner = solution_request.messages[-1]
+    owner.content = "Shift sore 2 orang."
+    solution_payload["findings"][0] = {
+        "statement": "Owner menyatakan: Shift sore 2 orang.",
+        "references": {"owner_message_ids": [owner.id]},
+    }
+    solution_payload["recommendations"][0]["references"] = {
+        "memory_ids": [solution_request.context.memories[0].id]
+    }
+    result = solution_to_proto(
+        GeneratedSolution.model_validate(solution_payload),
+        prepare_context(solution_request),
+    )
+    assert result.findings[0].references.owner_message_ids == [owner.id]
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "findings",
+        "customer_evidence",
+        "hypotheses",
+        "recommendations",
+        "success_indicators",
+    ],
+)
+@pytest.mark.parametrize("missing", [False, True])
+def test_all_sections_required(solution_payload, field, missing):
+    if missing:
+        del solution_payload[field]
+    else:
+        solution_payload[field] = []
+    with pytest.raises(ValidationError):
+        GeneratedSolution.model_validate(solution_payload)
+
+
+def test_generation_no_evidence_does_not_invoke_provider(request_factory):
+    assessor = ContextAssessor(GeminiSettings(), Mock())
+    request = request_factory(ai_pb2.CONSULTATION_EVENT_GENERATE_NOW)
+    with pytest.raises(ConsultationFailure) as error:
+        ConsultationPipeline(assessor).run(request)
+    assert error.value.code == grpc.StatusCode.FAILED_PRECONDITION
+    assessor.model_factory.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "result,code",
+    [
+        (None, grpc.StatusCode.INTERNAL),
+        ({}, grpc.StatusCode.INTERNAL),
+        ("bad", grpc.StatusCode.INTERNAL),
+        (ReadTimeout("private"), grpc.StatusCode.DEADLINE_EXCEEDED),
+        (RuntimeError("private"), grpc.StatusCode.UNAVAILABLE),
+    ],
+)
+def test_generation_errors_not_invalid_argument(solution_request, result, code):
+    solution_request.event = ai_pb2.CONSULTATION_EVENT_GENERATE_NOW
+    factory = Mock()
+    invoke = factory.return_value.with_structured_output.return_value.invoke
+    if isinstance(result, Exception):
+        invoke.side_effect = result
+    else:
+        invoke.return_value = result
+    assessor = ContextAssessor(
+        GeminiSettings(model="mock", api_key=SecretStr("test")), factory
+    )
+    with pytest.raises(ConsultationFailure) as error:
+        ConsultationPipeline(assessor).run(solution_request)
+    assert error.value.code == code
+    assert "private" not in str(error.value)
+
+
+def test_revision_uses_latest_owner_but_historical_ids_are_not_sources(
+    solution_request, solution_payload
+):
+    solution_request.event = ai_pb2.CONSULTATION_EVENT_CONTINUE_DISCUSSION
+    solution_request.question_count = 4
+    solution_request.messages.add(
+        id=str(uuid4()),
+        role=ai_pb2.MESSAGE_ROLE_OWNER,
+        content="Revisi agar biaya rendah.",
+    )
+    old_id = str(uuid4())
+    solution_request.previous_solution.findings.add(
+        statement="Claim lama"
+    ).references.opinion_ids.append(old_id)
+    factory = Mock()
+    factory.return_value.with_structured_output.return_value.invoke.return_value = (
+        solution_payload
+    )
+    assessor = ContextAssessor(
+        GeminiSettings(model="mock", api_key=SecretStr("test")), factory
+    )
+    ConsultationPipeline(assessor).run(solution_request)
+    prompt = (
+        factory.return_value.with_structured_output.return_value.invoke.call_args.args[
+            0
+        ]
+    )
+    messages = prompt.to_messages()
+    data = json.loads(messages[-1].content.split("\n", 1)[1])
+    assert data["latest_owner_message"]["content"] == "Revisi agar biaya rendah."
+    assert data["previous_solution"]["source_kind"] == "historical_ai_output"
+    assert factory.call_count == 1
+    solution_payload["findings"][0]["references"] = {"opinion_ids": [old_id]}
+    with pytest.raises(ConsultationFailure):
+        solution_to_proto(
+            GeneratedSolution.model_validate(solution_payload),
+            prepare_context(solution_request),
+        )
+
+
+def test_solution_on_real_grpc_wire(solution_request, solution_assessor):
+    from atlas.ai.v1 import ai_pb2_grpc
+    from atlas_ai.grpc_service import AtlasAIService
+
+    service = AtlasAIService()
+    service.consultation_pipeline = ConsultationPipeline(solution_assessor)
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
+    ai_pb2_grpc.add_AIServiceServicer_to_server(service, server)
+    port = server.add_insecure_port("127.0.0.1:0")
+    assert port
+    server.start()
+    try:
+        with grpc.insecure_channel(f"127.0.0.1:{port}") as channel:
+            response = ai_pb2_grpc.AIServiceStub(channel).ProcessConsultationTurn(
+                solution_request, timeout=5
+            )
+            assert response.WhichOneof("result") == "solution"
+            assert response.prompt_version == SOLUTION_PROMPT_VERSION
+            assert len(response.solution.customer_evidence) == 1
+    finally:
+        server.stop(0).wait(timeout=5)
+
+
+def test_real_sdk_structured_solution_offline(
+    solution_request, solution_payload, monkeypatch
+):
+    from google.genai import types
+
+    solution_request.event = ai_pb2.CONSULTATION_EVENT_GENERATE_NOW
+    provider = Mock(
+        return_value=types.GenerateContentResponse(
+            candidates=[
+                types.Candidate(
+                    content=types.Content(
+                        role="model",
+                        parts=[types.Part(text=json.dumps(solution_payload))],
+                    ),
+                    finish_reason="STOP",
+                )
+            ]
+        )
+    )
+    monkeypatch.setattr("google.genai.models.Models.generate_content", provider)
+    assessor = ContextAssessor(
+        GeminiSettings(model="offline-test", api_key=SecretStr("test-only"))
+    )
+    response = ConsultationPipeline(assessor).run(solution_request)
+    assert response.HasField("solution")
+    config = provider.call_args.kwargs["config"]
+    assert config.response_mime_type == "application/json"
+    assert not config.tools
+
+
+def test_total_deadline_shared_between_both_calls(
+    solution_request, solution_assessor, monkeypatch
+):
+    solution_request.event = ai_pb2.CONSULTATION_EVENT_START
+    clock = [0.0]
+    timer = SimpleNamespace(monotonic=lambda: clock[0])
+    monkeypatch.setattr("atlas_ai.consultation.pipeline.time", timer)
+    monkeypatch.setattr("atlas_ai.consultation.assessment.time", timer)
+
+    def build(**kwargs):
+        clock[0] += 10
+        return solution_assessor.model_factory.return_value
+
+    solution_assessor.model_factory.side_effect = build
+    ConsultationPipeline(solution_assessor).run(solution_request, time_remaining=30)
+    calls = solution_assessor.model_factory.call_args_list
+    assert calls[0].kwargs["timeout"] == pytest.approx(29.75)
+    assert calls[1].kwargs["timeout"] == pytest.approx(19.75)
+
+
+def test_statistic_missing_and_unavailable_references(
+    solution_request, solution_payload
+):
+    solution_request.context.ClearField("stats")
+    with pytest.raises(ConsultationFailure, match="statistic is unavailable"):
+        solution_to_proto(
+            GeneratedSolution.model_validate(solution_payload),
+            prepare_context(solution_request),
+        )
+
+
+def test_zero_values_and_decimal_statistics(solution_request, solution_payload):
+    solution_request.context.stats.neutral_count = 0
+    solution_payload["findings"][1]["statement"] = (
+        "Snapshot: [[stat:neutral_count=0]], [[stat:average_rating=3.5]]."
+    )
+    response = solution_to_proto(
+        GeneratedSolution.model_validate(solution_payload),
+        prepare_context(solution_request),
+    )
+    assert "opini netral: 0" in response.findings[1].statement
+    assert "rata-rata rating: 3.5" in response.findings[1].statement
+
+
+def test_full_feedback_quote_allowed_but_normalized_opinion_is_not_source_quote(
+    solution_request, solution_payload
+):
+    solution_payload["customer_evidence"][0]["quote"] = "Rotinya enak."
+    solution_to_proto(
+        GeneratedSolution.model_validate(solution_payload),
+        prepare_context(solution_request),
+    )
+    solution_payload["customer_evidence"][0]["quote"] = (
+        solution_request.context.evidence[0].opinion_text
+    )
+    with pytest.raises(ConsultationFailure, match="verbatim"):
+        solution_to_proto(
+            GeneratedSolution.model_validate(solution_payload),
+            prepare_context(solution_request),
+        )
+
+
+@pytest.mark.parametrize("kind", ["memory", "owner"])
+def test_sourced_operational_numbers_are_not_ai_targets(
+    solution_request, solution_payload, kind
+):
+    fact = "Jam ramai pukul 17.00 sampai 19.00 setiap hari."
+    if kind == "memory":
+        source = solution_request.context.memories.add(id=str(uuid4()), fact_text=fact)
+        refs = {"memory_ids": [source.id]}
+    else:
+        source = solution_request.messages.add(
+            id=str(uuid4()), role=ai_pb2.MESSAGE_ROLE_OWNER, content=fact
+        )
+        refs = {"owner_message_ids": [source.id]}
+    action = solution_payload["recommendations"][0]
+    action["references"] = refs
+    action["description"] = "Amati antrean pada jam ramai 17.00 sampai 19.00."
+    response = solution_to_proto(
+        GeneratedSolution.model_validate(solution_payload),
+        prepare_context(solution_request),
+    )
+    assert response.recommendations[0].description == action["description"]
+    assert not action["description"].startswith("Usulan:")
+
+
+@pytest.mark.parametrize(
+    "description,wrong_source",
+    [
+        ("Amati antrean pada jam ramai 18.00 sampai 19.00.", False),
+        ("Amati antrean pada jam buka 17.00 sampai 19.00.", False),
+        ("Amati antrean dengan jumlah barista 17 orang.", False),
+        ("Amati antrean pada jam ramai 17.00 sampai 19.00.", True),
+        ("Usulan: amati antrean pada jam ramai 18.00 sampai 19.00.", False),
+        ("Amati antrean pada jam ramai 17.00 sampai 19.00 selama 99 hari.", False),
+    ],
+)
+def test_operational_numbers_require_same_proposition_and_correct_citation(
+    solution_request, solution_payload, description, wrong_source
+):
+    memory = solution_request.context.memories.add(
+        id=str(uuid4()), fact_text="Jam ramai pukul 17.00 sampai 19.00 setiap hari."
+    )
+    action = solution_payload["recommendations"][0]
+    action["description"] = description
+    action["references"] = {
+        "memory_ids": [
+            solution_request.context.memories[0].id if wrong_source else memory.id
+        ]
+    }
+    with pytest.raises(ConsultationFailure):
+        solution_to_proto(
+            GeneratedSolution.model_validate(solution_payload),
+            prepare_context(solution_request),
+        )
+
+
+def test_unavailable_operational_reference_is_not_inferred_from_other_memories(
+    solution_request, solution_payload
+):
+    action = solution_payload["recommendations"][0]
+    action["description"] = "Amati antrean dengan jumlah barista 2 orang."
+    action["references"] = {"memory_ids": [str(uuid4())]}
+    with pytest.raises(ConsultationFailure, match="namespace"):
+        solution_to_proto(
+            GeneratedSolution.model_validate(solution_payload),
+            prepare_context(solution_request),
+        )
+
+
+def test_cited_staff_count_and_proposed_target_remain_distinct(
+    solution_request, solution_payload
+):
+    action = solution_payload["recommendations"][0]
+    action["references"] = {"memory_ids": [solution_request.context.memories[0].id]}
+    action["description"] = "Amati antrean dengan jumlah barista 2 orang."
+    indicator = solution_payload["success_indicators"][0]
+    indicator["target"] = "Usulan: durasi antrean di bawah 5 menit"
+    indicator["timeframe"] = "Usulan: evaluasi setelah 7 hari"
+    result = solution_to_proto(
+        GeneratedSolution.model_validate(solution_payload),
+        prepare_context(solution_request),
+    )
+    assert result.success_indicators[0].target == indicator["target"]
+
+
+def test_target_staffing_is_a_proposal_not_a_claim_about_existing_staff(
+    solution_request, solution_payload
+):
+    solution_payload["success_indicators"][0]["target"] = (
+        "Usulan: jumlah barista 3 orang"
+    )
+    result = solution_to_proto(
+        GeneratedSolution.model_validate(solution_payload),
+        prepare_context(solution_request),
+    )
+    assert result.success_indicators[0].target.endswith("3 orang")
+
+
+def test_verified_sql_cannot_bypass_go_nonempty_reference_requirement(
+    solution_request, solution_payload
+):
+    solution_payload["findings"][1]["references"] = {}
+    with pytest.raises(ConsultationFailure, match="Go requires"):
+        solution_to_proto(
+            GeneratedSolution.model_validate(solution_payload),
+            prepare_context(solution_request),
+        )
+
+
+@pytest.mark.parametrize(
+    "fact",
+    [
+        "Jam ramai pukul 17.00 sampai 19.00 belum diketahui.",
+        "Bukan jam ramai pukul 17.00 sampai 19.00.",
+        "Jam ramai bukan pukul 17.00 sampai 19.00.",
+        "Usulan: jam ramai pukul 17.00 sampai 19.00.",
+    ],
+)
+@pytest.mark.parametrize("with_positive", [False, True])
+def test_uncertain_or_conflicting_operational_sources_do_not_prove_a_fact(
+    solution_request, solution_payload, fact, with_positive
+):
+    uncertain = solution_request.context.memories.add(id=str(uuid4()), fact_text=fact)
+    refs = [uncertain.id]
+    if with_positive:
+        positive = solution_request.context.memories.add(
+            id=str(uuid4()), fact_text="Jam ramai pukul 17.00 sampai 19.00."
+        )
+        refs.append(positive.id)
+    action = solution_payload["recommendations"][0]
+    action["description"] = "Amati antrean pada jam ramai 17.00 sampai 19.00."
+    action["references"] = {"memory_ids": refs}
+    with pytest.raises(ConsultationFailure, match="operational number"):
+        solution_to_proto(
+            GeneratedSolution.model_validate(solution_payload),
+            prepare_context(solution_request),
+        )
+
+
+@pytest.mark.parametrize(
+    "statement",
+    [
+        "Jumlah opini 99.",
+        "Jumlah feedback unik 99.",
+        "Jumlah opini sembilan puluh sembilan.",
+        "Jumlah feedback unik sembilan puluh sembilan.",
+    ],
+)
+def test_owner_or_memory_cannot_override_issue_statistics(
+    solution_request, solution_payload, statement
+):
+    memory = solution_request.context.memories.add(id=str(uuid4()), fact_text=statement)
+    solution_payload["findings"][0] = {
+        "statement": statement,
+        "references": {"memory_ids": [memory.id]},
+    }
+    with pytest.raises(ConsultationFailure, match="IssueStats"):
+        solution_to_proto(
+            GeneratedSolution.model_validate(solution_payload),
+            prepare_context(solution_request),
+        )
+
+
+@pytest.mark.parametrize(
+    "quote,accepted",
+    [
+        ("Antreannya lama", True),
+        ("lama sekali", True),
+        ("Antrean lama", False),
+        ("treannya lama", False),
+        ("Antreannya cepat", False),
+    ],
+)
+def test_quote_may_be_shorter_verbatim_excerpt(
+    solution_request, solution_payload, quote, accepted
+):
+    solution_payload["customer_evidence"][0]["quote"] = quote
+    output = GeneratedSolution.model_validate(solution_payload)
+    if accepted:
+        assert (
+            solution_to_proto(output, prepare_context(solution_request))
+            .customer_evidence[0]
+            .quote
+            == quote
+        )
+    else:
+        with pytest.raises(ConsultationFailure, match="verbatim"):
+            solution_to_proto(output, prepare_context(solution_request))
+
+
+def test_quote_cannot_drop_customer_negation(solution_request, solution_payload):
+    opinion = solution_request.context.evidence[0]
+    opinion.full_feedback = "Antreannya tidak lama."
+    opinion.evidence_text = (
+        "lama."  # Even a cropped evidence_text cannot erase wider context.
+    )
+    solution_payload["customer_evidence"][0]["quote"] = "lama."
+    with pytest.raises(ConsultationFailure, match="verbatim"):
+        solution_to_proto(
+            GeneratedSolution.model_validate(solution_payload),
+            prepare_context(solution_request),
+        )

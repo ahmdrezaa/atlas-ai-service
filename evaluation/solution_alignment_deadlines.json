@@ -1,0 +1,59 @@
+{
+  "milestone": "4C.1",
+  "audit_date_local": "2026-11-13",
+  "timezone": "Asia/Jakarta",
+  "go_repository": "Elioth-Gray/atlas-backend-core",
+  "go_pinned_ref": "002472705b76f1f86e0b6628fc07bd6a92fe478d",
+  "go_files": {
+    "internal/aiclient/client.go": {
+      "blob_sha": "043268da183955bd3cc1b6e3df8b81f90a8744b7",
+      "consultation_with_timeout_line": 53
+    },
+    "internal/config/config.go": {
+      "blob_sha": "91af27c36fc0e08039f677d1c6e0bf6f3c561a7d",
+      "consultation_timeout_default_line": 155,
+      "http_write_timeout_line": 81,
+      "validate_ai_timeout_line": 294
+    }
+  },
+  "go_default_branch_config_and_client_blob_match_pinned_ref": true,
+  "go_defaults_seconds": {
+    "AI_CONSULTATION_TIMEOUT": 60,
+    "HTTP_WRITE_TIMEOUT": 90,
+    "ConsultationOverhead": 15
+  },
+  "go_reference_validator_blob_sha": "6600f5df31ca2a91400de8e3459b6ccf2ff9b363",
+  "go_reference_policy": "At least one current source per finding, hypothesis and recommendation; references do not themselves prove SQL statistics.",
+  "go_deployment_environment_verified": false,
+  "actual_go_caller_test_executed": false,
+  "python_shared_budget_seconds": 30,
+  "planned_rpc_timeout_seconds": 60,
+  "nominal_rpc_headroom_seconds": 30,
+  "live_rpc_executed": false,
+  "transport_overhead_measured": false,
+  "configured_55_vs_60_not_assumed_safe": true,
+  "deadline_condition": "Go mapping, queue, transport and return costs must fit remaining caller budget in addition to Python time; an earlier parent deadline wins.",
+  "sdk_versions": {
+    "google-genai": "3.2.0",
+    "langchain-google-genai": "4.5.0",
+    "grpcio": "1.85.1",
+    "protobuf": "7.36.2",
+    "pydantic": "2.14.3"
+  },
+  "sdk_timeout_behavior": {
+    "http_options_unit": "milliseconds",
+    "httpx_unit": "seconds",
+    "server_timeout_header": "X-Server-Timeout=ceil(timeout_seconds), derived from installed source; raw headers not logged",
+    "inferred_A1_server_timeout_seconds": 30
+  },
+  "live_observation": {
+    "http_status": 504,
+    "equivalent_grpc_status": "DEADLINE_EXCEEDED",
+    "duration_seconds": 29.466,
+    "sdk_timeout_seconds": 29.74921063599686,
+    "client_TimeoutException_observed": false
+  },
+  "production_model_changed": false,
+  "production_timeout_changed": false,
+  "limitations": "Source/default audit and mocked shorter-caller regression only; no deployed Go, remote transport or successful live RPC timing proof."
+}

@@ -1,0 +1,326 @@
+{
+  "diagnostic_version": 1,
+  "invocations": [
+    {
+      "stage": "sdk_plain",
+      "model": "gemini-3.8-flash",
+      "synthetic_only": true,
+      "configured_timeout_seconds": 30.0,
+      "output_token_budget": 2048,
+      "requested_api_version": null,
+      "thinking_level_requested": "provider_default",
+      "automatic_retries": 0,
+      "status": "FAILED",
+      "category": "PROVIDER_HTTP_ERROR",
+      "grpc_status_equivalent": "UNAVAILABLE",
+      "exception_chain": [
+        {
+          "type": "ServerError",
+          "http_code": 503
+        }
+      ],
+      "duration_seconds": 8.588,
+      "http_events": [
+        {
+          "http_status": 503,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1/models/gemini-3.8-flash:generateContent"
+        }
+      ],
+      "effective_requests": [
+        {
+          "api_version": "v1"
+        }
+      ],
+      "provider_responses": [],
+      "id": "D1"
+    },
+    {
+      "stage": "sdk_plain",
+      "model": "gemini-3.7-flash",
+      "synthetic_only": true,
+      "configured_timeout_seconds": 30.0,
+      "output_token_budget": 2048,
+      "requested_api_version": null,
+      "thinking_level_requested": "provider_default",
+      "automatic_retries": 0,
+      "status": "FAILED",
+      "category": "PROVIDER_HTTP_504",
+      "grpc_status_equivalent": "DEADLINE_EXCEEDED",
+      "exception_chain": [
+        {
+          "type": "ServerError",
+          "http_code": 504
+        }
+      ],
+      "duration_seconds": 28.476,
+      "http_events": [
+        {
+          "http_status": 504,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1/models/gemini-3.7-flash:generateContent"
+        }
+      ],
+      "effective_requests": [
+        {
+          "api_version": "v1"
+        }
+      ],
+      "provider_responses": [],
+      "id": "D2"
+    },
+    {
+      "stage": "sdk_plain",
+      "model": "gemini-3.8-flash",
+      "synthetic_only": true,
+      "configured_timeout_seconds": 30.0,
+      "output_token_budget": 2048,
+      "requested_api_version": "v1beta",
+      "thinking_level_requested": "low",
+      "automatic_retries": 0,
+      "status": "FAILED",
+      "category": "PROVIDER_HTTP_504",
+      "grpc_status_equivalent": "DEADLINE_EXCEEDED",
+      "exception_chain": [
+        {
+          "type": "ServerError",
+          "http_code": 504
+        }
+      ],
+      "duration_seconds": 28.506,
+      "http_events": [
+        {
+          "http_status": 504,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1beta/models/gemini-3.8-flash:generateContent"
+        }
+      ],
+      "effective_requests": [
+        {
+          "api_version": "v1beta"
+        }
+      ],
+      "provider_responses": [],
+      "id": "D3"
+    },
+    {
+      "stage": "sdk_plain",
+      "model": "gemini-3.6-flash",
+      "synthetic_only": true,
+      "configured_timeout_seconds": 30.0,
+      "output_token_budget": 2048,
+      "requested_api_version": "v1beta",
+      "thinking_level_requested": "low",
+      "automatic_retries": 0,
+      "result": {
+        "expected_text_matched": true
+      },
+      "status": "OK",
+      "grpc_status_equivalent": "OK",
+      "duration_seconds": 7.302,
+      "http_events": [
+        {
+          "http_status": 200,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1beta/models/gemini-3.6-flash:generateContent"
+        }
+      ],
+      "effective_requests": [
+        {
+          "api_version": "v1beta"
+        }
+      ],
+      "provider_responses": [
+        {
+          "model_version": "gemini-3.6-flash",
+          "finish_reasons": [
+            "STOP"
+          ],
+          "usage": {
+            "prompt_token_count": 11,
+            "candidates_token_count": 4,
+            "thoughts_token_count": 85,
+            "total_token_count": 100,
+            "cached_content_token_count": null
+          },
+          "visible_text": "ATLAS_OK"
+        }
+      ],
+      "id": "D4"
+    },
+    {
+      "stage": "lc_simple",
+      "model": "gemini-3.6-flash",
+      "synthetic_only": true,
+      "configured_timeout_seconds": 30.0,
+      "output_token_budget": 2048,
+      "requested_api_version": "v1beta",
+      "thinking_level_requested": "low",
+      "automatic_retries": 0,
+      "result": {
+        "status": "ATLAS_OK"
+      },
+      "status": "OK",
+      "grpc_status_equivalent": "OK",
+      "duration_seconds": 21.554,
+      "http_events": [
+        {
+          "http_status": 200,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1beta/models/gemini-3.6-flash:generateContent"
+        }
+      ],
+      "effective_requests": [
+        {
+          "api_version": "v1beta",
+          "timeout_seconds": 30.0,
+          "max_output_tokens": 2048,
+          "thinking_level_requested": "low",
+          "effective_temperature": null,
+          "effective_thinking_config": {
+            "thinking_level": "LOW"
+          }
+        }
+      ],
+      "provider_responses": [
+        {
+          "model_version": "gemini-3.6-flash",
+          "finish_reasons": [
+            "STOP"
+          ],
+          "usage": {
+            "prompt_token_count": 11,
+            "candidates_token_count": 8,
+            "thoughts_token_count": null,
+            "total_token_count": 19,
+            "cached_content_token_count": null
+          },
+          "visible_text": "{\"status\":\"ATLAS_OK\"}"
+        }
+      ],
+      "id": "D5"
+    },
+    {
+      "stage": "assessment",
+      "model": "gemini-3.6-flash",
+      "synthetic_only": true,
+      "configured_timeout_seconds": 30.0,
+      "output_token_budget": 2048,
+      "requested_api_version": "v1beta",
+      "thinking_level_requested": "low",
+      "automatic_retries": 0,
+      "status": "FAILED",
+      "category": "APPLICATION_VALIDATION",
+      "grpc_status_equivalent": "INTERNAL",
+      "exception_chain": [
+        {
+          "type": "ConsultationFailure",
+          "http_code": null
+        }
+      ],
+      "application_error": "Assessment returned an invalid or repeated question",
+      "duration_seconds": 11.938,
+      "http_events": [
+        {
+          "http_status": 200,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1beta/models/gemini-3.6-flash:generateContent"
+        }
+      ],
+      "effective_requests": [
+        {
+          "api_version": "v1beta",
+          "timeout_seconds": 29.74972828600221,
+          "max_output_tokens": 2048,
+          "thinking_level_requested": "low",
+          "effective_temperature": null,
+          "effective_thinking_config": {
+            "thinking_level": "LOW"
+          }
+        }
+      ],
+      "provider_responses": [
+        {
+          "model_version": "gemini-3.6-flash",
+          "finish_reasons": [
+            "STOP"
+          ],
+          "usage": {
+            "prompt_token_count": 1114,
+            "candidates_token_count": 192,
+            "thoughts_token_count": null,
+            "total_token_count": 1306,
+            "cached_content_token_count": null
+          },
+          "visible_text": "{\n  \"decision\": \"ASK_QUESTION\",\n  \"reason\": \"Problem evidence indicates customer dissatisfaction with queue times, but operational context regarding peak hours or current POS capacity is missing, which is material to formulating a targeted recommendation.\",\n  \"problem_evidence_sufficient\": true,\n  \"missing_operational_information\": [\n    \"Waktu sibuk/jam puncak (peak hours)\",\n    \"Kapasitas kasir/staf saat ini\"\n  ],\n  \"relevant_business_constraints\": [],\n  \"additional_question_material\": true,\n  \"repeats_existing_information\": false,\n  \"question\": {\n    \"topic_key\": \"peak_hours_and_staffing\",\n    \"text\": \"Apakah antrean panjang ini terutama terjadi pada jam-jam tertentu, dan berapa jumlah staf yang melayani kasir saat itu?\"\n  }\n}"
+        }
+      ],
+      "id": "D6",
+      "posthoc_schema_validation": "PASSED",
+      "posthoc_question_validation": "INTERNAL"
+    },
+    {
+      "stage": "solution",
+      "model": "gemini-3.6-flash",
+      "synthetic_only": true,
+      "configured_timeout_seconds": 30.0,
+      "output_token_budget": 2048,
+      "requested_api_version": "v1beta",
+      "thinking_level_requested": "low",
+      "automatic_retries": 0,
+      "status": "FAILED",
+      "category": "PROVIDER_HTTP_504",
+      "grpc_status_equivalent": "DEADLINE_EXCEEDED",
+      "exception_chain": [
+        {
+          "type": "ConsultationFailure",
+          "http_code": null
+        },
+        {
+          "type": "GoogleAPIError",
+          "http_code": 504
+        },
+        {
+          "type": "ServerError",
+          "http_code": 504
+        }
+      ],
+      "duration_seconds": 29.246,
+      "http_events": [
+        {
+          "http_status": 504,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1beta/models/gemini-3.6-flash:generateContent"
+        }
+      ],
+      "effective_requests": [
+        {
+          "api_version": "v1beta",
+          "timeout_seconds": 29.74981079000281,
+          "max_output_tokens": 2048,
+          "thinking_level_requested": "low",
+          "effective_temperature": null,
+          "effective_thinking_config": {
+            "thinking_level": "LOW"
+          }
+        }
+      ],
+      "provider_responses": [],
+      "id": "D7"
+    }
+  ],
+  "packages": {
+    "google-genai": "3.2.0",
+    "langchain-google-genai": "4.5.0",
+    "langchain-core": "1.8.0",
+    "pydantic": "2.14.3",
+    "httpx": "0.28.1"
+  },
+  "interpretation": {
+    "actual_grpc_transport_tested": false,
+    "production_model_unchanged": "gemini-3.8-flash",
+    "attempted_generation_requests": 7,
+    "automatic_retries": 0,
+    "large_evaluation_run": false
+  }
+}

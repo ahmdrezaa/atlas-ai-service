@@ -1,0 +1,26 @@
+{
+  "model_id": "gemini-3.8-flash",
+  "synthetic_cases": 4,
+  "diagnostic": "whitelisted_categories_only",
+  "status": "DEADLINE_EXCEEDED",
+  "exception_chain": [
+    {
+      "type": "ConsultationFailure",
+      "http_code": null,
+      "categories": []
+    },
+    {
+      "type": "GoogleAPIError",
+      "http_code": 504,
+      "categories": []
+    },
+    {
+      "type": "ServerError",
+      "http_code": 504,
+      "categories": []
+    }
+  ],
+  "configured_timeout_seconds": 55,
+  "measured_latency_ms": null,
+  "note": "Generation evaluation only; no completed model judgments."
+}
