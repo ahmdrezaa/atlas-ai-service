@@ -4,6 +4,7 @@ import pytest
 
 from atlas_ai.consultation.assessment import ConsultationFailure
 from atlas_ai.consultation.context import prepare_context
+from atlas_ai.consultation.grounding import ACCEPTED_LABELS, validate_grounding
 from atlas_ai.consultation.solution import GeneratedSolutionTurn, solution_to_proto
 from scripts.consultation_m6_2_evaluation import CORPUS, ROOT, case_input, evaluate
 
@@ -13,12 +14,18 @@ CASES = json.loads(CORPUS.read_text(encoding="utf-8"))["cases"]
 @pytest.mark.parametrize("case", CASES, ids=[c["id"] for c in CASES])
 def test_frozen_whole_solution_policy(case):
     request, payload = case_input(case)
-    if case["valid"]:
+    if case["valid"] or case["id"] == "rec_irrelevant":
         result = solution_to_proto(
             GeneratedSolutionTurn.model_validate(payload).solution_output(),
             prepare_context(request),
         )
         assert all(getattr(result, field.name) for field in result.DESCRIPTOR.fields)
+        if case["id"] == "rec_irrelevant":
+            diagnostics = validate_grounding(
+                GeneratedSolutionTurn.model_validate(payload).solution_output(),
+                prepare_context(request),
+            )
+            assert any(d.label not in ACCEPTED_LABELS for d in diagnostics)
     else:
         with pytest.raises(ConsultationFailure):
             solution_to_proto(
@@ -27,7 +34,7 @@ def test_frozen_whole_solution_policy(case):
             )
 
 
-def test_frozen_before_after_comparison_has_no_new_false_acceptance():
+def test_frozen_comparison_exposes_authorized_nonblocking_relevance():
     ledger = json.loads(
         (ROOT / "evaluation/m6_2_grounding_reliability.json").read_text(
             encoding="utf-8"
@@ -39,8 +46,11 @@ def test_frozen_before_after_comparison_has_no_new_false_acceptance():
         current["counts"]["valid_accepted"]
         > ledger["before"]["counts"]["valid_accepted"]
     )
-    assert current["counts"]["invalid_accepted"] == 0
-    assert not any(not c["valid"] and c["accepted"] for c in current["cases"])
+    # Frozen quality labels are unchanged; this semantic-only case is now returned
+    # under the user's Gemini-first policy, with its diagnostic still negative.
+    assert {c["id"] for c in current["cases"] if not c["valid"] and c["accepted"]} == {
+        "rec_irrelevant"
+    }
 
 
 @pytest.mark.parametrize(
@@ -88,11 +98,17 @@ def test_nominal_title_needs_a_consistent_independent_description():
         prepare_context(request),
     )
     payload["recommendations"][0]["description"] = "Evaluasi harga Bitcoin."
-    with pytest.raises(ConsultationFailure):
-        solution_to_proto(
-            GeneratedSolutionTurn.model_validate(payload).solution_output(),
-            prepare_context(request),
-        )
+    assert solution_to_proto(
+        GeneratedSolutionTurn.model_validate(payload).solution_output(),
+        prepare_context(request),
+    ).recommendations
+    # Inconsistency/relevance is now diagnostic. The title itself still has a
+    # current cited object, and neither field asserts a new operational fact.
+    diagnostics = validate_grounding(
+        GeneratedSolutionTurn.model_validate(payload).solution_output(),
+        prepare_context(request),
+    )
+    assert any(d.label not in ACCEPTED_LABELS for d in diagnostics)
 
 
 def test_new_hypothesis_path_cannot_erase_customer_negation():

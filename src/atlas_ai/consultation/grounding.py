@@ -1,7 +1,8 @@
 """Conservative source verification, not a general entailment model.
 
-4A structural validation remains the prerequisite. Unresolved language fails closed;
-only bounded extractive/attribution proofs and premise-free proposals are accepted.
+4A structural validation remains the prerequisite. Factual source proof blocks;
+pure lexical relevance is diagnostic. Mixed factual/scope guards remain bounded
+and conservative where they cannot safely be separated from language judgments.
 """
 
 import re
@@ -31,7 +32,7 @@ STAT_LABELS = {
     "not_severe_count": "opini tidak severe",
 }
 STAT = re.compile(r"\[\[stat:([a-z_]+)=(-?\d+(?:\.\d+)?)\]\]")
-GROUNDING_RULE_VERSION = "grounding-rules-v7"
+GROUNDING_RULE_VERSION = "grounding-rules-v8"
 TENTATIVE = re.compile(
     r"\b(mungkin|diduga|belum diketahui|perlu diverifikasi|berpotensi dipengaruhi|"
     r"ada kemungkinan|perlu ditelusuri apakah)\b",
@@ -426,11 +427,11 @@ def _label_subject_words(text: str) -> set[str]:
 
 
 def _recommendation_title(
-    claim: GroundingClaim, context: ConsultationContext
+    claim: GroundingClaim, context: ConsultationContext, *, semantic_checks: bool = True
 ) -> GroundingDecision:
     text = claim.text.strip()
     standalone = claim.model_copy(update={"recommendation_description": None})
-    verdict = evaluate_claim(standalone, context)
+    verdict = evaluate_claim(standalone, context, semantic_checks=semantic_checks)
     # Do not let even an imperative heading independently promise outcomes or
     # assert an operational condition. Descriptions cannot launder such claims.
     if (
@@ -450,13 +451,17 @@ def _recommendation_title(
                 "recommendation_description": None,
             }
         )
-        desc_verdict = evaluate_claim(description, context)
+        desc_verdict = evaluate_claim(
+            description, context, semantic_checks=semantic_checks
+        )
         common = (
             set(_normal(text).split())
             & set(_normal(description.text).split())
             & _source_words(cited_sources(claim, context))
         )
-        if desc_verdict.label not in ACCEPTED_LABELS or len(common) < 2:
+        if desc_verdict.label not in ACCEPTED_LABELS or (
+            semantic_checks and len(common) < 2
+        ):
             return GroundingDecision(
                 claim_id=claim.claim_id,
                 label=GroundingLabel.INSUFFICIENT_EVIDENCE,
@@ -468,7 +473,7 @@ def _recommendation_title(
     action = claim.model_copy(
         update={"text": description, "recommendation_description": None}
     )
-    action_verdict = evaluate_claim(action, context)
+    action_verdict = evaluate_claim(action, context, semantic_checks=semantic_checks)
     sources = cited_sources(claim, context)
     words = text.split()
     if (
@@ -477,10 +482,10 @@ def _recommendation_title(
         or not 2 <= len(words) <= 8
         or not re.fullmatch(r"[A-Za-z ]+", text)
         or action_verdict.label != GroundingLabel.NOT_APPLICABLE
-        or not _related_hypothesis(description, sources)
+        or (semantic_checks and not _related_hypothesis(description, sources))
         or not any(
             re.fullmatch(head, words[0], re.IGNORECASE)
-            and re.search(intent, description, re.IGNORECASE)
+            and (not semantic_checks or re.search(intent, description, re.IGNORECASE))
             for head, intent in _LABEL_INTENTS
         )
     ):
@@ -514,7 +519,7 @@ def _recommendation_title(
                 }
             )
         )
-        and subject & description_words
+        and (not semantic_checks or subject & description_words)
         and subject & source_words
         and not NUMBER_WORDS.search(text.casefold())
     ):
@@ -634,6 +639,28 @@ def _nominal_proposal(text: str, sources: list[dict[str, str]]) -> bool:
         len(subject & cited) >= 2
         and subject <= cited | activities
         and not _LABEL_ASSERTION.search(text)
+    )
+
+
+def _source_bound_nominal(text: str, sources: list[dict[str, str]]) -> bool:
+    """A nominal proposal with a fully cited object, not a domain vocabulary.
+
+    Retain resource/predicate guards: a grammatical noun form alone cannot prove
+    existing equipment, availability or outcomes. The source text, never another
+    generated field, must supply the complete object phrase in one source.
+    """
+    match = re.fullmatch(r"pe[a-z]+an\s+([a-z ]+)\.?", text, re.IGNORECASE)
+    if not match or _LABEL_ASSERTION.search(text):
+        return False
+    if re.match(
+        r"(?:penambahan|pengadaan|pembelian|pengurangan)\b", text, re.IGNORECASE
+    ):
+        return False
+    subject = _normal(match[1])
+    return bool(subject) and any(
+        not _INSTRUCTIONS.search(source["text"])
+        and _affirmed_part(subject, _normal(source["text"]))
+        for source in sources
     )
 
 
@@ -819,9 +846,14 @@ def _action_before_purpose(text: str) -> str:
 
 
 def evaluate_claim(
-    claim: GroundingClaim, context: ConsultationContext
+    claim: GroundingClaim, context: ConsultationContext, *, semantic_checks: bool = True
 ) -> GroundingDecision:
-    """Classify structurally valid text; unknown language is not accepted as proven."""
+    """Diagnose claims; evidence-only checks never waive factual source proof.
+
+    The default retains historical semantic diagnostics for offline review.
+    Production uses semantic_checks=False: lexical relevance and safely bounded
+    nominal wording do not block. Mixed factual/scope guards remain conservative.
+    """
     text = claim.text.strip()
     sources = cited_sources(claim, context)
     label, reason = GroundingLabel.INSUFFICIENT_EVIDENCE, "unresolved_claim"
@@ -830,7 +862,7 @@ def evaluate_claim(
     elif (
         claim.kind == "recommendation" and claim.recommendation_description is not None
     ):
-        return _recommendation_title(claim, context)
+        return _recommendation_title(claim, context, semantic_checks=semantic_checks)
     elif claim.kind == "finding" and STAT.search(text):
         label, reason = _statistics(text, context)
     elif claim.kind == "hypothesis":
@@ -845,7 +877,9 @@ def evaluate_claim(
         )
         if len(contrast) == 2:
             left = evaluate_claim(
-                claim.model_copy(update={"text": contrast[0]}), context
+                claim.model_copy(update={"text": contrast[0]}),
+                context,
+                semantic_checks=semantic_checks,
             )
             right = contrast[1]
             # "Owner menyatakan: mungkin ..." asserts what the owner said;
@@ -859,6 +893,7 @@ def evaluate_claim(
                     }
                 ),
                 context,
+                semantic_checks=semantic_checks,
             )
             return GroundingDecision(
                 claim_id=claim.claim_id,
@@ -885,9 +920,10 @@ def evaluate_claim(
             and not _PREMISE.search(text)
             and not _CURRENT_ASSERTION.search(text)
             and not _ACHIEVED.search(text)
-            and _related_hypothesis(text, sources)
+            and (not semantic_checks or _related_hypothesis(text, sources))
             and all(
                 _normal(part) in {"perlu diverifikasi", "belum diketahui"}
+                or not semantic_checks
                 or _related_hypothesis(part, sources)
                 for part in clauses
             )
@@ -916,7 +952,9 @@ def evaluate_claim(
                 prefix = "Usulan: " if text.startswith("Usulan:") else ""
                 decisions = [
                     evaluate_claim(
-                        claim.model_copy(update={"text": prefix + part}), context
+                        claim.model_copy(update={"text": prefix + part}),
+                        context,
+                        semantic_checks=semantic_checks,
                     )
                     for part in parts
                 ]
@@ -960,11 +998,15 @@ def evaluate_claim(
             claim.kind == "metric" or text.startswith("Usulan:")
             if indicator
             else _action_framing(action)
+            or (not semantic_checks and _source_bound_nominal(action, sources))
         )
         # Separate sentences cannot hide a new fact behind an initial imperative.
         independent_parts = re.split(r"(?<!\d)[.;]|[.;](?!\d)", action)
         clauses_ok = indicator or all(
-            _action_framing(part.strip()) for part in independent_parts if part.strip()
+            _action_framing(part.strip())
+            or (not semantic_checks and _source_bound_nominal(part.strip(), sources))
+            for part in independent_parts
+            if part.strip()
         )
         if (
             not _ACHIEVED.search(body)
@@ -1001,10 +1043,14 @@ def evaluate_claim(
                     "bounded_nominal_proposal",
                 )
             action_object = _action_before_purpose(action)
-            if not _related_hypothesis(action_object, sources) and not re.search(
-                r"\b(alur|pesanan|antrean|pencatatan|shift|durasi|transaksi)\b",
-                action_object,
-                re.IGNORECASE,
+            if (
+                semantic_checks
+                and not _related_hypothesis(action_object, sources)
+                and not re.search(
+                    r"\b(alur|pesanan|antrean|pencatatan|shift|durasi|transaksi)\b",
+                    action_object,
+                    re.IGNORECASE,
+                )
             ):
                 label, reason = (
                     GroundingLabel.INSUFFICIENT_EVIDENCE,
@@ -1069,7 +1115,12 @@ def validate_grounding(
     time_remaining: float | None = None,
     is_active: Callable[[], bool] | None = None,
 ) -> list[GroundingDecision]:
-    """No model invocation or repair. Fail the whole solution on an unresolved claim."""
+    """Block evidence failures; return semantic diagnostics without promoting facts.
+
+    Diagnostics may contain INSUFFICIENT_EVIDENCE even for a returned Solution.
+    This never labels an unresolved semantic judgment as factual support. No
+    source text or diagnostic is logged or added to the public protobuf response.
+    """
     from atlas_ai.consultation.assessment import ConsultationFailure
 
     deadline = time.monotonic() + time_remaining if time_remaining is not None else None
@@ -1084,13 +1135,13 @@ def validate_grounding(
             raise ConsultationFailure(
                 grpc.StatusCode.CANCELLED, "Consultation cancelled"
             )
-        decision = evaluate_claim(claim, context)
-        if decision.label not in ACCEPTED_LABELS:
+        evidence = evaluate_claim(claim, context, semantic_checks=False)
+        if evidence.label not in ACCEPTED_LABELS:
             raise ConsultationFailure(
                 grpc.StatusCode.INTERNAL,
-                f"Solution grounding rejected {decision.claim_id}: {decision.label.value}",
+                f"Solution grounding rejected {evidence.claim_id}: {evidence.label.value}",
             )
-        decisions.append(decision)
+        decisions.append(evaluate_claim(claim, context))
     if deadline is not None and time.monotonic() >= deadline:
         raise ConsultationFailure(
             grpc.StatusCode.DEADLINE_EXCEEDED, "Solution grounding deadline exceeded"

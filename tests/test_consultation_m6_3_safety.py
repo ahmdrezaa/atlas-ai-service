@@ -17,6 +17,7 @@ from atlas_ai.consultation.assessment import (
     GeminiSettings,
 )
 from atlas_ai.consultation.context import prepare_context
+from atlas_ai.consultation.grounding import ACCEPTED_LABELS, validate_grounding
 from atlas_ai.consultation.models import HistoricalSolution
 from atlas_ai.consultation.pipeline import ConsultationPipeline
 from atlas_ai.consultation.solution import (
@@ -35,6 +36,13 @@ UNRESOLVED = {
     "a_two_speculations": "Modality and relevance inside shared coordination are unresolved",
     "a_bakery_causal": "Existing causal guard rejects a legitimate tentative bakery cause",
     "b_original": "Shared nominal coordination cannot yet establish semantic relevance",
+}
+SEMANTIC_ONLY = {
+    "b_separate_actions",
+    "b_reverse_actions",
+    "b_two_sentences",
+    "b_purpose_overlap",
+    "b_repeated_word_attack",
 }
 
 
@@ -62,12 +70,18 @@ def mapped(request, payload):
 def test_frozen_semantic_expectations(case):
     request, payload = case_input(case)
     before_request, before_payload = request.SerializeToString(), copy.deepcopy(payload)
-    if case["expected"] == "valid":
+    if case["expected"] == "valid" or case["id"] in SEMANTIC_ONLY:
         response = mapped(request, payload)
         assert all(
             getattr(response, field.name) for field in response.DESCRIPTOR.fields
         )
         assert ai_pb2.Solution.FromString(response.SerializeToString()) == response
+        if case["id"] in SEMANTIC_ONLY:
+            diagnostics = validate_grounding(
+                GeneratedSolutionTurn.model_validate(payload).solution_output(),
+                prepare_context(request),
+            )
+            assert any(d.label not in ACCEPTED_LABELS for d in diagnostics)
     else:
         with pytest.raises(ConsultationFailure):
             mapped(request, payload)
@@ -91,7 +105,7 @@ def test_frozen_comparison_tracks_errors_without_treating_ambiguity_as_truth():
     for case in current["cases"]:
         if case["expected"] == "invalid" and case["accepted"]:
             assert previous[case["id"]]["accepted"]  # No newly unsafe acceptance.
-            assert case["id"] in UNRESOLVED
+            assert case["id"] in UNRESOLVED or case["id"] in SEMANTIC_ONLY
     assert sum(c["expected"] == "ambiguous" for c in current["cases"]) == 2
 
 
@@ -121,14 +135,24 @@ def test_attribution_of_uncertain_text_still_requires_owner_proof():
 
 @pytest.mark.parametrize("connector", [" dan ", " serta ", ". ", "; "])
 @pytest.mark.parametrize("reverse", [False, True])
-def test_each_independent_action_needs_its_own_relevance(connector, reverse):
+def test_each_independent_action_has_nonblocking_relevance_diagnostic(
+    connector, reverse
+):
     request, payload = case_input(CASES["queue_base"])
     parts = ["Amati antrean kasir", "evaluasi harga Bitcoin"]
     if reverse:
         parts.reverse()
     payload["recommendations"][0]["description"] = connector.join(parts) + "."
-    with pytest.raises(ConsultationFailure, match="recommendations"):
-        mapped(request, payload)
+    assert mapped(request, payload).recommendations
+    diagnostics = validate_grounding(
+        GeneratedSolutionTurn.model_validate(payload).solution_output(),
+        prepare_context(request),
+    )
+    assert any(
+        d.claim_id == "recommendations[0].description"
+        and d.label not in ACCEPTED_LABELS
+        for d in diagnostics
+    )
 
 
 @pytest.mark.parametrize("blank", ["", " ", "\n\t", "\u00a0"])
