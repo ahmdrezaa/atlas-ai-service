@@ -1,4 +1,3 @@
-from atlas_ai.grpc_service import AtlasAIService
 import hmac
 import logging
 import os
@@ -7,6 +6,9 @@ from concurrent import futures
 import grpc
 
 from atlas.ai.v1 import ai_pb2_grpc
+from atlas_ai.grpc_service import AtlasAIService
+
+logger = logging.getLogger(__name__)
 
 
 class BearerAuthInterceptor(grpc.ServerInterceptor):
@@ -29,6 +31,7 @@ class BearerAuthInterceptor(grpc.ServerInterceptor):
             )
 
         return grpc.unary_unary_rpc_method_handler(reject)
+
 
 def serve():
     host = os.getenv("GRPC_HOST", "0.0.0.0")
@@ -54,7 +57,7 @@ def serve():
         raise RuntimeError(f"Cannot bind to {address}")
 
     server.start()
-    logging.info("ATLAS AI gRPC server running on %s", address)
+    logger.info("ATLAS AI gRPC server running on %s", address)
 
     try:
         server.wait_for_termination()

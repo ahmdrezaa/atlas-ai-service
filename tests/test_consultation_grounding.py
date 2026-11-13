@@ -30,7 +30,7 @@ from atlas_ai.consultation.solution import GeneratedSolution, solution_to_proto
 
 DATASET = Path(__file__).resolve().parents[1] / "evaluation/grounding_cases.json"
 DATA, CONTEXT, CLAIMS = load_dataset(DATASET)
-ABSTENTIONS = {"wider_positive_paraphrase", "polite_action"}
+ABSTENTIONS = {"wider_positive_paraphrase"}
 
 
 @pytest.mark.parametrize(
@@ -51,9 +51,12 @@ def test_evaluation_counts_are_not_model_accuracy():
     report = evaluate(DATASET)
     assert report["evaluation_type"] == "DETERMINISTIC_RULES_ONLY"
     assert report["model_id"] is None
-    assert report["summaries"]["structural"]["false_acceptance"] == 20
+    # SQL-only findings are now excluded by MVP wire policy, not weakened.
+    assert report["summaries"]["structural"]["false_acceptance"] < 20
     assert report["summaries"]["rules"]["false_acceptance"] == 0
-    assert report["summaries"]["rules"]["false_rejection"] == 2
+    # Semantic checker resolves the polite-action abstention. Combined evaluator
+    # also excludes four previously SUPPORTED, context-only SQL outputs under MVP.
+    assert report["summaries"]["rules"]["false_rejection"] == 5
     assert (
         len(
             [

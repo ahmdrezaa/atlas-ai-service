@@ -1,0 +1,118 @@
+{
+  "test_type": "AUTHENTICATED_PYTHON_GRPC_WITH_MOCK_PROVIDER_NOT_LIVE",
+  "synthetic_only": true,
+  "actual_provider_requests": 0,
+  "mock_model_boundary_invocations": 1,
+  "grpc_status": "OK",
+  "duration_seconds": 0.02984000499782269,
+  "stage_durations_seconds": {
+    "solution.langchain_invoke_and_parse": 5.5271000746870413e-05,
+    "solution.pydantic": 0.0001782889994501602,
+    "solution.structural": 0.00202088700098102,
+    "solution.grounding": 0.0063559560003341176,
+    "solution.protobuf_mapping": 0.00016784299805294722,
+    "memory.validation_and_mapping": 0.0020898719994875137
+  },
+  "response": {
+    "solution": {
+      "findings": [
+        {
+          "statement": "Pelanggan menyebut: Antreannya lama sekali.",
+          "references": {
+            "opinion_ids": [
+              "10000000-0000-4000-8000-000000000001"
+            ]
+          }
+        },
+        {
+          "statement": "Owner menyatakan: Buat langkah observasi tanpa biaya. Penyebab antrean belum diketahui.",
+          "references": {
+            "owner_message_ids": [
+              "20000000-0000-4000-8000-000000000001"
+            ]
+          }
+        },
+        {
+          "statement": "Jam ramai pukul 17.00 sampai 19.00 setiap hari.",
+          "references": {
+            "memory_ids": [
+              "30000000-0000-4000-8000-000000000001"
+            ]
+          }
+        }
+      ],
+      "customer_evidence": [
+        {
+          "opinion_id": "10000000-0000-4000-8000-000000000001",
+          "quote": "Antreannya lama sekali."
+        },
+        {
+          "opinion_id": "10000000-0000-4000-8000-000000000002",
+          "quote": "Pelayanannya lambat."
+        }
+      ],
+      "hypotheses": [
+        {
+          "statement": "Hipotesis: Penyebab keluhan antrean pelanggan belum diketahui secara pasti dan mungkin terkait kendala alur kasir.",
+          "confidence": "sedang",
+          "references": {
+            "opinion_ids": [
+              "10000000-0000-4000-8000-000000000001"
+            ],
+            "owner_message_ids": [
+              "20000000-0000-4000-8000-000000000001"
+            ],
+            "memory_ids": [
+              "30000000-0000-4000-8000-000000000004"
+            ]
+          }
+        }
+      ],
+      "recommendations": [
+        {
+          "title": "Observasi Alur Pelayanan Jam Ramai",
+          "description": "Lakukan pemantauan manual alur antrean dan transaksi kasir tanpa biaya selama jam ramai.",
+          "priority": "tinggi",
+          "references": {
+            "owner_message_ids": [
+              "20000000-0000-4000-8000-000000000001"
+            ],
+            "memory_ids": [
+              "30000000-0000-4000-8000-000000000001",
+              "30000000-0000-4000-8000-000000000002"
+            ]
+          }
+        }
+      ],
+      "success_indicators": [
+        {
+          "metric": "Jumlah pencatatan durasi transaksi kasir harian",
+          "target": "Usulan: Terkumpul data transaksi selama 7 hari",
+          "timeframe": "Usulan: 1 minggu"
+        }
+      ]
+    },
+    "memory_candidates": [
+      {
+        "fact_text": "Pesanan dicatat manual di kasir.",
+        "source_owner_message_ids": [
+          "20000000-0000-4000-8000-000000000002"
+        ]
+      }
+    ],
+    "model_id": "mock-provider-no-live",
+    "prompt_version": "consultation-solution-v6"
+  },
+  "candidate_provenance": [
+    {
+      "fact_text": "Pesanan dicatat manual di kasir.",
+      "source_owner_message_ids": [
+        "20000000-0000-4000-8000-000000000002"
+      ],
+      "source_owner_message": "Pesanan dicatat manual di kasir."
+    }
+  ],
+  "server_request_unchanged": true,
+  "confirmed_memories_count_unchanged": true,
+  "protobuf_round_trip": true
+}

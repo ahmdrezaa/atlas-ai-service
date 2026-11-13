@@ -1,5 +1,9 @@
 # Milestone 4C.1 — Solution Validation Alignment
 
+Follow-up: [P0 Live Solution Generation](p0-live-solution.md) records a later fresh
+Gemini Solution and Python gRPC round trip with all acceptance stages PASS. The
+failed 4C.1 invocation and conclusions below remain historical evidence.
+
 Tanggal audit: 13 November 2026, Asia/Jakarta.
 
 **Alignment dan regression selesai; tujuan Solution live + gRPC belum tercapai.**

@@ -1,0 +1,754 @@
+{
+  "evaluation_report_version": 2,
+  "dataset_version": "grounding-synthetic-v1",
+  "grounding_rule_version": "grounding-rules-v3",
+  "dataset_sha256": "e5393728110919e8ff24fcdd13c4107f9c50e766bc1da766f5c6d2517ae123a0",
+  "label_status": "developer-proposed labels for human review; not independently adjudicated or held out",
+  "verifier_prompt_version": "grounding-evaluation-v1",
+  "model_id": null,
+  "live_configuration": null,
+  "production_extra_model_invocations": 0,
+  "evaluation_type": "DETERMINISTIC_RULES_ONLY",
+  "rule_suite_latency_ms": 6.208,
+  "rule_only_latency_ms": 3.901,
+  "live_calls": [],
+  "summaries": {
+    "structural": {
+      "cases": 50,
+      "scored_cases": 50,
+      "by_expected_label": {
+        "SUPPORTED": {
+          "cases": 16,
+          "accepted": 12,
+          "labeled_cases": 0,
+          "label_correct": null
+        },
+        "CONTRADICTED": {
+          "cases": 7,
+          "accepted": 4,
+          "labeled_cases": 0,
+          "label_correct": null
+        },
+        "INSUFFICIENT_EVIDENCE": {
+          "cases": 16,
+          "accepted": 12,
+          "labeled_cases": 0,
+          "label_correct": null
+        },
+        "NOT_APPLICABLE": {
+          "cases": 11,
+          "accepted": 11,
+          "labeled_cases": 0,
+          "label_correct": null
+        }
+      },
+      "false_acceptance": 16,
+      "false_rejection": 4,
+      "positive_cases_rejected_due_to_error": 0,
+      "confusion": {
+        "SUPPORTED -> STRUCTURAL_ONLY": 16,
+        "NOT_APPLICABLE -> STRUCTURAL_ONLY": 11,
+        "INSUFFICIENT_EVIDENCE -> STRUCTURAL_ONLY": 16,
+        "CONTRADICTED -> STRUCTURAL_ONLY": 7
+      },
+      "errors": 0
+    },
+    "rules": {
+      "cases": 50,
+      "scored_cases": 50,
+      "by_expected_label": {
+        "SUPPORTED": {
+          "cases": 16,
+          "accepted": 11,
+          "labeled_cases": 16,
+          "label_correct": 15
+        },
+        "CONTRADICTED": {
+          "cases": 7,
+          "accepted": 0,
+          "labeled_cases": 7,
+          "label_correct": 7
+        },
+        "INSUFFICIENT_EVIDENCE": {
+          "cases": 16,
+          "accepted": 0,
+          "labeled_cases": 16,
+          "label_correct": 16
+        },
+        "NOT_APPLICABLE": {
+          "cases": 11,
+          "accepted": 11,
+          "labeled_cases": 11,
+          "label_correct": 11
+        }
+      },
+      "false_acceptance": 0,
+      "false_rejection": 5,
+      "positive_cases_rejected_due_to_error": 0,
+      "confusion": {
+        "SUPPORTED -> SUPPORTED": 15,
+        "NOT_APPLICABLE -> NOT_APPLICABLE": 11,
+        "SUPPORTED -> INSUFFICIENT_EVIDENCE": 1,
+        "INSUFFICIENT_EVIDENCE -> INSUFFICIENT_EVIDENCE": 16,
+        "CONTRADICTED -> CONTRADICTED": 7
+      },
+      "errors": 0
+    }
+  },
+  "rows": {
+    "structural": [
+      {
+        "id": "customer_excerpt",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "customer_paraphrase",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "bread_paraphrase",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "owner_attributed",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "budget_attributed",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "owner_negative",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "memory_fact",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "memory_hours",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "sql_count",
+        "expected": "SUPPORTED",
+        "accepted": false
+      },
+      {
+        "id": "sql_rating",
+        "expected": "SUPPORTED",
+        "accepted": false
+      },
+      {
+        "id": "sql_multiple",
+        "expected": "SUPPORTED",
+        "accepted": false
+      },
+      {
+        "id": "sql_words_correct",
+        "expected": "SUPPORTED",
+        "accepted": false
+      },
+      {
+        "id": "customer_two_sources",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "two_owner_statements",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "note_topic",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "tentative_hypothesis",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "unknown_cause",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "observe_action",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "proposed_shift_action",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "target_proposal",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "time_proposal",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "measurement_metric",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "conditional_proposal",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "supported_action_premise",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "wider_positive_paraphrase",
+        "expected": "SUPPORTED",
+        "accepted": true
+      },
+      {
+        "id": "polite_action",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      },
+      {
+        "id": "valid_id_irrelevant_source",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "negated_source",
+        "expected": "CONTRADICTED",
+        "accepted": true
+      },
+      {
+        "id": "opposite_adjective",
+        "expected": "CONTRADICTED",
+        "accepted": true
+      },
+      {
+        "id": "all_customers",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "majority_from_sample",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "correlation_to_cause",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": false
+      },
+      {
+        "id": "hypothesis_as_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "metric_renamed",
+        "expected": "CONTRADICTED",
+        "accepted": false
+      },
+      {
+        "id": "metric_meaning_swapped",
+        "expected": "CONTRADICTED",
+        "accepted": false
+      },
+      {
+        "id": "spelled_number_wrong",
+        "expected": "CONTRADICTED",
+        "accepted": false
+      },
+      {
+        "id": "sql_marker_unrelated_premise",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": false
+      },
+      {
+        "id": "owner_promoted_to_verified",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "owner_attribution_lost",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "owner_negation_reversed",
+        "expected": "CONTRADICTED",
+        "accepted": true
+      },
+      {
+        "id": "historical_ai_as_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": false
+      },
+      {
+        "id": "injection_laundered_into_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "unavailable_action_premise",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "action_because_unknown",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "target_historical",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": false
+      },
+      {
+        "id": "multisource_reference_missing",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "hypothesis_with_hidden_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "measurement_with_hidden_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "accepted": true
+      },
+      {
+        "id": "owner_memory_conflict",
+        "expected": "CONTRADICTED",
+        "accepted": true
+      },
+      {
+        "id": "measurement_target_numeric",
+        "expected": "NOT_APPLICABLE",
+        "accepted": true
+      }
+    ],
+    "rules": [
+      {
+        "id": "customer_excerpt",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance",
+        "latency_ms": 0.39222700070240535
+      },
+      {
+        "id": "customer_paraphrase",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance",
+        "latency_ms": 0.15204199735308066
+      },
+      {
+        "id": "bread_paraphrase",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance",
+        "latency_ms": 0.10298999768565409
+      },
+      {
+        "id": "owner_attributed",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance",
+        "latency_ms": 0.12722400060738437
+      },
+      {
+        "id": "budget_attributed",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance",
+        "latency_ms": 0.10398999802418984
+      },
+      {
+        "id": "owner_negative",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance",
+        "latency_ms": 0.14507999730994925
+      },
+      {
+        "id": "memory_fact",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance",
+        "latency_ms": 0.10517999908188358
+      },
+      {
+        "id": "memory_hours",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance",
+        "latency_ms": 0.07623200144735165
+      },
+      {
+        "id": "sql_count",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": false,
+        "reason": "bounded_sql_claim",
+        "latency_ms": 0.5276379997667391
+      },
+      {
+        "id": "sql_rating",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": false,
+        "reason": "bounded_sql_claim",
+        "latency_ms": 0.031771000067237765
+      },
+      {
+        "id": "sql_multiple",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": false,
+        "reason": "bounded_sql_claim",
+        "latency_ms": 0.033039999834727496
+      },
+      {
+        "id": "sql_words_correct",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": false,
+        "reason": "bounded_sql_claim",
+        "latency_ms": 0.09346699880552478
+      },
+      {
+        "id": "customer_two_sources",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance",
+        "latency_ms": 0.10022700007539243
+      },
+      {
+        "id": "two_owner_statements",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance",
+        "latency_ms": 0.09257900092052296
+      },
+      {
+        "id": "note_topic",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "accepted": true,
+        "reason": "all_clauses_supported_with_provenance",
+        "latency_ms": 0.10109399954671971
+      },
+      {
+        "id": "tentative_hypothesis",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "tentative_hypothesis_not_established_cause",
+        "latency_ms": 0.1506080006947741
+      },
+      {
+        "id": "unknown_cause",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "tentative_hypothesis_not_established_cause",
+        "latency_ms": 0.06779099931009114
+      },
+      {
+        "id": "observe_action",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise",
+        "latency_ms": 0.32613899747957475
+      },
+      {
+        "id": "proposed_shift_action",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise",
+        "latency_ms": 0.029843999072909355
+      },
+      {
+        "id": "target_proposal",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise",
+        "latency_ms": 0.012335000064922497
+      },
+      {
+        "id": "time_proposal",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise",
+        "latency_ms": 0.010073999874293804
+      },
+      {
+        "id": "measurement_metric",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise",
+        "latency_ms": 0.06801899871788919
+      },
+      {
+        "id": "conditional_proposal",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise",
+        "latency_ms": 0.11702899791998789
+      },
+      {
+        "id": "supported_action_premise",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise",
+        "latency_ms": 0.08573300146963447
+      },
+      {
+        "id": "wider_positive_paraphrase",
+        "expected": "SUPPORTED",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "no_bounded_source_proof_for_clause",
+        "latency_ms": 0.07926800026325509
+      },
+      {
+        "id": "polite_action",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise",
+        "latency_ms": 0.13937900075688958
+      },
+      {
+        "id": "valid_id_irrelevant_source",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "no_bounded_source_proof_for_clause",
+        "latency_ms": 0.05143100133864209
+      },
+      {
+        "id": "negated_source",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "cited_source_contradicts_clause",
+        "latency_ms": 0.12021099973935634
+      },
+      {
+        "id": "opposite_adjective",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "cited_source_contradicts_clause",
+        "latency_ms": 0.03750399991986342
+      },
+      {
+        "id": "all_customers",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "unproven_scope_causality_or_independent_verification",
+        "latency_ms": 0.0036609999369829893
+      },
+      {
+        "id": "majority_from_sample",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "unproven_scope_causality_or_independent_verification",
+        "latency_ms": 0.0033079995773732662
+      },
+      {
+        "id": "correlation_to_cause",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "unproven_scope_causality_or_independent_verification",
+        "latency_ms": 0.0048770016292110085
+      },
+      {
+        "id": "hypothesis_as_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "unproven_scope_causality_or_independent_verification",
+        "latency_ms": 0.005230998795013875
+      },
+      {
+        "id": "metric_renamed",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "sql_marker_metric_relabelled",
+        "latency_ms": 0.019674000213854015
+      },
+      {
+        "id": "metric_meaning_swapped",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "sql_marker_metric_relabelled",
+        "latency_ms": 0.0165250021382235
+      },
+      {
+        "id": "spelled_number_wrong",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "spelled_quantity_contradicts_sql",
+        "latency_ms": 0.03314900095574558
+      },
+      {
+        "id": "sql_marker_unrelated_premise",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "unproven_scope_causality_or_independent_verification",
+        "latency_ms": 0.003058001311728731
+      },
+      {
+        "id": "owner_promoted_to_verified",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "unproven_scope_causality_or_independent_verification",
+        "latency_ms": 0.004721001459984109
+      },
+      {
+        "id": "owner_attribution_lost",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "no_cited_source_with_required_provenance",
+        "latency_ms": 0.006656002369709313
+      },
+      {
+        "id": "owner_negation_reversed",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "cited_source_contradicts_clause",
+        "latency_ms": 0.03561500125215389
+      },
+      {
+        "id": "historical_ai_as_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "no_cited_source_with_required_provenance",
+        "latency_ms": 0.006088001100579277
+      },
+      {
+        "id": "injection_laundered_into_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "no_cited_source_with_required_provenance",
+        "latency_ms": 0.0060820020735263824
+      },
+      {
+        "id": "unavailable_action_premise",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "proposal_contains_unproved_premise_or_unresolved_language",
+        "latency_ms": 0.030619998142356053
+      },
+      {
+        "id": "action_because_unknown",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "proposal_contains_unproved_premise_or_unresolved_language",
+        "latency_ms": 0.054887997976038605
+      },
+      {
+        "id": "target_historical",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "proposal_contains_unproved_premise_or_unresolved_language",
+        "latency_ms": 0.008767001418164
+      },
+      {
+        "id": "multisource_reference_missing",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "no_bounded_source_proof_for_clause",
+        "latency_ms": 0.06375199882313609
+      },
+      {
+        "id": "hypothesis_with_hidden_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "unresolved_claim",
+        "latency_ms": 0.011421998351579532
+      },
+      {
+        "id": "measurement_with_hidden_fact",
+        "expected": "INSUFFICIENT_EVIDENCE",
+        "predicted": "INSUFFICIENT_EVIDENCE",
+        "accepted": false,
+        "reason": "proposal_contains_unproved_premise_or_unresolved_language",
+        "latency_ms": 0.008705002983333543
+      },
+      {
+        "id": "owner_memory_conflict",
+        "expected": "CONTRADICTED",
+        "predicted": "CONTRADICTED",
+        "accepted": false,
+        "reason": "cited_source_contradicts_clause",
+        "latency_ms": 0.08153399903676473
+      },
+      {
+        "id": "measurement_target_numeric",
+        "expected": "NOT_APPLICABLE",
+        "predicted": "NOT_APPLICABLE",
+        "accepted": true,
+        "reason": "proposal_with_no_unproved_factual_premise",
+        "latency_ms": 0.012542001059046015
+      }
+    ]
+  }
+}

@@ -49,7 +49,7 @@ def test_fixture_has_one_unknown_operational_gap_and_real_source_ids():
 
 
 def test_assessment_prompt_clarifies_single_variable_without_relaxing_guard():
-    assert PROMPT_VERSION == "consultation-assessment-v3"
+    assert PROMPT_VERSION == "consultation-assessment-v4"
     assert "ONLY ONE" in ASSESSMENT_SYSTEM_PROMPT
     assert "peak_hours_and_staffing" in ASSESSMENT_SYSTEM_PROMPT
     assert "One question mark is not enough" in ASSESSMENT_SYSTEM_PROMPT
@@ -223,19 +223,16 @@ def test_c5_numeric_false_rejection_fixed_without_whitelisting_all_its_language(
     )
     context = prepare_context(request)
     # The original output is neither rewritten nor counted as a live success.
-    validate_solution(result, context)
+    with pytest.raises(ConsultationFailure, match="no current sources"):
+        validate_solution(result, context)
     rejected = {
         claim.claim_id
         for claim in solution_claims(result)
         if evaluate_claim(claim, context).label not in {"SUPPORTED", "NOT_APPLICABLE"}
     }
     assert rejected == {
-        "recommendations[0].description",
         "customer_evidence[0].note",
         "customer_evidence[1].note",
-        "success_indicators[0].metric",
-        "success_indicators[0].target",
-        "success_indicators[0].timeframe",
     }
     assert "17.00 sampai 19.00" in result.recommendations[0].description
     assert not result.recommendations[0].description.startswith("Usulan:")

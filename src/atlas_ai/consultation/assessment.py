@@ -25,6 +25,7 @@ from pydantic import (
 )
 
 from atlas.ai.v1 import ai_pb2
+from atlas_ai.consultation.memory import MemoryProposals
 from atlas_ai.consultation.models import ConsultationContext
 from atlas_ai.consultation.prompts import ASSESSMENT_PROMPT
 
@@ -81,6 +82,7 @@ class SufficiencyAssessment(BaseModel):
     additional_question_material: bool
     repeats_existing_information: bool
     question: AssessmentQuestion | None = None
+    memory_candidates: MemoryProposals = Field(default_factory=list)
 
     @model_validator(mode="after")
     def check_decision(self):
@@ -167,6 +169,7 @@ class ContextAssessor:
         *,
         time_remaining: float | None = None,
         is_active: Callable[[], bool] | None = None,
+        timings: dict[str, float] | None = None,
     ) -> SufficiencyAssessment:
         if must_generate(context):
             return SufficiencyAssessment(
@@ -187,7 +190,43 @@ class ContextAssessor:
             stage="Assessment",
             time_remaining=time_remaining,
             is_active=is_active,
+            timings=timings,
+            provider_schema=compact_provider_schema(SufficiencyAssessment),
         )
+
+
+def compact_provider_schema(schema: type[BaseModel]) -> dict:
+    """Native provider grammar only; the complete Pydantic model validates locally."""
+    data = schema.model_json_schema()
+    definitions = data.get("$defs", {})
+    allowed = {
+        "type",
+        "properties",
+        "items",
+        "required",
+        "enum",
+        "anyOf",
+        "additionalProperties",
+    }
+
+    def compact(value):
+        if isinstance(value, list):
+            return [compact(item) for item in value]
+        if not isinstance(value, dict):
+            return value
+        if "$ref" in value:
+            return compact(definitions[value["$ref"].split("/")[-1]])
+        return {
+            key: (
+                {name: compact(item) for name, item in part.items()}
+                if key == "properties"
+                else compact(part)
+            )
+            for key, part in value.items()
+            if key in allowed
+        }
+
+    return {"title": schema.__name__, **compact(data)}
 
 
 def invoke_structured(
@@ -202,6 +241,7 @@ def invoke_structured(
     is_active: Callable[[], bool] | None = None,
     input_data: dict | None = None,
     provider_schema: dict | None = None,
+    timings: dict[str, float] | None = None,
 ) -> OutputModel:
     """Shared single-call Gemini boundary for assessment and solution generation."""
     started = time.monotonic()
@@ -261,10 +301,24 @@ def invoke_structured(
                 provider_schema if provider_schema is not None else schema,
                 method="json_schema",
             )
-            result = structured.invoke(prompt, config={"callbacks": []})
+            stage_started = time.monotonic() if timings is not None else 0
+            try:
+                result = structured.invoke(prompt, config={"callbacks": []})
+            finally:
+                if timings is not None:
+                    timings[f"{stage.lower()}.langchain_invoke_and_parse"] = (
+                        time.monotonic() - stage_started
+                    )
             if isinstance(result, BaseModel):
                 result = result.model_dump()
-            result = schema.model_validate(result)
+            stage_started = time.monotonic() if timings is not None else 0
+            try:
+                result = schema.model_validate(result)
+            finally:
+                if timings is not None:
+                    timings[f"{stage.lower()}.pydantic"] = (
+                        time.monotonic() - stage_started
+                    )
     except (ValidationError, OutputParserException):
         raise ConsultationFailure(
             grpc.StatusCode.INTERNAL, f"Invalid structured {stage.lower()} output"

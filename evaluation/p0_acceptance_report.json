@@ -1,0 +1,67 @@
+{
+  "task": "P0 Guided Consultation Live Solution",
+  "base_commit": "c3e1e589fca7333dc8189bd71ea308877a1ae682",
+  "audit_date_local": "2026-11-13",
+  "timezone": "Asia/Jakarta",
+  "acceptance": "PASSED_ON_SYNTHETIC_DEVELOPMENT_OVERRIDE_NOT_PRODUCTION_READINESS",
+  "proof_run_id": "P3",
+  "proof_is_fresh_model_invocation": true,
+  "replayed_output_used_as_grpc_response": false,
+  "stages": {
+    "Gemini Live Generation": "PASS",
+    "Pydantic Validation": "PASS",
+    "Structural Validation": "PASS",
+    "Grounding Validation": "PASS",
+    "Protobuf Mapping": "PASS",
+    "Python gRPC Live": "PASS"
+  },
+  "actual_generation_requests": 3,
+  "automatic_retries": 0,
+  "correction_invocations": 0,
+  "model_override": "gemini-3.6-flash",
+  "production_model_unchanged": "gemini-3.8-flash",
+  "prompt_version": "consultation-solution-v5",
+  "api_version": "v1beta",
+  "thinking": "LOW",
+  "max_output_tokens": 2048,
+  "durations_seconds": {
+    "rpc": 5.95992,
+    "provider": 5.885,
+    "pipeline": 5.954834,
+    "local_rpc_overhead": 0.005086,
+    "solution.langchain_invoke_and_parse": 5.90912990400102,
+    "solution.pydantic": 3.135799852316268e-05,
+    "solution.structural": 0.00019189099839422852,
+    "solution.grounding": 0.0007910979984444566,
+    "solution.protobuf_mapping": 3.8559999666176736e-05
+  },
+  "caller_deadline_seconds": 60,
+  "python_development_shared_budget_seconds": 45,
+  "remaining_at_server_entry_seconds": 59.99890899658203,
+  "entry_headroom_seconds": 14.998908996582031,
+  "deployed_go_environment_verified": false,
+  "actual_go_backend_e2e_executed": false,
+  "go_source_reference": "evaluation/solution_alignment_deadlines.json",
+  "production_timeout_changed": false,
+  "production_llm_verifier_enabled": false,
+  "memory_extraction_implemented": false,
+  "authentication_ast_unchanged": true,
+  "live_ledger_sha256": "eeb503c00d115de3351c9ee48c82a8210f24174636cb047bef2fd5391cbc729a",
+  "fresh_raw_output_sha256": "5ba66495ed3832404caf47786a25533c6314203b166b4a871b09858e8b0df721",
+  "tests": {
+    "baseline": "702 passed in 5.23s",
+    "final": "796 passed in 4.22s",
+    "runtime": "Docker Python 3.11, network disabled"
+  },
+  "ruff": {
+    "lint_application_tests_scripts": "PASS: ruff check src/atlas_ai tests scripts",
+    "format_changed_scope": "PASS, 25 files already formatted; NLP/generated formatting not changed"
+  },
+  "remaining_risks": [
+    "Provider HTTP 504 remains intermittent (P2), including at 45s budget.",
+    "Development comparator only: production gemini-3.8-flash not proven.",
+    "Necessary lexical relevance and bounded provenance are not general entailment guarantees.",
+    "Go deployment/proxy deadlines and Go backend e2e not tested.",
+    "Same 50-case labels retain one semantic abstention plus four intentional MVP SQL-output exclusions."
+  ]
+}

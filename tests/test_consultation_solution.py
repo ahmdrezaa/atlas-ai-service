@@ -1,4 +1,3 @@
-import copy
 import json
 from concurrent import futures
 from types import SimpleNamespace
@@ -22,106 +21,6 @@ from atlas_ai.consultation.prompts import SOLUTION_PROMPT_VERSION
 from atlas_ai.consultation.solution import GeneratedSolution, solution_to_proto
 
 
-@pytest.fixture
-def solution_request(valid_request):
-    request = valid_request
-    request.context.stats.CopyFrom(
-        ai_pb2.IssueStats(
-            opinion_count=10,
-            unique_feedback_count=8,
-            average_rating=3.5,
-            negative_count=6,
-            positive_count=3,
-            neutral_count=1,
-            severe_count=1,
-            not_severe_count=9,
-        )
-    )
-    request.context.evidence.add(
-        opinion_id=str(uuid4()),
-        opinion_text="Antrean lambat",
-        evidence_text="Antreannya lama sekali.",
-        full_feedback="Rotinya enak. Antreannya lama sekali.",
-        sentiment=ai_pb2.SENTIMENT_NEGATIVE,
-        severity=ai_pb2.SEVERITY_NOT_SEVERE,
-    )
-    request.context.memories.add(id=str(uuid4()), fact_text="Jumlah barista 2 orang.")
-    return request
-
-
-@pytest.fixture
-def solution_payload(solution_request):
-    oid = solution_request.context.evidence[0].opinion_id
-    refs = {"opinion_ids": [oid], "owner_message_ids": [], "memory_ids": []}
-    return {
-        "findings": [
-            {"statement": "Pelanggan menyebut antrean lama.", "references": refs},
-            {
-                "statement": "Snapshot mencatat [[stat:opinion_count=10]].",
-                # Related current evidence required by Go. It is not used as
-                # proof of the count: the marker is checked against IssueStats.
-                "references": refs,
-            },
-        ],
-        "customer_evidence": [
-            {
-                "opinion_id": oid,
-                "quote": "Antreannya lama sekali.",
-                "note": "Keluhan antrean.",
-            }
-        ],
-        "hypotheses": [
-            {
-                "statement": "Hipotesis: alur pesanan mungkin menghambat antrean; perlu diverifikasi.",
-                "confidence": "",
-                "references": refs,
-            }
-        ],
-        "recommendations": [
-            {
-                "title": "Amati alur pesanan",
-                "description": "Usulan: amati 2 shift sebelum mengubah alur.",
-                "priority": "medium",
-                "references": refs,
-            }
-        ],
-        "success_indicators": [
-            {
-                "metric": "Durasi antrean yang dicatat owner",
-                "target": "Usulan: catat menit tunggu per pesanan",
-                "timeframe": "Usulan: evaluasi setelah 1 minggu",
-            }
-        ],
-    }
-
-
-@pytest.fixture
-def solution_assessor(solution_payload):
-    factory = Mock()
-
-    def structured(schema, **kwargs):
-        result = Mock()
-        if schema is GeneratedSolution or isinstance(schema, dict):
-            result.invoke.return_value = copy.deepcopy(solution_payload)
-        else:
-            result.invoke.return_value = {
-                "decision": "GENERATE_SOLUTION",
-                "reason": "Cukup untuk langkah observasi.",
-                "problem_evidence_sufficient": True,
-                "missing_operational_information": [],
-                "relevant_business_constraints": [],
-                "additional_question_material": False,
-                "repeats_existing_information": False,
-                "question": None,
-            }
-        return result
-
-    factory.return_value.with_structured_output.side_effect = structured
-    return ContextAssessor(
-        GeminiSettings(model="mock-gemini", api_key=SecretStr("test-only")), factory
-    )
-
-
 def test_valid_solution_all_events(
     solution_request, solution_payload, solution_assessor
 ):
@@ -129,9 +28,7 @@ def test_valid_solution_all_events(
     response = ConsultationPipeline(solution_assessor).run(solution_request)
     assert response.WhichOneof("result") == "solution"
     assert all(len(getattr(response.solution, field)) for field in solution_payload)
-    assert (
-        response.solution.findings[1].statement == "Snapshot mencatat jumlah opini: 10."
-    )
+    assert response.solution.findings[1].statement == "Jumlah barista 2 orang."
     assert (
         response.solution.customer_evidence[0].quote
         == solution_payload["customer_evidence"][0]["quote"]
@@ -263,6 +160,52 @@ def test_generation_no_evidence_does_not_invoke_provider(request_factory):
         ConsultationPipeline(assessor).run(request)
     assert error.value.code == grpc.StatusCode.FAILED_PRECONDITION
     assessor.model_factory.assert_not_called()
+
+
+def test_stage_timings_are_request_local_and_include_validation_and_mapping(
+    solution_request, solution_assessor
+):
+    timings = {}
+    response = ConsultationPipeline(solution_assessor).run(
+        solution_request, timings=timings
+    )
+    assert response.WhichOneof("result") == "solution"
+    for stage in (
+        "solution.langchain_invoke_and_parse",
+        "solution.pydantic",
+        "solution.structural",
+        "solution.grounding",
+        "solution.protobuf_mapping",
+    ):
+        assert timings[stage] >= 0
+    assert all(isinstance(value, float) for value in timings.values())
+
+
+@pytest.mark.parametrize("with_reference", [False, True])
+def test_mvp_forbids_standalone_sql_even_with_a_real_but_unrelated_reference(
+    solution_request, solution_payload, with_reference
+):
+    solution_payload["findings"][0]["statement"] = (
+        "Snapshot mencatat [[stat:opinion_count=10]]."
+    )
+    if not with_reference:
+        solution_payload["findings"][0]["references"] = {}
+    with pytest.raises(ConsultationFailure):
+        solution_to_proto(
+            GeneratedSolution.model_validate(solution_payload),
+            prepare_context(solution_request),
+        )
+
+
+def test_optional_evidence_note_can_be_omitted_without_inventing_an_explanation(
+    solution_request, solution_payload
+):
+    del solution_payload["customer_evidence"][0]["note"]
+    response = solution_to_proto(
+        GeneratedSolution.model_validate(solution_payload),
+        prepare_context(solution_request),
+    )
+    assert response.customer_evidence[0].note == ""
 
 
 @pytest.mark.parametrize(
@@ -409,24 +352,25 @@ def test_statistic_missing_and_unavailable_references(
     solution_request, solution_payload
 ):
     solution_request.context.ClearField("stats")
-    with pytest.raises(ConsultationFailure, match="statistic is unavailable"):
-        solution_to_proto(
-            GeneratedSolution.model_validate(solution_payload),
-            prepare_context(solution_request),
-        )
+    # Statistics are optional context, never an output-only dependency.
+    assert solution_to_proto(
+        GeneratedSolution.model_validate(solution_payload),
+        prepare_context(solution_request),
+    ).findings
 
 
-def test_zero_values_and_decimal_statistics(solution_request, solution_payload):
+def test_zero_and_decimal_statistics_are_context_only(
+    solution_request, solution_payload
+):
     solution_request.context.stats.neutral_count = 0
     solution_payload["findings"][1]["statement"] = (
         "Snapshot: [[stat:neutral_count=0]], [[stat:average_rating=3.5]]."
     )
-    response = solution_to_proto(
-        GeneratedSolution.model_validate(solution_payload),
-        prepare_context(solution_request),
-    )
-    assert "opini netral: 0" in response.findings[1].statement
-    assert "rata-rata rating: 3.5" in response.findings[1].statement
+    with pytest.raises(ConsultationFailure, match="context-only"):
+        solution_to_proto(
+            GeneratedSolution.model_validate(solution_payload),
+            prepare_context(solution_request),
+        )
 
 
 def test_full_feedback_quote_allowed_but_normalized_opinion_is_not_source_quote(
@@ -469,6 +413,44 @@ def test_sourced_operational_numbers_are_not_ai_targets(
     )
     assert response.recommendations[0].description == action["description"]
     assert not action["description"].startswith("Usulan:")
+
+
+@pytest.mark.parametrize(
+    "description,accepted",
+    [
+        (
+            "Catat durasi transaksi kasir secara manual pada jam 17.00 hingga 19.00 tanpa membeli alat baru.",
+            True,
+        ),
+        ("Catat durasi transaksi kasir pada jam 18.00 hingga 19.00.", False),
+        ("Catat durasi transaksi kasir pada jam buka 17.00 hingga 19.00.", False),
+        ("Catat durasi transaksi kasir pada jam 19.00 hingga 17.00.", False),
+        ("Catat durasi transaksi kasir pukul 17.00–19.00.", True),
+        ("Catat durasi transaksi kasir jam 17:00-19:00.", True),
+        ("Catat durasi transaksi kasir pukul 18.00–19.00.", False),
+        ("Usulan: catat durasi transaksi kasir pada jam 18.00 hingga 19.00.", True),
+    ],
+)
+def test_action_schedule_reuses_a_cited_window_without_changing_its_meaning(
+    solution_request, solution_payload, description, accepted
+):
+    memory = solution_request.context.memories.add(
+        id=str(uuid4()), fact_text="Jam ramai pukul 17.00 sampai 19.00 setiap hari."
+    )
+    action = solution_payload["recommendations"][0]
+    action["description"] = description
+    action["references"] = {"memory_ids": [memory.id]}
+    if accepted:
+        solution_to_proto(
+            GeneratedSolution.model_validate(solution_payload),
+            prepare_context(solution_request),
+        )
+    else:
+        with pytest.raises(ConsultationFailure):
+            solution_to_proto(
+                GeneratedSolution.model_validate(solution_payload),
+                prepare_context(solution_request),
+            )
 
 
 @pytest.mark.parametrize(
@@ -548,7 +530,7 @@ def test_verified_sql_cannot_bypass_go_nonempty_reference_requirement(
     solution_request, solution_payload
 ):
     solution_payload["findings"][1]["references"] = {}
-    with pytest.raises(ConsultationFailure, match="Go requires"):
+    with pytest.raises(ConsultationFailure, match="no current sources"):
         solution_to_proto(
             GeneratedSolution.model_validate(solution_payload),
             prepare_context(solution_request),

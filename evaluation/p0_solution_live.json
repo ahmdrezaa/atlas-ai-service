@@ -1,0 +1,593 @@
+{
+  "milestone": "P0",
+  "runs": [
+    {
+      "case": "solution",
+      "model_override": "gemini-3.6-flash",
+      "turn_budget_seconds": 45.0,
+      "output_token_budget": 2048,
+      "thinking": "LOW",
+      "api_version": "v1beta",
+      "synthetic_request": {
+        "session_id": "40000000-0000-4000-8000-000000000001",
+        "request_id": "50000000-0000-4000-8000-000000000001",
+        "event": "CONSULTATION_EVENT_GENERATE_NOW",
+        "context": {
+          "issue": {
+            "id": "60000000-0000-4000-8000-000000000001",
+            "title": "Antrean"
+          },
+          "stats": {
+            "unique_feedback_count": "2",
+            "opinion_count": "2",
+            "average_rating": 3.0,
+            "negative_count": "2",
+            "not_severe_count": "2"
+          },
+          "evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "opinion_text": "Antrean lama",
+              "evidence_text": "Antreannya lama sekali.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Antreannya lama sekali.",
+              "rating": 3.0
+            },
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000002",
+              "opinion_text": "Pelayanan lambat",
+              "evidence_text": "Pelayanannya lambat.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Pelayanannya lambat.",
+              "rating": 3.0
+            }
+          ],
+          "shop": {
+            "id": "70000000-0000-4000-8000-000000000001",
+            "name": "Kedai sintetis 4C",
+            "category": "Kafe",
+            "scale": "Kecil"
+          },
+          "memories": [
+            {
+              "id": "30000000-0000-4000-8000-000000000001",
+              "fact_text": "Jam ramai pukul 17.00 sampai 19.00 setiap hari."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000002",
+              "fact_text": "Anggaran tambahan belum tersedia; langkah awal harus tanpa pembelian alat."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000003",
+              "fact_text": "Waktu observasi tersedia selama satu minggu."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000004",
+              "fact_text": "Owner ingin mengurangi antrean dengan memperbaiki alur kasir."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000005",
+              "fact_text": "Jumlah barista dua orang."
+            }
+          ]
+        },
+        "messages": [
+          {
+            "id": "20000000-0000-4000-8000-000000000001",
+            "role": "MESSAGE_ROLE_OWNER",
+            "content": "Buat langkah observasi tanpa biaya. Penyebab antrean belum diketahui."
+          }
+        ]
+      },
+      "automatic_retries": 0,
+      "bounded_corrections": 0,
+      "stage_durations_seconds": {
+        "solution.langchain_invoke_and_parse": 5.648121114001697,
+        "solution.pydantic": 4.433100184542127e-05,
+        "solution.structural": 0.0009465859984629788
+      },
+      "rpc_timeout_seconds": 60.0,
+      "configured_rpc_headroom_seconds": 15.0,
+      "server_entry_time_remaining_seconds": 60.0,
+      "pipeline_duration_seconds": 5.794177,
+      "status": "FAILED",
+      "category": "STRUCTURAL_REJECTION",
+      "grpc_status_equivalent": "INTERNAL",
+      "grpc_status_source": "application_exception",
+      "exception_chain": [
+        {
+          "type": "ConsultationFailure",
+          "http_code": null
+        }
+      ],
+      "application_error": "Invalid solution output: unverified numeric factual text; use SQL markers or a cited exact excerpt",
+      "duration_seconds": 5.794,
+      "http_events": [
+        {
+          "http_status": 200,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1beta/models/gemini-3.6-flash:generateContent"
+        }
+      ],
+      "provider_errors": [],
+      "effective_requests": [
+        {
+          "api_version": "v1beta",
+          "timeout_seconds": 44.74960704499972,
+          "max_output_tokens": 2048,
+          "thinking_level_requested": "low",
+          "actual_prompt_text_utf8_bytes": 7775,
+          "response_json_schema_utf8_bytes": 2401,
+          "effective_temperature": null,
+          "effective_thinking_config": {
+            "thinking_level": "LOW"
+          },
+          "provider_elapsed_seconds": 5.625
+        }
+      ],
+      "provider_responses": [
+        {
+          "model_version": "gemini-3.6-flash",
+          "finish_reasons": [
+            "STOP"
+          ],
+          "usage": {
+            "prompt_token_count": 2207,
+            "candidates_token_count": 1032,
+            "thoughts_token_count": null,
+            "total_token_count": 3239,
+            "cached_content_token_count": null
+          },
+          "visible_text": "{\n  \"findings\": [\n    {\n      \"statement\": \"Pelanggan menyebut: Antreannya lama sekali.\",\n      \"references\": {\n        \"opinion_ids\": [\n          \"10000000-0000-4000-8000-000000000001\"\n        ],\n        \"owner_message_ids\": [],\n        \"memory_ids\": []\n      }\n    },\n    {\n      \"statement\": \"Owner menyatakan: Buat langkah observasi tanpa biaya. Penyebab antrean belum diketahui.\",\n      \"references\": {\n        \"opinion_ids\": [],\n        \"owner_message_ids\": [\n          \"20000000-0000-4000-8000-000000000001\"\n        ],\n        \"memory_ids\": []\n      }\n    },\n    {\n      \"statement\": \"Jam ramai pukul 17.00 sampai 19.00 setiap hari.\",\n      \"references\": {\n        \"opinion_ids\": [],\n        \"owner_message_ids\": [],\n        \"memory_ids\": [\n          \"30000000-0000-4000-8000-000000000001\"\n        ]\n      }\n    }\n  ],\n  \"customer_evidence\": [\n    {\n      \"opinion_id\": \"10000000-0000-4000-8000-000000000001\",\n      \"quote\": \"Antreannya lama sekali.\",\n      \"note\": \"\"\n    },\n    {\n      \"opinion_id\": \"10000000-0000-4000-8000-000000000002\",\n      \"quote\": \"Pelayanannya lambat.\",\n      \"note\": \"\"\n    }\n  ],\n  \"hypotheses\": [\n    {\n      \"statement\": \"Hipotesis: Penyebab antrean dan pelayanan lambat belum diketahui.\",\n      \"confidence\": \"sedang\",\n      \"references\": {\n        \"opinion_ids\": [\n          \"10000000-0000-4000-8000-000000000001\",\n          \"10000000-0000-4000-8000-000000000002\"\n        ],\n        \"owner_message_ids\": [\n          \"20000000-0000-4000-8000-000000000001\"\n        ],\n        \"memory_ids\": []\n      }\n    }\n  ],\n  \"recommendations\": [\n    {\n      \"title\": \"Lakukan Observasi Alur Kasir Tanpa Biaya\",\n      \"description\": \"Catat durasi transaksi kasir secara manual pada jam 17.00 hingga 19.00 tanpa membeli alat baru.\",\n      \"priority\": \"tinggi\",\n      \"references\": {\n        \"opinion_ids\": [],\n        \"owner_message_ids\": [\n          \"20000000-0000-4000-8000-000000000001\"\n        ],\n        \"memory_ids\": [\n          \"30000000-0000-4000-8000-000000000001\",\n          \"30000000-0000-4000-8000-000000000002\",\n          \"30000000-0000-4000-8000-000000000004\"\n        ]\n      }\n    }\n  ],\n  \"success_indicators\": [\n    {\n      \"metric\": \"Catatan durasi transaksi kasir harian\",\n      \"target\": \"Usulan: Terkumpul data observasi waktu pelayanan\",\n      \"timeframe\": \"Usulan: 7 hari\"\n    }\n  ]\n}"
+        }
+      ],
+      "validation": {
+        "pydantic_schema": "PASSED",
+        "section_lengths": {
+          "findings": 3,
+          "customer_evidence": 2,
+          "hypotheses": 1,
+          "recommendations": 1,
+          "success_indicators": 1
+        },
+        "structural": "REJECTED",
+        "grounding": "NOT_REACHED",
+        "application_error": "Invalid solution output: unverified numeric factual text; use SQL markers or a cited exact excerpt"
+      },
+      "id": "P1"
+    },
+    {
+      "case": "solution",
+      "model_override": "gemini-3.6-flash",
+      "turn_budget_seconds": 45.0,
+      "output_token_budget": 2048,
+      "thinking": "LOW",
+      "api_version": "v1beta",
+      "synthetic_request": {
+        "session_id": "40000000-0000-4000-8000-000000000001",
+        "request_id": "50000000-0000-4000-8000-000000000001",
+        "event": "CONSULTATION_EVENT_GENERATE_NOW",
+        "context": {
+          "issue": {
+            "id": "60000000-0000-4000-8000-000000000001",
+            "title": "Antrean"
+          },
+          "stats": {
+            "unique_feedback_count": "2",
+            "opinion_count": "2",
+            "average_rating": 3.0,
+            "negative_count": "2",
+            "not_severe_count": "2"
+          },
+          "evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "opinion_text": "Antrean lama",
+              "evidence_text": "Antreannya lama sekali.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Antreannya lama sekali.",
+              "rating": 3.0
+            },
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000002",
+              "opinion_text": "Pelayanan lambat",
+              "evidence_text": "Pelayanannya lambat.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Pelayanannya lambat.",
+              "rating": 3.0
+            }
+          ],
+          "shop": {
+            "id": "70000000-0000-4000-8000-000000000001",
+            "name": "Kedai sintetis 4C",
+            "category": "Kafe",
+            "scale": "Kecil"
+          },
+          "memories": [
+            {
+              "id": "30000000-0000-4000-8000-000000000001",
+              "fact_text": "Jam ramai pukul 17.00 sampai 19.00 setiap hari."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000002",
+              "fact_text": "Anggaran tambahan belum tersedia; langkah awal harus tanpa pembelian alat."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000003",
+              "fact_text": "Waktu observasi tersedia selama satu minggu."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000004",
+              "fact_text": "Owner ingin mengurangi antrean dengan memperbaiki alur kasir."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000005",
+              "fact_text": "Jumlah barista dua orang."
+            }
+          ]
+        },
+        "messages": [
+          {
+            "id": "20000000-0000-4000-8000-000000000001",
+            "role": "MESSAGE_ROLE_OWNER",
+            "content": "Buat langkah observasi tanpa biaya. Penyebab antrean belum diketahui."
+          }
+        ]
+      },
+      "automatic_retries": 0,
+      "bounded_corrections": 0,
+      "stage_durations_seconds": {
+        "solution.langchain_invoke_and_parse": 44.545273186002305
+      },
+      "rpc_timeout_seconds": 60.0,
+      "configured_rpc_headroom_seconds": 15.0,
+      "server_entry_time_remaining_seconds": 60.0,
+      "pipeline_duration_seconds": 44.591488,
+      "status": "FAILED",
+      "category": "PROVIDER_HTTP_504",
+      "grpc_status_equivalent": "DEADLINE_EXCEEDED",
+      "grpc_status_source": "application_exception",
+      "exception_chain": [
+        {
+          "type": "ConsultationFailure",
+          "http_code": null
+        },
+        {
+          "type": "GoogleAPIError",
+          "http_code": 504
+        },
+        {
+          "type": "ServerError",
+          "http_code": 504
+        }
+      ],
+      "application_error": "Solution provider timed out",
+      "duration_seconds": 44.592,
+      "http_events": [
+        {
+          "http_status": 504,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1beta/models/gemini-3.6-flash:generateContent"
+        }
+      ],
+      "provider_errors": [],
+      "effective_requests": [
+        {
+          "api_version": "v1beta",
+          "timeout_seconds": 44.749591843003145,
+          "max_output_tokens": 2048,
+          "thinking_level_requested": "low",
+          "actual_prompt_text_utf8_bytes": 7775,
+          "response_json_schema_utf8_bytes": 2401,
+          "effective_temperature": null,
+          "effective_thinking_config": {
+            "thinking_level": "LOW"
+          },
+          "provider_elapsed_seconds": 44.518
+        }
+      ],
+      "provider_responses": [],
+      "validation": {
+        "structural": "NOT_REACHED",
+        "grounding": "NOT_REACHED"
+      },
+      "id": "P2"
+    },
+    {
+      "case": "grpc",
+      "model_override": "gemini-3.6-flash",
+      "turn_budget_seconds": 45.0,
+      "output_token_budget": 2048,
+      "thinking": "LOW",
+      "api_version": "v1beta",
+      "synthetic_request": {
+        "session_id": "40000000-0000-4000-8000-000000000001",
+        "request_id": "50000000-0000-4000-8000-000000000001",
+        "event": "CONSULTATION_EVENT_GENERATE_NOW",
+        "context": {
+          "issue": {
+            "id": "60000000-0000-4000-8000-000000000001",
+            "title": "Antrean"
+          },
+          "stats": {
+            "unique_feedback_count": "2",
+            "opinion_count": "2",
+            "average_rating": 3.0,
+            "negative_count": "2",
+            "not_severe_count": "2"
+          },
+          "evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "opinion_text": "Antrean lama",
+              "evidence_text": "Antreannya lama sekali.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Antreannya lama sekali.",
+              "rating": 3.0
+            },
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000002",
+              "opinion_text": "Pelayanan lambat",
+              "evidence_text": "Pelayanannya lambat.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Pelayanannya lambat.",
+              "rating": 3.0
+            }
+          ],
+          "shop": {
+            "id": "70000000-0000-4000-8000-000000000001",
+            "name": "Kedai sintetis 4C",
+            "category": "Kafe",
+            "scale": "Kecil"
+          },
+          "memories": [
+            {
+              "id": "30000000-0000-4000-8000-000000000001",
+              "fact_text": "Jam ramai pukul 17.00 sampai 19.00 setiap hari."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000002",
+              "fact_text": "Anggaran tambahan belum tersedia; langkah awal harus tanpa pembelian alat."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000003",
+              "fact_text": "Waktu observasi tersedia selama satu minggu."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000004",
+              "fact_text": "Owner ingin mengurangi antrean dengan memperbaiki alur kasir."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000005",
+              "fact_text": "Jumlah barista dua orang."
+            }
+          ]
+        },
+        "messages": [
+          {
+            "id": "20000000-0000-4000-8000-000000000001",
+            "role": "MESSAGE_ROLE_OWNER",
+            "content": "Buat langkah observasi tanpa biaya. Penyebab antrean belum diketahui."
+          }
+        ]
+      },
+      "automatic_retries": 0,
+      "bounded_corrections": 0,
+      "stage_durations_seconds": {
+        "solution.langchain_invoke_and_parse": 5.90912990400102,
+        "solution.pydantic": 3.135799852316268e-05,
+        "solution.structural": 0.00019189099839422852,
+        "solution.grounding": 0.0007910979984444566,
+        "solution.protobuf_mapping": 3.8559999666176736e-05
+      },
+      "rpc_timeout_seconds": 60.0,
+      "configured_rpc_headroom_seconds": 15.0,
+      "server_entry_time_remaining_seconds": 59.99890899658203,
+      "pipeline_duration_seconds": 5.954834,
+      "rpc_duration_seconds": 5.95992,
+      "grpc_overhead_observed_seconds": 0.005086,
+      "actual_grpc_status": "OK",
+      "result_kind": "solution",
+      "response": {
+        "solution": {
+          "findings": [
+            {
+              "statement": "Pelanggan menyebut: Antreannya lama sekali.",
+              "references": {
+                "opinion_ids": [
+                  "10000000-0000-4000-8000-000000000001"
+                ]
+              }
+            },
+            {
+              "statement": "Owner menyatakan: Buat langkah observasi tanpa biaya. Penyebab antrean belum diketahui.",
+              "references": {
+                "owner_message_ids": [
+                  "20000000-0000-4000-8000-000000000001"
+                ]
+              }
+            },
+            {
+              "statement": "Jam ramai pukul 17.00 sampai 19.00 setiap hari.",
+              "references": {
+                "memory_ids": [
+                  "30000000-0000-4000-8000-000000000001"
+                ]
+              }
+            }
+          ],
+          "customer_evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "quote": "Antreannya lama sekali."
+            },
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000002",
+              "quote": "Pelayanannya lambat."
+            }
+          ],
+          "hypotheses": [
+            {
+              "statement": "Hipotesis: Penyebab keluhan antrean pelanggan belum diketahui secara pasti dan mungkin terkait kendala alur kasir.",
+              "confidence": "sedang",
+              "references": {
+                "opinion_ids": [
+                  "10000000-0000-4000-8000-000000000001"
+                ],
+                "owner_message_ids": [
+                  "20000000-0000-4000-8000-000000000001"
+                ],
+                "memory_ids": [
+                  "30000000-0000-4000-8000-000000000004"
+                ]
+              }
+            }
+          ],
+          "recommendations": [
+            {
+              "title": "Observasi Alur Pelayanan Jam Ramai",
+              "description": "Lakukan pemantauan manual alur antrean dan transaksi kasir tanpa biaya selama jam ramai.",
+              "priority": "tinggi",
+              "references": {
+                "owner_message_ids": [
+                  "20000000-0000-4000-8000-000000000001"
+                ],
+                "memory_ids": [
+                  "30000000-0000-4000-8000-000000000001",
+                  "30000000-0000-4000-8000-000000000002"
+                ]
+              }
+            }
+          ],
+          "success_indicators": [
+            {
+              "metric": "Jumlah pencatatan durasi transaksi kasir harian",
+              "target": "Usulan: Terkumpul data transaksi selama 7 hari",
+              "timeframe": "Usulan: 1 minggu"
+            }
+          ]
+        },
+        "model_id": "gemini-3.6-flash",
+        "prompt_version": "consultation-solution-v5"
+      },
+      "protobuf_round_trip": true,
+      "go_required_references_nonempty": true,
+      "status": "PASSED",
+      "duration_seconds": 5.97,
+      "http_events": [
+        {
+          "http_status": 200,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1beta/models/gemini-3.6-flash:generateContent"
+        }
+      ],
+      "provider_errors": [],
+      "effective_requests": [
+        {
+          "api_version": "v1beta",
+          "timeout_seconds": 44.74958418499955,
+          "max_output_tokens": 2048,
+          "thinking_level_requested": "low",
+          "actual_prompt_text_utf8_bytes": 7775,
+          "response_json_schema_utf8_bytes": 2401,
+          "effective_temperature": null,
+          "effective_thinking_config": {
+            "thinking_level": "LOW"
+          },
+          "provider_elapsed_seconds": 5.885
+        }
+      ],
+      "provider_responses": [
+        {
+          "model_version": "gemini-3.6-flash",
+          "finish_reasons": [
+            "STOP"
+          ],
+          "usage": {
+            "prompt_token_count": 2207,
+            "candidates_token_count": 997,
+            "thoughts_token_count": null,
+            "total_token_count": 3204,
+            "cached_content_token_count": null
+          },
+          "visible_text": "{\n  \"findings\": [\n    {\n      \"statement\": \"Pelanggan menyebut: Antreannya lama sekali.\",\n      \"references\": {\n        \"opinion_ids\": [\n          \"10000000-0000-4000-8000-000000000001\"\n        ],\n        \"owner_message_ids\": [],\n        \"memory_ids\": []\n      }\n    },\n    {\n      \"statement\": \"Owner menyatakan: Buat langkah observasi tanpa biaya. Penyebab antrean belum diketahui.\",\n      \"references\": {\n        \"opinion_ids\": [],\n        \"owner_message_ids\": [\n          \"20000000-0000-4000-8000-000000000001\"\n        ],\n        \"memory_ids\": []\n      }\n    },\n    {\n      \"statement\": \"Jam ramai pukul 17.00 sampai 19.00 setiap hari.\",\n      \"references\": {\n        \"opinion_ids\": [],\n        \"owner_message_ids\": [],\n        \"memory_ids\": [\n          \"30000000-0000-4000-8000-000000000001\"\n        ]\n      }\n    }\n  ],\n  \"customer_evidence\": [\n    {\n      \"opinion_id\": \"10000000-0000-4000-8000-000000000001\",\n      \"quote\": \"Antreannya lama sekali.\",\n      \"note\": \"\"\n    },\n    {\n      \"opinion_id\": \"10000000-0000-4000-8000-000000000002\",\n      \"quote\": \"Pelayanannya lambat.\",\n      \"note\": \"\"\n    }\n  ],\n  \"hypotheses\": [\n    {\n      \"statement\": \"Hipotesis: Penyebab keluhan antrean pelanggan belum diketahui secara pasti dan mungkin terkait kendala alur kasir.\",\n      \"confidence\": \"sedang\",\n      \"references\": {\n        \"opinion_ids\": [\n          \"10000000-0000-4000-8000-000000000001\"\n        ],\n        \"owner_message_ids\": [\n          \"20000000-0000-4000-8000-000000000001\"\n        ],\n        \"memory_ids\": [\n          \"30000000-0000-4000-8000-000000000004\"\n        ]\n      }\n    }\n  ],\n  \"recommendations\": [\n    {\n      \"title\": \"Observasi Alur Pelayanan Jam Ramai\",\n      \"description\": \"Lakukan pemantauan manual alur antrean dan transaksi kasir tanpa biaya selama jam ramai.\",\n      \"priority\": \"tinggi\",\n      \"references\": {\n        \"opinion_ids\": [],\n        \"owner_message_ids\": [\n          \"20000000-0000-4000-8000-000000000001\"\n        ],\n        \"memory_ids\": [\n          \"30000000-0000-4000-8000-000000000001\",\n          \"30000000-0000-4000-8000-000000000002\"\n        ]\n      }\n    }\n  ],\n  \"success_indicators\": [\n    {\n      \"metric\": \"Jumlah pencatatan durasi transaksi kasir harian\",\n      \"target\": \"Usulan: Terkumpul data transaksi selama 7 hari\",\n      \"timeframe\": \"Usulan: 1 minggu\"\n    }\n  ]\n}"
+        }
+      ],
+      "validation": {
+        "pydantic_schema": "PASSED",
+        "section_lengths": {
+          "findings": 3,
+          "customer_evidence": 2,
+          "hypotheses": 1,
+          "recommendations": 1,
+          "success_indicators": 1
+        },
+        "structural": "PASSED",
+        "grounding": "PASSED",
+        "decisions": [
+          {
+            "claim_id": "findings[0].statement",
+            "label": "SUPPORTED",
+            "reason": "all_clauses_supported_with_provenance"
+          },
+          {
+            "claim_id": "findings[1].statement",
+            "label": "SUPPORTED",
+            "reason": "all_clauses_supported_with_provenance"
+          },
+          {
+            "claim_id": "findings[2].statement",
+            "label": "SUPPORTED",
+            "reason": "all_clauses_supported_with_provenance"
+          },
+          {
+            "claim_id": "hypotheses[0].statement",
+            "label": "NOT_APPLICABLE",
+            "reason": "tentative_hypothesis_not_established_cause"
+          },
+          {
+            "claim_id": "recommendations[0].title",
+            "label": "NOT_APPLICABLE",
+            "reason": "proposal_with_no_unproved_factual_premise"
+          },
+          {
+            "claim_id": "recommendations[0].description",
+            "label": "NOT_APPLICABLE",
+            "reason": "proposal_with_no_unproved_factual_premise"
+          },
+          {
+            "claim_id": "success_indicators[0].metric",
+            "label": "NOT_APPLICABLE",
+            "reason": "proposal_with_no_unproved_factual_premise"
+          },
+          {
+            "claim_id": "success_indicators[0].target",
+            "label": "NOT_APPLICABLE",
+            "reason": "proposal_with_no_unproved_factual_premise"
+          },
+          {
+            "claim_id": "success_indicators[0].timeframe",
+            "label": "NOT_APPLICABLE",
+            "reason": "proposal_with_no_unproved_factual_premise"
+          }
+        ]
+      },
+      "spend_prerequisite": {
+        "type": "UNMODIFIED_SAVED_LIVE_OUTPUT_REVALIDATED_NOT_NEW_LIVE_SUCCESS",
+        "original_run_id": "P1",
+        "original_status": "FAILED",
+        "raw_output_sha256": "44e7cd22d56dc20ab9d49f0c9563c698efad1b3bfa8b2ee1d757d87d014a60a6",
+        "pydantic_structural_grounding_protobuf": "PASSED",
+        "used_as_rpc_response": false
+      },
+      "id": "P3"
+    }
+  ],
+  "production_model_unchanged": "gemini-3.8-flash"
+}

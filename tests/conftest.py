@@ -1,7 +1,9 @@
+import copy
 from unittest.mock import Mock
 from uuid import uuid4
 
 import pytest
+from pydantic import SecretStr
 
 from atlas.ai.v1 import ai_pb2
 from atlas_ai.consultation.assessment import (
@@ -9,6 +11,7 @@ from atlas_ai.consultation.assessment import (
     GeminiSettings,
     SufficiencyAssessment,
 )
+from atlas_ai.consultation.solution import GeneratedSolution
 
 
 @pytest.fixture(scope="module")
@@ -27,6 +30,106 @@ def generate_assessor():
         )
     )
     return assessor
+
+
+@pytest.fixture
+def solution_request(valid_request):
+    request = valid_request
+    request.context.stats.CopyFrom(
+        ai_pb2.IssueStats(
+            opinion_count=10,
+            unique_feedback_count=8,
+            average_rating=3.5,
+            negative_count=6,
+            positive_count=3,
+            neutral_count=1,
+            severe_count=1,
+            not_severe_count=9,
+        )
+    )
+    request.context.evidence.add(
+        opinion_id=str(uuid4()),
+        opinion_text="Antrean lambat",
+        evidence_text="Antreannya lama sekali.",
+        full_feedback="Rotinya enak. Antreannya lama sekali.",
+        sentiment=ai_pb2.SENTIMENT_NEGATIVE,
+        severity=ai_pb2.SEVERITY_NOT_SEVERE,
+    )
+    request.context.memories.add(id=str(uuid4()), fact_text="Jumlah barista 2 orang.")
+    return request
+
+
+@pytest.fixture
+def solution_payload(solution_request):
+    oid = solution_request.context.evidence[0].opinion_id
+    refs = {"opinion_ids": [oid], "owner_message_ids": [], "memory_ids": []}
+    return {
+        "findings": [
+            {"statement": "Pelanggan menyebut antrean lama.", "references": refs},
+            {
+                "statement": "Jumlah barista 2 orang.",
+                "references": {"memory_ids": [solution_request.context.memories[0].id]},
+            },
+        ],
+        "customer_evidence": [
+            {
+                "opinion_id": oid,
+                "quote": "Antreannya lama sekali.",
+                "note": "Keluhan antrean.",
+            }
+        ],
+        "hypotheses": [
+            {
+                "statement": "Hipotesis: alur pesanan mungkin menghambat antrean; perlu diverifikasi.",
+                "confidence": "",
+                "references": refs,
+            }
+        ],
+        "recommendations": [
+            {
+                "title": "Amati alur pesanan",
+                "description": "Usulan: amati 2 shift sebelum mengubah alur.",
+                "priority": "medium",
+                "references": refs,
+            }
+        ],
+        "success_indicators": [
+            {
+                "metric": "Durasi antrean yang dicatat owner",
+                "target": "Usulan: catat menit tunggu per pesanan",
+                "timeframe": "Usulan: evaluasi setelah 1 minggu",
+            }
+        ],
+    }
+
+
+@pytest.fixture
+def solution_assessor(solution_payload):
+    factory = Mock()
+
+    def structured(schema, **kwargs):
+        result = Mock()
+        if schema is GeneratedSolution or (
+            isinstance(schema, dict) and schema.get("title") == "GeneratedSolutionTurn"
+        ):
+            result.invoke.return_value = copy.deepcopy(solution_payload)
+        else:
+            result.invoke.return_value = {
+                "decision": "GENERATE_SOLUTION",
+                "reason": "Cukup untuk langkah observasi.",
+                "problem_evidence_sufficient": True,
+                "missing_operational_information": [],
+                "relevant_business_constraints": [],
+                "additional_question_material": False,
+                "repeats_existing_information": False,
+                "question": None,
+            }
+        return result
+
+    factory.return_value.with_structured_output.side_effect = structured
+    return ContextAssessor(
+        GeminiSettings(model="mock-gemini", api_key=SecretStr("test-only")), factory
+    )
 
 
 EVENTS = [

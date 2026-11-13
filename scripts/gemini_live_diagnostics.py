@@ -9,6 +9,7 @@ import importlib.metadata
 import json
 import os
 import time
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 
@@ -143,6 +144,7 @@ class Capture:
         self.responses = []
         self.requests = []
         self.provider_errors = []
+        self.invocations = []
 
     def response_hook(self, response):
         self.http_events.append(
@@ -254,11 +256,28 @@ class Capture:
                 }
             )
             started = time.perf_counter()
+            invocation = {
+                "started_at": datetime.now(UTC).isoformat(),
+                "schema_title": (config.response_json_schema or {}).get("title"),
+            }
+            self.invocations.append(invocation)
+            http_start = len(self.http_events)
             try:
                 response = original(**request)
+            except Exception as error:  # Record types/codes, never bodies; re-raise.
+                invocation["exception_type"] = type(error).__name__
+                code = getattr(error, "code", None)
+                invocation["provider_code"] = code if isinstance(code, int) else None
+                raise
             finally:
-                self.requests[-1]["provider_elapsed_seconds"] = round(
-                    time.perf_counter() - started, 3
+                elapsed = round(time.perf_counter() - started, 3)
+                self.requests[-1]["provider_elapsed_seconds"] = elapsed
+                invocation.update(
+                    ended_at=datetime.now(UTC).isoformat(),
+                    duration_seconds=elapsed,
+                    http_statuses=[
+                        e["http_status"] for e in self.http_events[http_start:]
+                    ],
                 )
             self.record(response)
             return response
@@ -360,7 +379,7 @@ def run_stage(stage, settings, *, api_version=None, thinking=None):
                             else None,
                         }
                     else:
-                        result = SolutionGenerator(assessor).generate(
+                        result, _ = SolutionGenerator(assessor).generate(
                             context, time_remaining=settings.timeout_seconds
                         )
                         row["result"] = {
@@ -393,6 +412,7 @@ def run_stage(stage, settings, *, api_version=None, thinking=None):
         http_events=capture.http_events,
         effective_requests=capture.requests,
         provider_responses=capture.responses,
+        sdk_invocations=capture.invocations,
     )
     return row
 

@@ -12,6 +12,7 @@ from atlas_ai.consultation.assessment import (
     validate_question,
 )
 from atlas_ai.consultation.context import prepare_context
+from atlas_ai.consultation.memory import memory_candidates_to_proto
 from atlas_ai.consultation.prompts import PROMPT_VERSION, SOLUTION_PROMPT_VERSION
 from atlas_ai.consultation.solution import SolutionGenerator
 
@@ -28,6 +29,7 @@ class ConsultationPipeline:
         *,
         time_remaining: float | None = None,
         is_active: Callable[[], bool] | None = None,
+        timings: dict[str, float] | None = None,
     ) -> ai_pb2.ProcessConsultationTurnResponse:
         started = time.monotonic()
         context = prepare_context(request)
@@ -54,14 +56,25 @@ class ConsultationPipeline:
                 )
             return response
 
-        def solution_response() -> ai_pb2.ProcessConsultationTurnResponse:
+        def memory_protos(proposals):
+            memory_started = time.monotonic() if timings is not None else 0
+            result = memory_candidates_to_proto(proposals, context)
+            if timings is not None:
+                timings["memory.validation_and_mapping"] = (
+                    time.monotonic() - memory_started
+                )
+            return result
+
+        def solution_response(
+            prior_candidates=(),
+        ) -> ai_pb2.ProcessConsultationTurnResponse:
+            solution, candidates = SolutionGenerator(
+                assessor, timings=timings
+            ).generate(context, time_remaining=remaining(), is_active=is_active)
             return finish_response(
                 ai_pb2.ProcessConsultationTurnResponse(
-                    solution=SolutionGenerator(assessor).generate(
-                        context,
-                        time_remaining=remaining(),
-                        is_active=is_active,
-                    ),
+                    solution=solution,
+                    memory_candidates=memory_protos([*prior_candidates, *candidates]),
                     model_id=assessor.settings.model,
                     prompt_version=SOLUTION_PROMPT_VERSION,
                 )
@@ -73,12 +86,14 @@ class ConsultationPipeline:
             context,
             time_remaining=remaining(),
             is_active=is_active,
+            timings=timings,
         )
         if must_generate(context) or assessment.decision == "GENERATE_SOLUTION":
-            return solution_response()
+            return solution_response(assessment.memory_candidates)
         return finish_response(
             ai_pb2.ProcessConsultationTurnResponse(
                 next_question=validate_question(assessment.question, context),
+                memory_candidates=memory_protos(assessment.memory_candidates),
                 model_id=assessor.settings.model,
                 prompt_version=PROMPT_VERSION,
             )

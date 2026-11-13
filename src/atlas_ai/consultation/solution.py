@@ -3,7 +3,6 @@
 import re
 import time
 from collections.abc import Callable
-from decimal import Decimal
 from typing import Annotated, Literal
 
 import grpc
@@ -13,12 +12,11 @@ from atlas.ai.v1 import ai_pb2
 from atlas_ai.consultation.assessment import (
     ConsultationFailure,
     ContextAssessor,
+    compact_provider_schema,
     invoke_structured,
 )
 from atlas_ai.consultation.grounding import (
     NUMBER_WORDS,
-    STAT,
-    STAT_LABELS,
     GroundingClaim,
     attributed_text,
     cited_sources,
@@ -26,6 +24,7 @@ from atlas_ai.consultation.grounding import (
     validate_grounding,
     verbatim_quote_supported,
 )
+from atlas_ai.consultation.memory import MemoryProposals, ProposedMemoryCandidate
 from atlas_ai.consultation.models import (
     ConsultationContext,
     ContextModel,
@@ -65,7 +64,7 @@ class GeneratedFinding(Finding):
 
 class GeneratedEvidence(SolutionEvidence):
     quote: Text
-    note: str = Field(max_length=3000)
+    note: str = Field(default="", max_length=3000)
 
 
 class GeneratedHypothesis(Hypothesis):
@@ -96,42 +95,19 @@ class GeneratedSolution(ContextModel):
     success_indicators: list[GeneratedIndicator] = Field(min_length=1, max_length=20)
 
 
+class GeneratedSolutionTurn(GeneratedSolution):
+    """Flat LLM turn output; metadata is excluded from the five-field wire Solution."""
+
+    memory_candidates: MemoryProposals = Field(default_factory=list)
+
+    def solution_output(self) -> GeneratedSolution:
+        return GeneratedSolution.model_validate(
+            self.model_dump(exclude={"memory_candidates"})
+        )
+
+
 def solution_provider_schema() -> dict:
-    """Small native JSON-schema dialect; full Pydantic constraints remain local.
-
-    Inline references and omit annotations/bounds in the provider grammar only.
-    This never changes the typed output model, reference checks or grounding.
-    """
-    schema = GeneratedSolution.model_json_schema()
-    definitions = schema.get("$defs", {})
-    allowed = {
-        "type",
-        "properties",
-        "items",
-        "required",
-        "enum",
-        "anyOf",
-        "additionalProperties",
-    }
-
-    def compact(value):
-        if isinstance(value, list):
-            return [compact(item) for item in value]
-        if not isinstance(value, dict):
-            return value
-        if "$ref" in value:
-            return compact(definitions[value["$ref"].split("/")[-1]])
-        return {
-            key: (
-                {name: compact(item) for name, item in part.items()}
-                if key == "properties"
-                else compact(part)
-            )
-            for key, part in value.items()
-            if key in allowed
-        }
-
-    return {"title": "GeneratedSolution", **compact(schema)}
+    return compact_provider_schema(GeneratedSolutionTurn)
 
 
 NUMBER = re.compile(r"\d")
@@ -169,28 +145,23 @@ def _check_numbers(
     *,
     proposal=False,
 ) -> None:
-    matches = list(STAT.finditer(text))
-    for match in matches:
-        field, value = match.groups()
-        if context.aggregate_statistics is None or field not in STAT_LABELS:
-            _reject("statistic is unavailable")
-        expected = getattr(context.aggregate_statistics, field)
-        if Decimal(value) != Decimal(str(expected)):
-            _reject("statistic contradicts IssueStats")
-    rest = STAT.sub("", text)
-    if "[[stat:" in rest:
-        _reject("malformed statistic marker")
-    is_proposal = proposal and text.startswith("Usulan:") and not matches
+    if "[[stat:" in text:
+        _reject("aggregate statistics are context-only in MVP Solution output")
+    rest = text
+    is_proposal = proposal and text.startswith("Usulan:")
     if (
-        not matches
-        and not is_proposal
+        not is_proposal
         and SQL_QUANTITY.search(rest)
         and NUMBER_WORDS.search(rest.casefold())
     ):
-        _reject("actual statistical quantities require verified IssueStats markers")
+        _reject(
+            "IssueStats aggregate quantities are context-only in MVP Solution output"
+        )
     if NUMBER.search(rest):
         if SQL_QUANTITY.search(rest) and not is_proposal:
-            _reject("actual statistical quantities require verified IssueStats markers")
+            _reject(
+                "IssueStats aggregate quantities are context-only in MVP Solution output"
+            )
         exact_excerpt = any(
             attributed_text(text).strip() in source["text"] for source in sources
         )
@@ -198,7 +169,9 @@ def _check_numbers(
             # Faithful attributed denials/uncertain owner reports may contain
             # numbers too; grounding still checks attribution and every clause.
             return
-        residual, operational_supported = operational_number_context(rest, sources)
+        residual, operational_supported = operational_number_context(
+            rest, sources, action_window=proposal
+        )
         if not operational_supported:
             _reject("operational number lacks matching cited owner/memory provenance")
         if not NUMBER.search(residual):
@@ -207,7 +180,7 @@ def _check_numbers(
             return
         if not exact_excerpt:
             _reject(
-                "unverified numeric factual text; use SQL markers or a cited exact excerpt"
+                "unverified numeric factual text; cite matching operational provenance or an exact source excerpt"
             )
 
 
@@ -221,9 +194,7 @@ def validate_solution(
         )
         if not text.strip():
             _reject("required text is blank")
-        if not sources and not (
-            isinstance(item, GeneratedFinding) and STAT.search(text)
-        ):
+        if not sources:
             _reject("claim/action has no current sources")
         _check_numbers(
             text, sources, context, proposal=isinstance(item, GeneratedRecommendation)
@@ -275,49 +246,42 @@ def solution_to_proto(
     *,
     time_remaining: float | None = None,
     is_active: Callable[[], bool] | None = None,
+    timings: dict[str, float] | None = None,
 ) -> ai_pb2.Solution:
     started = time.monotonic()
-    validate_solution(solution, context)
-    validate_grounding(
-        solution,
-        context,
-        time_remaining=None
-        if time_remaining is None
-        else time_remaining - (time.monotonic() - started),
-        is_active=is_active,
-    )
-    # A SQL marker may be semantically verifiable without opinion references,
-    # but Go's current wire validator still requires a reference on every item.
-    # Fail explicitly instead of inventing a citation just to satisfy Go.
-    for item in (*solution.findings, *solution.hypotheses, *solution.recommendations):
-        if not (
-            item.references.opinion_ids
-            or item.references.owner_message_ids
-            or item.references.memory_ids
-        ):
-            _reject("Go requires at least one current reference per claim/action")
+    stage_started = time.monotonic() if timings is not None else 0
+    try:
+        validate_solution(solution, context)
+    finally:
+        if timings is not None:
+            timings["solution.structural"] = time.monotonic() - stage_started
+    stage_started = time.monotonic() if timings is not None else 0
+    try:
+        validate_grounding(
+            solution,
+            context,
+            time_remaining=None
+            if time_remaining is None
+            else time_remaining - (time.monotonic() - started),
+            is_active=is_active,
+        )
+    finally:
+        if timings is not None:
+            timings["solution.grounding"] = time.monotonic() - stage_started
+    stage_started = time.monotonic() if timings is not None else 0
     data = solution.model_dump(mode="json")
-
-    # Replace verified internal markers only in prose; never modify quotes or UUIDs.
-    def render(text: str) -> str:
-        return STAT.sub(lambda m: f"{STAT_LABELS[m[1]]}: {m[2]}", text)
-
-    for section, fields in (
-        ("findings", ("statement",)),
-        ("hypotheses", ("statement",)),
-        ("recommendations", ("title", "description")),
-        ("success_indicators", ("metric",)),
-        ("customer_evidence", ("note",)),
-    ):
-        for item in data[section]:
-            for field in fields:
-                item[field] = render(item[field])
-    return ai_pb2.Solution(**data)
+    result = ai_pb2.Solution(**data)
+    if timings is not None:
+        timings["solution.protobuf_mapping"] = time.monotonic() - stage_started
+    return result
 
 
 class SolutionGenerator:
-    def __init__(self, assessor: ContextAssessor):
+    def __init__(
+        self, assessor: ContextAssessor, *, timings: dict[str, float] | None = None
+    ):
         self.assessor = assessor
+        self.timings = timings
 
     def generate(
         self,
@@ -325,7 +289,7 @@ class SolutionGenerator:
         *,
         time_remaining: float | None = None,
         is_active: Callable[[], bool] | None = None,
-    ) -> ai_pb2.Solution:
+    ) -> tuple[ai_pb2.Solution, list[ProposedMemoryCandidate]]:
         if not any(
             item.evidence_text.strip() or item.full_feedback.strip()
             for item in context.representative_evidence
@@ -340,19 +304,22 @@ class SolutionGenerator:
             self.assessor.settings,
             self.assessor.model_factory,
             SOLUTION_PROMPT,
-            GeneratedSolution,
+            GeneratedSolutionTurn,
             stage="Solution",
             time_remaining=time_remaining,
             is_active=is_active,
             provider_schema=solution_provider_schema(),
+            timings=self.timings,
         )
+        solution = result.solution_output()
         response = solution_to_proto(
-            result,
+            solution,
             context,
             time_remaining=None
             if time_remaining is None
             else time_remaining - (time.monotonic() - started),
             is_active=is_active,
+            timings=self.timings,
         )
         if time_remaining is not None and time.monotonic() - started >= time_remaining:
             raise ConsultationFailure(
@@ -362,4 +329,4 @@ class SolutionGenerator:
             raise ConsultationFailure(
                 grpc.StatusCode.CANCELLED, "Consultation cancelled"
             )
-        return response
+        return response, result.memory_candidates

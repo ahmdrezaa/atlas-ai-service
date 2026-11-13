@@ -1,0 +1,99 @@
+{
+  "milestone": "5",
+  "feature": "Business Memory Candidate Extraction",
+  "implementation_status": "IMPLEMENTED_AND_OFFLINE_GRPC_VERIFIED",
+  "live_status": "NOT_VALIDATED_PROVIDER_HTTP_503_TWICE",
+  "input_contract": "atlas.ai.v1.ProcessConsultationTurnRequest",
+  "output_field": "atlas.ai.v1.ProcessConsultationTurnResponse.memory_candidates",
+  "solution_component_count": 5,
+  "invocation_counts": {
+    "assessment_to_question": 1,
+    "assessment_to_solution": 2,
+    "generate_now_or_question_cap": 1,
+    "additional_calls_for_memory": 0
+  },
+  "prompt_versions": {
+    "assessment": "consultation-assessment-v4",
+    "solution": "consultation-solution-v6",
+    "memory_policy": "memory-candidates-v1"
+  },
+  "selection_policy": "LLM proposes at most five owner-only atomic verbatim facts; deterministic provenance/durability/conflict/dedup filters; no confirmation or storage.",
+  "max_candidates": 5,
+  "max_fact_length": 1000,
+  "go_limit_source_ref": "002472705b76f1f86e0b6628fc07bd6a92fe478d",
+  "go_limit_source_blob": "a42c5b6c5793a7d4f669c5cb3f33aaa72b5d436b",
+  "mock_grpc_status": "OK",
+  "mock_is_live": false,
+  "candidate_provenance": [
+    {
+      "fact_text": "Pesanan dicatat manual di kasir.",
+      "source_owner_message_ids": [
+        "20000000-0000-4000-8000-000000000002"
+      ],
+      "source_owner_message": "Pesanan dicatat manual di kasir."
+    }
+  ],
+  "server_request_unchanged": true,
+  "confirmed_memories_unchanged": true,
+  "latency": {
+    "mock_memory_validation_mapping_seconds": 0.0020898719994875137,
+    "mock_rpc_seconds": 0.02984000499782269,
+    "live_rows": [
+      {
+        "id": "M1",
+        "runner_seconds": 2.227,
+        "http_status": 503,
+        "actual_grpc_status": "UNAVAILABLE"
+      },
+      {
+        "id": "M2",
+        "runner_seconds": 1.541,
+        "http_status": 503,
+        "actual_grpc_status": "UNAVAILABLE"
+      }
+    ],
+    "live_extraction_latency_measured": false
+  },
+  "actual_live_requests": 2,
+  "automatic_retries": 0,
+  "llm_semantic_verifier_calls": 0,
+  "live_development_override": {
+    "model": "gemini-3.6-flash",
+    "api_version": "v1beta",
+    "thinking": "LOW",
+    "turn_budget_seconds": 45,
+    "rpc_timeout_seconds": 60,
+    "max_output_tokens": 2048
+  },
+  "production_model_unchanged": "gemini-3.8-flash",
+  "production_timeout_changed": false,
+  "request_sizes": {
+    "p0_prompt_bytes": 7775,
+    "m5_prompt_bytes": 9587,
+    "p0_schema_bytes": 2401,
+    "m5_schema_bytes": 2685,
+    "different_context_included": "M5 adds an explicit synthetic owner fact; byte delta is not a controlled latency experiment."
+  },
+  "tests": {
+    "baseline": "796 passed in 3.54s",
+    "final": "873 passed in 4.46s",
+    "runtime": "Docker Python 3.11, network disabled",
+    "prior_verification_before_external_package_rename": "873 passed in 7.23s"
+  },
+  "ruff": "PASS: src/atlas_ai, tests, scripts; format check consultation/tests/scripts",
+  "historical_p0_unchanged": true,
+  "limitations": [
+    "No successful live M5 schema/output was received; mock tests are not a substitute.",
+    "Durability, semantic equivalence, conflict and private-data detection are bounded; unsupported/ambiguous wording is omitted.",
+    "Recall is deliberately limited to staffing, business/busy hours, budget and order-recording forms; no general semantic guarantee.",
+    "Different owner values from confirmed memory remain proposals; Go must resolve confirmation/update lifecycle.",
+    "Additional prompt/output tokens may affect generation latency and the unchanged 2048-token budget; not measured live."
+  ],
+  "workspace_adapter_migration": {
+    "previous_import": "atlas_ai.nlp.pipeline",
+    "current_import": "atlas_ai.feedback.pipeline",
+    "reason": "Workspace folder renamed while final verification continued; old import produced 4 collection errors.",
+    "pipeline_content_modified": false,
+    "feedback_pipeline_sha256": "b9567efbaf8a49541996675192cd03790641886e538e451fcf9dbecea9b1d022"
+  }
+}

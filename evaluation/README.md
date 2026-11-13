@@ -1,5 +1,18 @@
 # Synthetic grounding evaluation artifacts
 
+Milestone 5: `m5_memory_mock_grpc.json` contains a successful authenticated gRPC
+response with a mock provider, Solution and owner-sourced candidates. It is NOT live.
+`m5_memory_live.json` records two real provider HTTP 503 failures; no live M5 output
+was validated. `m5_memory_report.json` distinguishes those results and records source
+provenance, call counts and latency limits. See `docs/business-memory-candidates.md`.
+
+P0 fresh Solution + Python gRPC success is recorded in `p0_solution_live.json` (P3),
+with all six acceptance stages in `p0_acceptance_report.json`. P1 structural failure
+and P2 HTTP 504 remain FAILED; P1 offline revalidation is not a new live success.
+`p0_c5_audit.json` records original sources and the six abstention classifications;
+`p0_grounding_rules_report.json` reruns the unchanged 50-case dataset under MVP policy.
+See `docs/p0-live-solution.md` for timings, request limits and production limitations.
+
 Milestone 4C.1 alignment: `solution_alignment_c5_audit.json` replays the unmodified
 C5; `grounding_alignment_rules_report.json` re-runs the same 50 cases.
 `solution_alignment_live.json` records one new HTTP 504 (no valid Solution, gRPC

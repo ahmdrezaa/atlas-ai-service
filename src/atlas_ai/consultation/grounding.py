@@ -31,7 +31,7 @@ STAT_LABELS = {
     "not_severe_count": "opini tidak severe",
 }
 STAT = re.compile(r"\[\[stat:([a-z_]+)=(-?\d+(?:\.\d+)?)\]\]")
-GROUNDING_RULE_VERSION = "grounding-rules-v2"
+GROUNDING_RULE_VERSION = "grounding-rules-v3"
 
 
 class GroundingLabel(str, Enum):
@@ -193,10 +193,13 @@ _OPERATIONAL = re.compile(
 _UNCERTAIN_OPERATION = re.compile(
     r"\b(tidak|bukan|belum|jangan|jika|usulan|target|rencana|mungkin|diduga|akan)\b"
 )
+_ACTION_WINDOW = re.compile(
+    r"\b(?:pada jam|jam|pukul) (\d{1,2} \d{2} sampai \d{1,2} \d{2})\b"
+)
 
 
 def operational_number_context(
-    text: str, sources: list[dict[str, str]]
+    text: str, sources: list[dict[str, str]], *, action_window: bool = False
 ) -> tuple[str, bool]:
     """Remove only proved operational fragments; return residual text and proof.
 
@@ -205,7 +208,17 @@ def operational_number_context(
     """
 
     def normalize(value):
-        return " ".join(word for word in _normal(value).split() if word != "pukul")
+        # Range punctuation equivalence only between complete clock values.
+        # This does not normalize UUIDs, quotes, SQL metrics or wire text.
+        value = re.sub(
+            r"(?<!\d)(\d{1,2}[.:]\d{2})\s*[-–—]\s*(\d{1,2}[.:]\d{2})(?!\d)",
+            r"\1 sampai \2",
+            value,
+        )
+        value = re.sub(r"\bhingga\b", "sampai", _normal(value))
+        return re.sub(
+            r"\b(jam (?:ramai|sibuk|buka|tutup|operasional)) pukul\b", r"\1", value
+        )
 
     normalized = normalize(text)
     fragments = list(_OPERATIONAL.finditer(normalized))
@@ -225,7 +238,8 @@ def operational_number_context(
         if any(
             uncertain
             and re.search(
-                pattern, " ".join(_UNCERTAIN_OPERATION.sub(" ", source).split())
+                pattern,
+                normalize(" ".join(_UNCERTAIN_OPERATION.sub(" ", source).split())),
             )
             for source, uncertain in source_clauses
         ):
@@ -237,7 +251,25 @@ def operational_number_context(
         ]
         if atom not in candidates or any(value != atom for value in candidates):
             return normalized, False
-    return _OPERATIONAL.sub(" ", normalized), True
+    residual = _OPERATIONAL.sub(" ", normalized)
+    # An action may reuse a cited clock window without asserting a new business
+    # predicate. Opening hours and busy hours remain different factual claims.
+    if action_window and not text.startswith("Usulan:"):
+        for window in list(_ACTION_WINDOW.finditer(residual)):
+            supported = False
+            for clause, uncertain in source_clauses:
+                clean = normalize(
+                    " ".join(_UNCERTAIN_OPERATION.sub(" ", clause).split())
+                )
+                for fact in _OPERATIONAL.finditer(clean):
+                    if fact[0].startswith("jam ") and window[1] in fact[0]:
+                        if uncertain:
+                            return residual, False
+                        supported = True
+            if not supported:
+                return residual, False
+            residual = residual.replace(window[0], " ", 1)
+    return residual, True
 
 
 _INSTRUCTIONS = re.compile(
@@ -256,9 +288,99 @@ _PREMISE = re.compile(
     r"\b(tersedia|memiliki|dimiliki|yang ada|yang rusak)\b", re.IGNORECASE
 )
 _ACTION = re.compile(
-    r"^(amati|catat|ukur|evaluasi|bandingkan|uji|pertimbangkan|tinjau|verifikasi|diskusikan|tambah|kurangi)\b",
+    r"^(amati|catat|ukur|evaluasi|bandingkan|uji|pertimbangkan|tinjau|verifikasi|diskusikan|tambah|kurangi|lakukan)\b",
     re.IGNORECASE,
 )
+_CURRENT_ASSERTION = re.compile(
+    r"\b(saat ini|sekarang|kenyataannya|faktanya|tercatat)\b",
+    re.IGNORECASE,
+)
+_TOPIC_STOP = {
+    "menyatakan",
+    "belum",
+    "hipotesis",
+    "pada",
+    "itu",
+    "agar",
+    "pelanggan",
+    "ini",
+    "karena",
+    "saat",
+    "oleh",
+    "owner",
+    "alur",
+    "ke",
+    "tidak",
+    "dari",
+    "diverifikasi",
+    "atau",
+    "pemilik",
+    "setiap",
+    "customer",
+    "mengatakan",
+    "telah",
+    "jumlah",
+    "waktu",
+    "jam",
+    "mungkin",
+    "proses",
+    "menurut",
+    "orang",
+    "ada",
+    "di",
+    "lama",
+    "dengan",
+    "menyebut",
+    "perlu",
+    "hari",
+    "untuk",
+    "yang",
+    "dalam",
+    "dan",
+    "sudah",
+    "diduga",
+    "penyebab",
+    "tanpa",
+    "bukan",
+    "sekali",
+}
+
+
+def _related_hypothesis(text: str, sources: list[dict[str, str]]) -> bool:
+    """Necessary lexical relevance to cited context, NOT semantic entailment.
+
+    A tentative cause need not be true, but must anchor to substantive cited words.
+    No history, uncited issue title or generic uncertainty word can supply a proof.
+    """
+
+    def words(value):
+        return {
+            word
+            for word in _normal(value).split()
+            if len(word) > 2 and not word.isdigit() and word not in _TOPIC_STOP
+        }
+
+    anchors = set().union(
+        *(
+            words(source["text"])
+            for source in sources
+            if not _INSTRUCTIONS.search(source["text"])
+        )
+    )
+    return bool(words(text) & anchors)
+
+
+def _action_framing(text: str) -> bool:
+    # Imperative, action nominal, or explicit advisory modality. These establish
+    # proposal intent only; factual premises are still verified separately.
+    return bool(
+        _ACTION.match(text)
+        or re.match(
+            r"^(?:sebaiknya|disarankan|pertimbangan untuk|pemantauan|pencatatan|pengukuran|observasi)\b",
+            text,
+            re.IGNORECASE,
+        )
+    )
 
 
 def _affirmed_part(atom: str, source: str) -> bool:
@@ -437,6 +559,17 @@ def evaluate_claim(
                 for part in clauses
             )
             and not _PREMISE.search(text)
+            and not _CURRENT_ASSERTION.search(text)
+            and not _ACHIEVED.search(text)
+            and _related_hypothesis(text, sources)
+            and all(
+                _normal(part) in {"perlu diverifikasi", "belum diketahui"}
+                or _related_hypothesis(part, sources)
+                for part in clauses
+            )
+            and not re.search(
+                r"\b(karena|sebab|mengingat|because)\b", text, re.IGNORECASE
+            )
         ):
             label, reason = (
                 GroundingLabel.NOT_APPLICABLE,
@@ -448,7 +581,9 @@ def evaluate_claim(
         # Check the existing operational premises embedded in actions instead.
         operations_supported = True
         if claim.kind == "recommendation":
-            _, operations_supported = operational_number_context(body, sources)
+            _, operations_supported = operational_number_context(
+                text, sources, action_window=True
+            )
         action, *premise = re.split(
             r"\s+(?:karena|sebab|mengingat|because)\s+",
             body,
@@ -467,15 +602,36 @@ def evaluate_claim(
                 context,
             )
             premise_ok = verdict.label == GroundingLabel.SUPPORTED
-        metric = re.match(
-            r"^(durasi|jumlah|rata-rata|persentase)\b", action, re.IGNORECASE
+        # Typed indicator fields define a variable, goal or evaluation window.
+        # They do not need an imperative verb. Explicit proposed framing and the
+        # absence of current/historical assertions matter, not their first word.
+        indicator = claim.kind in {"metric", "target", "timeframe"}
+        framing = (
+            claim.kind == "metric" or text.startswith("Usulan:")
+            if indicator
+            else _action_framing(action)
+        )
+        # Separate sentences cannot hide a new fact behind an initial imperative.
+        independent_parts = re.split(r"(?<!\d)[.;]|[.;](?!\d)", action)
+        clauses_ok = indicator or all(
+            _action_framing(part.strip()) for part in independent_parts if part.strip()
         )
         if (
             not _ACHIEVED.search(body)
+            and not _CURRENT_ASSERTION.search(body)
+            and not (
+                claim.kind == "metric"
+                and re.search(
+                    r"\b(meningkat|bertambah|berkurang|naik|turun)\b",
+                    body,
+                    re.IGNORECASE,
+                )
+            )
             and not _PREMISE.search(action)
             and operations_supported
             and premise_ok
-            and (_ACTION.match(action) or metric)
+            and framing
+            and clauses_ok
         ):
             label, reason = (
                 GroundingLabel.NOT_APPLICABLE,

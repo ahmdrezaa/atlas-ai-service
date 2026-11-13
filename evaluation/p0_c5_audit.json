@@ -1,0 +1,119 @@
+{
+  "type": "OFFLINE_C5_AUDIT_NOT_LIVE_SUCCESS",
+  "source_ledger_sha256": "fd1391443016186e2871b27c80f302321264a606fb7273c50c6f3e854c9c7e37",
+  "raw_output_sha256": "e529bf8ac7dbda78e2f381bf612249af4ed6a67ced7a0cc24cb089d01c4a18cd",
+  "rows": [
+    {
+      "claim_id": "recommendations[0].description",
+      "original_output": "Lakukan pemantauan dan pencatatan manual waktu pelayanan transaksi kasir pada jam ramai 17.00 sampai 19.00 untuk mengidentifikasi titik hambatan tanpa melakukan pembelian alat baru.",
+      "current_sources": [
+        {
+          "source_id": "20000000-0000-4000-8000-000000000001",
+          "kind": "owner",
+          "text": "Buat langkah observasi tanpa biaya. Penyebab antrean belum diketahui."
+        },
+        {
+          "source_id": "30000000-0000-4000-8000-000000000001",
+          "kind": "memory",
+          "text": "Jam ramai pukul 17.00 sampai 19.00 setiap hari."
+        },
+        {
+          "source_id": "30000000-0000-4000-8000-000000000002",
+          "kind": "memory",
+          "text": "Anggaran tambahan belum tersedia; langkah awal harus tanpa pembelian alat."
+        },
+        {
+          "source_id": "30000000-0000-4000-8000-000000000004",
+          "kind": "memory",
+          "text": "Owner ingin mengurangi antrean dengan memperbaiki alur kasir."
+        }
+      ],
+      "classification": "FALSE_REJECTION",
+      "decision_after_fix": {
+        "claim_id": "recommendations[0].description",
+        "label": "NOT_APPLICABLE",
+        "reason": "proposal_with_no_unproved_factual_premise"
+      },
+      "resolution": "Field-role/proposal intent and cited numeric provenance; no promotion of a factual premise.",
+      "indicator_provenance": null
+    },
+    {
+      "claim_id": "customer_evidence[0].note",
+      "original_output": "Keluhan pelanggan terkait waktu tunggu antrean",
+      "current_sources": [
+        {
+          "source_id": "10000000-0000-4000-8000-000000000001",
+          "kind": "customer",
+          "text": "Antreannya lama sekali.\nAntreannya lama sekali."
+        }
+      ],
+      "classification": "UNRESOLVED",
+      "decision_after_fix": {
+        "claim_id": "customer_evidence[0].note",
+        "label": "INSUFFICIENT_EVIDENCE",
+        "reason": "no_bounded_source_proof_for_clause"
+      },
+      "resolution": "Prefer empty note in new generation; do not rewrite original output or accept unproved paraphrase.",
+      "indicator_provenance": null
+    },
+    {
+      "claim_id": "customer_evidence[1].note",
+      "original_output": "Keluhan pelanggan terkait kecepatan pelayanan",
+      "current_sources": [
+        {
+          "source_id": "10000000-0000-4000-8000-000000000002",
+          "kind": "customer",
+          "text": "Pelayanannya lambat.\nPelayanannya lambat."
+        }
+      ],
+      "classification": "UNRESOLVED",
+      "decision_after_fix": {
+        "claim_id": "customer_evidence[1].note",
+        "label": "INSUFFICIENT_EVIDENCE",
+        "reason": "no_bounded_source_proof_for_clause"
+      },
+      "resolution": "Prefer empty note in new generation; do not rewrite original output or accept unproved paraphrase.",
+      "indicator_provenance": null
+    },
+    {
+      "claim_id": "success_indicators[0].metric",
+      "original_output": "Catatan durasi transaksi kasir harian",
+      "current_sources": [],
+      "classification": "FALSE_REJECTION",
+      "decision_after_fix": {
+        "claim_id": "success_indicators[0].metric",
+        "label": "NOT_APPLICABLE",
+        "reason": "proposal_with_no_unproved_factual_premise"
+      },
+      "resolution": "Field-role/proposal intent and cited numeric provenance; no promotion of a factual premise.",
+      "indicator_provenance": "Proposed measurement/goal/window, not a historical fact; protocol has no reference field here."
+    },
+    {
+      "claim_id": "success_indicators[0].target",
+      "original_output": "Usulan: Terkumpulnya data hambatan alur transaksi kasir",
+      "current_sources": [],
+      "classification": "FALSE_REJECTION",
+      "decision_after_fix": {
+        "claim_id": "success_indicators[0].target",
+        "label": "NOT_APPLICABLE",
+        "reason": "proposal_with_no_unproved_factual_premise"
+      },
+      "resolution": "Field-role/proposal intent and cited numeric provenance; no promotion of a factual premise.",
+      "indicator_provenance": "Proposed measurement/goal/window, not a historical fact; protocol has no reference field here."
+    },
+    {
+      "claim_id": "success_indicators[0].timeframe",
+      "original_output": "Usulan: Selama 7 hari pengamatan",
+      "current_sources": [],
+      "classification": "FALSE_REJECTION",
+      "decision_after_fix": {
+        "claim_id": "success_indicators[0].timeframe",
+        "label": "NOT_APPLICABLE",
+        "reason": "proposal_with_no_unproved_factual_premise"
+      },
+      "resolution": "Field-role/proposal intent and cited numeric provenance; no promotion of a factual premise.",
+      "indicator_provenance": "Proposed measurement/goal/window, not a historical fact; protocol has no reference field here."
+    }
+  ],
+  "statistics_mvp": "Standalone aggregate finding rejected even if a valid but unrelated source ID is supplied; no stats_id exists."
+}

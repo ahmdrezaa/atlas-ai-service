@@ -1,0 +1,1945 @@
+{
+  "milestone": "M6",
+  "synthetic_only": true,
+  "runs": [
+    {
+      "stage": "lc_simple",
+      "model": "gemini-3.8-flash",
+      "synthetic_only": true,
+      "configured_timeout_seconds": 10.0,
+      "output_token_budget": 256,
+      "requested_api_version": null,
+      "thinking_level_requested": "provider_default",
+      "automatic_retries": 0,
+      "status": "FAILED",
+      "category": "PROVIDER_HTTP_504",
+      "grpc_status_equivalent": "DEADLINE_EXCEEDED",
+      "grpc_status_source": "diagnostic_mapping_only",
+      "exception_chain": [
+        {
+          "type": "GoogleAPIError",
+          "http_code": 504
+        },
+        {
+          "type": "ServerError",
+          "http_code": 504
+        }
+      ],
+      "duration_seconds": 8.552,
+      "http_events": [
+        {
+          "http_status": 504,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1beta/models/gemini-3.8-flash:generateContent"
+        }
+      ],
+      "effective_requests": [
+        {
+          "api_version": "v1beta",
+          "timeout_seconds": 10.0,
+          "max_output_tokens": 256,
+          "thinking_level_requested": "provider_default",
+          "actual_prompt_text_utf8_bytes": 49,
+          "response_json_schema_utf8_bytes": 187,
+          "effective_temperature": 0.0,
+          "effective_thinking_config": null,
+          "provider_elapsed_seconds": 8.456
+        }
+      ],
+      "provider_responses": [],
+      "sdk_invocations": [
+        {
+          "started_at": "2026-11-13T00:30:03.189414+00:00",
+          "schema_title": "DiagnosticReply",
+          "exception_type": "ServerError",
+          "provider_code": 504,
+          "ended_at": "2026-11-13T00:30:11.645745+00:00",
+          "duration_seconds": 8.456,
+          "http_statuses": [
+            504
+          ]
+        }
+      ],
+      "actual_gemini_invocations": 1,
+      "category_of_test": "C_PREFLIGHT_NOT_GRPC_NOT_E2E",
+      "id": "M6-P",
+      "scenario": "preflight",
+      "diagnostic_model_override": false,
+      "requested_thinking": null,
+      "started_at": "2026-11-13T00:30:03.094341+00:00",
+      "ended_at": "2026-11-13T00:30:11.646020+00:00",
+      "total_duration_seconds": 8.551662
+    },
+    {
+      "case": "grpc",
+      "model_override": "gemini-3.8-flash",
+      "turn_budget_seconds": 30.0,
+      "output_token_budget": 2048,
+      "thinking": "provider_default",
+      "api_version": "sdk_default",
+      "started_at": "2026-11-13T00:30:32.382374+00:00",
+      "synthetic_request": {
+        "session_id": "40000000-0000-4000-8000-000000000001",
+        "request_id": "50000000-0000-4000-8000-000000000068",
+        "event": "CONSULTATION_EVENT_GENERATE_NOW",
+        "context": {
+          "issue": {
+            "id": "60000000-0000-4000-8000-000000000001",
+            "title": "Antrean"
+          },
+          "stats": {
+            "unique_feedback_count": "2",
+            "opinion_count": "2",
+            "average_rating": 3.0,
+            "negative_count": "2",
+            "not_severe_count": "2"
+          },
+          "evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "opinion_text": "Antrean lama",
+              "evidence_text": "Antreannya lama sekali.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Antreannya lama sekali.",
+              "rating": 3.0
+            },
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000002",
+              "opinion_text": "Pelayanan lambat",
+              "evidence_text": "Pelayanannya lambat.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Pelayanannya lambat.",
+              "rating": 3.0
+            }
+          ],
+          "shop": {
+            "id": "70000000-0000-4000-8000-000000000001",
+            "name": "Kedai sintetis M6",
+            "category": "Kafe",
+            "scale": "Kecil"
+          },
+          "memories": [
+            {
+              "id": "30000000-0000-4000-8000-000000000001",
+              "fact_text": "Jam ramai pukul 17.00 sampai 19.00 setiap hari."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000002",
+              "fact_text": "Anggaran tambahan belum tersedia; langkah awal harus tanpa pembelian alat."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000003",
+              "fact_text": "Waktu observasi tersedia selama satu minggu."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000004",
+              "fact_text": "Owner ingin mengurangi antrean dengan memperbaiki alur kasir."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000005",
+              "fact_text": "Jumlah barista dua orang."
+            }
+          ]
+        },
+        "messages": [
+          {
+            "id": "20000000-0000-4000-8000-000000000001",
+            "role": "MESSAGE_ROLE_OWNER",
+            "content": "Buat langkah observasi tanpa biaya. Penyebab antrean belum diketahui."
+          },
+          {
+            "id": "20000000-0000-4000-8000-000000000002",
+            "role": "MESSAGE_ROLE_OWNER",
+            "content": "Pesanan dicatat manual di kasir."
+          }
+        ]
+      },
+      "automatic_retries": 0,
+      "bounded_corrections": 0,
+      "stage_durations_seconds": {
+        "solution.langchain_invoke_and_parse": 28.581183868001972
+      },
+      "rpc_timeout_seconds": 60,
+      "configured_rpc_headroom_seconds": 30.0,
+      "rpc_started_at": "2026-11-13T00:30:32.392582+00:00",
+      "server_entry_time_remaining_seconds": 59.99911880493164,
+      "server_request_unchanged": true,
+      "pipeline_duration_seconds": 28.649576,
+      "rpc_ended_at": "2026-11-13T00:31:01.042818+00:00",
+      "rpc_duration_seconds": 28.653509,
+      "grpc_overhead_observed_seconds": 0.003933,
+      "status": "FAILED",
+      "category": "PROVIDER_HTTP_504",
+      "grpc_status_equivalent": "DEADLINE_EXCEEDED",
+      "grpc_status_source": "actual_grpc",
+      "exception_chain": [
+        {
+          "type": "_InactiveRpcError",
+          "http_code": null
+        }
+      ],
+      "actual_grpc_status": "DEADLINE_EXCEEDED",
+      "duration_seconds": 28.664,
+      "http_events": [
+        {
+          "http_status": 504,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1beta/models/gemini-3.8-flash:generateContent"
+        }
+      ],
+      "effective_requests": [
+        {
+          "api_version": "v1beta",
+          "timeout_seconds": 29.749394277001556,
+          "max_output_tokens": 2048,
+          "thinking_level_requested": "provider_default",
+          "actual_prompt_text_utf8_bytes": 9587,
+          "response_json_schema_utf8_bytes": 2685,
+          "effective_temperature": 0.0,
+          "effective_thinking_config": null,
+          "provider_elapsed_seconds": 28.547
+        }
+      ],
+      "provider_responses": [],
+      "sdk_invocations": [
+        {
+          "started_at": "2026-11-13T00:30:32.497822+00:00",
+          "schema_title": "GeneratedSolutionTurn",
+          "exception_type": "ServerError",
+          "provider_code": 504,
+          "ended_at": "2026-11-13T00:31:01.041387+00:00",
+          "duration_seconds": 28.547,
+          "http_statuses": [
+            504
+          ]
+        }
+      ],
+      "ended_at": "2026-11-13T00:31:01.044628+00:00",
+      "validation": {
+        "structural": "NOT_REACHED",
+        "grounding": "NOT_REACHED"
+      },
+      "actual_gemini_invocations": 1,
+      "dedicated_memory_invocations": 0,
+      "event": "CONSULTATION_EVENT_GENERATE_NOW",
+      "context_observations": {
+        "history_order_preserved": true,
+        "latest_owner_history_occurrences": 1,
+        "latest_owner_source_occurrences": 1,
+        "latest_owner_is_separate_context_view": true,
+        "ai_ids_excluded_from_owner_sources": true,
+        "previous_solution_source_kind": null,
+        "confirmed_memory_count": 5,
+        "asked_topics": [],
+        "skipped_topics": [],
+        "question_count": 0
+      },
+      "validation_reached": {
+        "pydantic": false,
+        "solution_structural": false,
+        "solution_grounding": false,
+        "memory": false
+      },
+      "all_response_validations": "NOT_PASSED",
+      "category_of_test": "C_REAL_PROVIDER_AUTHENTICATED_GRPC",
+      "id": "M6-D-PROD",
+      "scenario": "D",
+      "model": "gemini-3.8-flash",
+      "diagnostic_model_override": false,
+      "requested_api_version": null,
+      "requested_thinking": null,
+      "total_duration_seconds": 28.665503
+    },
+    {
+      "case": "grpc",
+      "model_override": "gemini-3.6-flash",
+      "turn_budget_seconds": 45.0,
+      "output_token_budget": 2048,
+      "thinking": "LOW",
+      "api_version": "v1beta",
+      "started_at": "2026-11-13T00:31:23.405247+00:00",
+      "synthetic_request": {
+        "session_id": "40000000-0000-4000-8000-000000000001",
+        "request_id": "50000000-0000-4000-8000-000000000068",
+        "event": "CONSULTATION_EVENT_GENERATE_NOW",
+        "context": {
+          "issue": {
+            "id": "60000000-0000-4000-8000-000000000001",
+            "title": "Antrean"
+          },
+          "stats": {
+            "unique_feedback_count": "2",
+            "opinion_count": "2",
+            "average_rating": 3.0,
+            "negative_count": "2",
+            "not_severe_count": "2"
+          },
+          "evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "opinion_text": "Antrean lama",
+              "evidence_text": "Antreannya lama sekali.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Antreannya lama sekali.",
+              "rating": 3.0
+            },
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000002",
+              "opinion_text": "Pelayanan lambat",
+              "evidence_text": "Pelayanannya lambat.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Pelayanannya lambat.",
+              "rating": 3.0
+            }
+          ],
+          "shop": {
+            "id": "70000000-0000-4000-8000-000000000001",
+            "name": "Kedai sintetis M6",
+            "category": "Kafe",
+            "scale": "Kecil"
+          },
+          "memories": [
+            {
+              "id": "30000000-0000-4000-8000-000000000001",
+              "fact_text": "Jam ramai pukul 17.00 sampai 19.00 setiap hari."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000002",
+              "fact_text": "Anggaran tambahan belum tersedia; langkah awal harus tanpa pembelian alat."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000003",
+              "fact_text": "Waktu observasi tersedia selama satu minggu."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000004",
+              "fact_text": "Owner ingin mengurangi antrean dengan memperbaiki alur kasir."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000005",
+              "fact_text": "Jumlah barista dua orang."
+            }
+          ]
+        },
+        "messages": [
+          {
+            "id": "20000000-0000-4000-8000-000000000001",
+            "role": "MESSAGE_ROLE_OWNER",
+            "content": "Buat langkah observasi tanpa biaya. Penyebab antrean belum diketahui."
+          },
+          {
+            "id": "20000000-0000-4000-8000-000000000002",
+            "role": "MESSAGE_ROLE_OWNER",
+            "content": "Pesanan dicatat manual di kasir."
+          }
+        ]
+      },
+      "automatic_retries": 0,
+      "bounded_corrections": 0,
+      "stage_durations_seconds": {
+        "solution.langchain_invoke_and_parse": 5.4963720189989544,
+        "solution.pydantic": 8.870299643604085e-05,
+        "solution.structural": 0.0014838049974059686,
+        "solution.grounding": 0.0009216559992637485
+      },
+      "rpc_timeout_seconds": 60,
+      "configured_rpc_headroom_seconds": 15.0,
+      "rpc_started_at": "2026-11-13T00:31:23.417508+00:00",
+      "server_entry_time_remaining_seconds": 59.99871349334717,
+      "server_request_unchanged": true,
+      "pipeline_duration_seconds": 5.576217,
+      "rpc_ended_at": "2026-11-13T00:31:28.992813+00:00",
+      "rpc_duration_seconds": 5.57912,
+      "grpc_overhead_observed_seconds": 0.002903,
+      "status": "FAILED",
+      "category": "GROUNDING_REJECTION",
+      "grpc_status_equivalent": "INTERNAL",
+      "grpc_status_source": "actual_grpc",
+      "exception_chain": [
+        {
+          "type": "_InactiveRpcError",
+          "http_code": null
+        }
+      ],
+      "actual_grpc_status": "INTERNAL",
+      "duration_seconds": 5.594,
+      "http_events": [
+        {
+          "http_status": 200,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1beta/models/gemini-3.6-flash:generateContent"
+        }
+      ],
+      "effective_requests": [
+        {
+          "api_version": "v1beta",
+          "timeout_seconds": 44.74926186300581,
+          "max_output_tokens": 2048,
+          "thinking_level_requested": "low",
+          "actual_prompt_text_utf8_bytes": 9587,
+          "response_json_schema_utf8_bytes": 2685,
+          "effective_temperature": null,
+          "effective_thinking_config": {
+            "thinking_level": "LOW"
+          },
+          "provider_elapsed_seconds": 5.447
+        }
+      ],
+      "provider_responses": [
+        {
+          "model_version": "gemini-3.6-flash",
+          "finish_reasons": [
+            "STOP"
+          ],
+          "usage": {
+            "prompt_token_count": 2625,
+            "candidates_token_count": 888,
+            "thoughts_token_count": null,
+            "total_token_count": 3513,
+            "cached_content_token_count": null
+          },
+          "output_sha256": "6dd90089ad6a3ae9f54fdd43b630c1a31f8759668b45dc22661161a3b55df504",
+          "output_utf8_bytes": 2126
+        }
+      ],
+      "sdk_invocations": [
+        {
+          "started_at": "2026-11-13T00:31:23.541109+00:00",
+          "schema_title": "GeneratedSolutionTurn",
+          "ended_at": "2026-11-13T00:31:28.988234+00:00",
+          "duration_seconds": 5.447,
+          "http_statuses": [
+            200
+          ]
+        }
+      ],
+      "ended_at": "2026-11-13T00:31:28.999279+00:00",
+      "validation": {
+        "pydantic_schema": "PASSED",
+        "section_lengths": {
+          "findings": 2,
+          "customer_evidence": 2,
+          "hypotheses": 1,
+          "recommendations": 1,
+          "success_indicators": 1
+        },
+        "structural": "PASSED",
+        "grounding": "REJECTED",
+        "decisions": [
+          {
+            "claim_id": "findings[0].statement",
+            "label": "SUPPORTED",
+            "reason": "all_clauses_supported_with_provenance"
+          },
+          {
+            "claim_id": "findings[1].statement",
+            "label": "SUPPORTED",
+            "reason": "all_clauses_supported_with_provenance"
+          },
+          {
+            "claim_id": "hypotheses[0].statement",
+            "label": "INSUFFICIENT_EVIDENCE",
+            "reason": "unproven_scope_causality_or_independent_verification"
+          },
+          {
+            "claim_id": "recommendations[0].title",
+            "label": "NOT_APPLICABLE",
+            "reason": "proposal_with_no_unproved_factual_premise"
+          },
+          {
+            "claim_id": "recommendations[0].description",
+            "label": "NOT_APPLICABLE",
+            "reason": "proposal_with_no_unproved_factual_premise"
+          },
+          {
+            "claim_id": "success_indicators[0].metric",
+            "label": "NOT_APPLICABLE",
+            "reason": "proposal_with_no_unproved_factual_premise"
+          },
+          {
+            "claim_id": "success_indicators[0].target",
+            "label": "NOT_APPLICABLE",
+            "reason": "proposal_with_no_unproved_factual_premise"
+          },
+          {
+            "claim_id": "success_indicators[0].timeframe",
+            "label": "NOT_APPLICABLE",
+            "reason": "proposal_with_no_unproved_factual_premise"
+          }
+        ]
+      },
+      "actual_gemini_invocations": 1,
+      "dedicated_memory_invocations": 0,
+      "event": "CONSULTATION_EVENT_GENERATE_NOW",
+      "context_observations": {
+        "history_order_preserved": true,
+        "latest_owner_history_occurrences": 1,
+        "latest_owner_source_occurrences": 1,
+        "latest_owner_is_separate_context_view": true,
+        "ai_ids_excluded_from_owner_sources": true,
+        "previous_solution_source_kind": null,
+        "confirmed_memory_count": 5,
+        "asked_topics": [],
+        "skipped_topics": [],
+        "question_count": 0
+      },
+      "validation_reached": {
+        "pydantic": true,
+        "solution_structural": true,
+        "solution_grounding": true,
+        "memory": false
+      },
+      "all_response_validations": "NOT_PASSED",
+      "category_of_test": "C_REAL_PROVIDER_AUTHENTICATED_GRPC",
+      "id": "M6-D-COMP",
+      "scenario": "D",
+      "model": "gemini-3.6-flash",
+      "diagnostic_model_override": true,
+      "requested_api_version": "v1beta",
+      "requested_thinking": "low",
+      "total_duration_seconds": 5.597826
+    },
+    {
+      "case": "grpc",
+      "model_override": "gemini-3.6-flash",
+      "turn_budget_seconds": 45.0,
+      "output_token_budget": 2048,
+      "thinking": "LOW",
+      "api_version": "v1beta",
+      "started_at": "2026-11-13T00:32:27.289317+00:00",
+      "synthetic_request": {
+        "session_id": "40000000-0000-4000-8000-000000000001",
+        "request_id": "50000000-0000-4000-8000-000000000065",
+        "event": "CONSULTATION_EVENT_START",
+        "context": {
+          "issue": {
+            "id": "60000000-0000-4000-8000-000000000001",
+            "title": "Antrean"
+          },
+          "stats": {
+            "unique_feedback_count": "2",
+            "opinion_count": "2",
+            "average_rating": 3.0,
+            "negative_count": "2",
+            "not_severe_count": "2"
+          },
+          "evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "opinion_text": "Antrean lama",
+              "evidence_text": "Antreannya lama sekali.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Antreannya lama sekali.",
+              "rating": 3.0
+            },
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000002",
+              "opinion_text": "Pelayanan lambat",
+              "evidence_text": "Pelayanannya lambat.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Pelayanannya lambat.",
+              "rating": 3.0
+            }
+          ],
+          "shop": {
+            "id": "70000000-0000-4000-8000-000000000001",
+            "name": "Kedai sintetis M6",
+            "category": "Kafe",
+            "scale": "Kecil"
+          },
+          "memories": [
+            {
+              "id": "30000000-0000-4000-8000-000000000001",
+              "fact_text": "Jam ramai pukul 17.00 sampai 19.00 setiap hari."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000002",
+              "fact_text": "Anggaran tambahan belum tersedia; langkah awal harus tanpa pembelian alat."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000003",
+              "fact_text": "Waktu observasi tersedia selama satu minggu."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000004",
+              "fact_text": "Owner ingin mengurangi antrean dengan memperbaiki alur kasir."
+            }
+          ]
+        }
+      },
+      "automatic_retries": 0,
+      "bounded_corrections": 0,
+      "stage_durations_seconds": {
+        "assessment.langchain_invoke_and_parse": 3.6837216749991057,
+        "assessment.pydantic": 3.1322000722866505e-05,
+        "memory.validation_and_mapping": 1.8549981177784503e-06
+      },
+      "rpc_timeout_seconds": 60,
+      "configured_rpc_headroom_seconds": 15.0,
+      "rpc_started_at": "2026-11-13T00:32:27.300293+00:00",
+      "server_entry_time_remaining_seconds": 59.99864959716797,
+      "server_request_unchanged": true,
+      "pipeline_duration_seconds": 3.761308,
+      "rpc_ended_at": "2026-11-13T00:32:31.068173+00:00",
+      "rpc_duration_seconds": 3.767893,
+      "grpc_overhead_observed_seconds": 0.006585,
+      "actual_grpc_status": "OK",
+      "result_kind": "next_question",
+      "response": {
+        "next_question": {
+          "topic_key": "peak_hours_staff_count",
+          "text": "Berapa jumlah staf yang bertugas melayani kasir pada jam sibuk tersebut?"
+        },
+        "model_id": "gemini-3.6-flash",
+        "prompt_version": "consultation-assessment-v4"
+      },
+      "protobuf_round_trip": true,
+      "status": "PASSED",
+      "duration_seconds": 3.782,
+      "http_events": [
+        {
+          "http_status": 200,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1beta/models/gemini-3.6-flash:generateContent"
+        }
+      ],
+      "effective_requests": [
+        {
+          "api_version": "v1beta",
+          "timeout_seconds": 44.749339103007514,
+          "max_output_tokens": 2048,
+          "thinking_level_requested": "low",
+          "actual_prompt_text_utf8_bytes": 7470,
+          "response_json_schema_utf8_bytes": 1215,
+          "effective_temperature": null,
+          "effective_thinking_config": {
+            "thinking_level": "LOW"
+          },
+          "provider_elapsed_seconds": 3.642
+        }
+      ],
+      "provider_responses": [
+        {
+          "model_version": "gemini-3.6-flash",
+          "finish_reasons": [
+            "STOP"
+          ],
+          "usage": {
+            "prompt_token_count": 2024,
+            "candidates_token_count": 154,
+            "thoughts_token_count": 193,
+            "total_token_count": 2371,
+            "cached_content_token_count": null
+          },
+          "output_sha256": "4f7f6e1925f858149000dece4b0654e65a3664658eacc23ef49e9915f6fa53eb",
+          "output_utf8_bytes": 664
+        }
+      ],
+      "sdk_invocations": [
+        {
+          "started_at": "2026-11-13T00:32:27.422294+00:00",
+          "schema_title": "SufficiencyAssessment",
+          "ended_at": "2026-11-13T00:32:31.064224+00:00",
+          "duration_seconds": 3.642,
+          "http_statuses": [
+            200
+          ]
+        }
+      ],
+      "ended_at": "2026-11-13T00:32:31.072137+00:00",
+      "validation": {
+        "question_guard": "PASSED"
+      },
+      "actual_gemini_invocations": 1,
+      "dedicated_memory_invocations": 0,
+      "event": "CONSULTATION_EVENT_START",
+      "context_observations": {
+        "history_order_preserved": true,
+        "latest_owner_history_occurrences": 0,
+        "latest_owner_source_occurrences": 0,
+        "latest_owner_is_separate_context_view": false,
+        "ai_ids_excluded_from_owner_sources": true,
+        "previous_solution_source_kind": null,
+        "confirmed_memory_count": 4,
+        "asked_topics": [],
+        "skipped_topics": [],
+        "question_count": 0
+      },
+      "validation_reached": {
+        "pydantic": true,
+        "solution_structural": false,
+        "solution_grounding": false,
+        "memory": true
+      },
+      "expected_gemini_invocations": 1,
+      "memory_validation": {
+        "returned_count": 0,
+        "live_candidate_demonstrated": false,
+        "empty_is_valid": true,
+        "owner_sources_valid": true,
+        "provenance": []
+      },
+      "response_checks": {
+        "oneof": true,
+        "metadata": true,
+        "protobuf_round_trip": true,
+        "invocation_count": true,
+        "request_unchanged": true,
+        "memory_owner_provenance": true,
+        "no_repeated_topic": true,
+        "question_guard": true
+      },
+      "all_response_validations": "PASSED",
+      "category_of_test": "C_REAL_PROVIDER_AUTHENTICATED_GRPC",
+      "id": "M6-A-COMP",
+      "scenario": "A",
+      "model": "gemini-3.6-flash",
+      "diagnostic_model_override": true,
+      "requested_api_version": "v1beta",
+      "requested_thinking": "low",
+      "total_duration_seconds": 3.78281
+    },
+    {
+      "case": "grpc",
+      "model_override": "gemini-3.6-flash",
+      "turn_budget_seconds": 45.0,
+      "output_token_budget": 2048,
+      "thinking": "LOW",
+      "api_version": "v1beta",
+      "started_at": "2026-11-13T00:32:43.437418+00:00",
+      "synthetic_request": {
+        "session_id": "40000000-0000-4000-8000-000000000001",
+        "request_id": "50000000-0000-4000-8000-000000000066",
+        "event": "CONSULTATION_EVENT_OWNER_REPLY",
+        "context": {
+          "issue": {
+            "id": "60000000-0000-4000-8000-000000000001",
+            "title": "Antrean"
+          },
+          "stats": {
+            "unique_feedback_count": "2",
+            "opinion_count": "2",
+            "average_rating": 3.0,
+            "negative_count": "2",
+            "not_severe_count": "2"
+          },
+          "evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "opinion_text": "Antrean lama",
+              "evidence_text": "Antreannya lama sekali.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Antreannya lama sekali.",
+              "rating": 3.0
+            },
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000002",
+              "opinion_text": "Pelayanan lambat",
+              "evidence_text": "Pelayanannya lambat.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Pelayanannya lambat.",
+              "rating": 3.0
+            }
+          ],
+          "shop": {
+            "id": "70000000-0000-4000-8000-000000000001",
+            "name": "Kedai sintetis M6",
+            "category": "Kafe",
+            "scale": "Kecil"
+          },
+          "memories": [
+            {
+              "id": "30000000-0000-4000-8000-000000000001",
+              "fact_text": "Jam ramai pukul 17.00 sampai 19.00 setiap hari."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000002",
+              "fact_text": "Anggaran tambahan belum tersedia; langkah awal harus tanpa pembelian alat."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000003",
+              "fact_text": "Waktu observasi tersedia selama satu minggu."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000004",
+              "fact_text": "Owner ingin mengurangi antrean dengan memperbaiki alur kasir."
+            }
+          ]
+        },
+        "messages": [
+          {
+            "id": "90000000-0000-4000-8000-000000000001",
+            "role": "MESSAGE_ROLE_ATLAS_AI",
+            "content": "Berapa barista yang bekerja saat jam ramai?",
+            "topic_key": "staffing"
+          },
+          {
+            "id": "20000000-0000-4000-8000-000000000003",
+            "role": "MESSAGE_ROLE_OWNER",
+            "content": "Saat jam ramai, dua barista menangani pesanan."
+          }
+        ],
+        "asked_topics": [
+          "staffing"
+        ],
+        "question_count": 1
+      },
+      "automatic_retries": 0,
+      "bounded_corrections": 0,
+      "stage_durations_seconds": {
+        "assessment.langchain_invoke_and_parse": 6.932332257994858,
+        "assessment.pydantic": 3.050399391213432e-05,
+        "solution.langchain_invoke_and_parse": 10.659415876005369,
+        "solution.pydantic": 0.00019767999765463173,
+        "solution.structural": 0.0018975599959958345,
+        "solution.grounding": 0.006395454001904
+      },
+      "rpc_timeout_seconds": 60,
+      "configured_rpc_headroom_seconds": 15.0,
+      "rpc_started_at": "2026-11-13T00:32:43.450710+00:00",
+      "server_entry_time_remaining_seconds": 59.99707365036011,
+      "server_request_unchanged": true,
+      "pipeline_duration_seconds": 17.736367,
+      "rpc_ended_at": "2026-11-13T00:33:01.189507+00:00",
+      "rpc_duration_seconds": 17.741557,
+      "grpc_overhead_observed_seconds": 0.00519,
+      "status": "FAILED",
+      "category": "GROUNDING_REJECTION",
+      "grpc_status_equivalent": "INTERNAL",
+      "grpc_status_source": "actual_grpc",
+      "exception_chain": [
+        {
+          "type": "_InactiveRpcError",
+          "http_code": null
+        }
+      ],
+      "actual_grpc_status": "INTERNAL",
+      "duration_seconds": 17.76,
+      "http_events": [
+        {
+          "http_status": 200,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1beta/models/gemini-3.6-flash:generateContent"
+        },
+        {
+          "http_status": 200,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1beta/models/gemini-3.6-flash:generateContent"
+        }
+      ],
+      "effective_requests": [
+        {
+          "api_version": "v1beta",
+          "timeout_seconds": 44.74904037099623,
+          "max_output_tokens": 2048,
+          "thinking_level_requested": "low",
+          "actual_prompt_text_utf8_bytes": 8118,
+          "response_json_schema_utf8_bytes": 1215,
+          "effective_temperature": null,
+          "effective_thinking_config": {
+            "thinking_level": "LOW"
+          },
+          "provider_elapsed_seconds": 6.891
+        },
+        {
+          "api_version": "v1beta",
+          "timeout_seconds": 37.728336752996256,
+          "max_output_tokens": 2048,
+          "thinking_level_requested": "low",
+          "actual_prompt_text_utf8_bytes": 9477,
+          "response_json_schema_utf8_bytes": 2685,
+          "effective_temperature": null,
+          "effective_thinking_config": {
+            "thinking_level": "LOW"
+          },
+          "provider_elapsed_seconds": 10.655
+        }
+      ],
+      "provider_responses": [
+        {
+          "model_version": "gemini-3.6-flash",
+          "finish_reasons": [
+            "STOP"
+          ],
+          "usage": {
+            "prompt_token_count": 2302,
+            "candidates_token_count": 242,
+            "thoughts_token_count": 509,
+            "total_token_count": 3053,
+            "cached_content_token_count": null
+          },
+          "output_sha256": "56d11f94a19f30d6c85b1494cb061acaa8891e91f24900e151af7945dc350bf6",
+          "output_utf8_bytes": 750
+        },
+        {
+          "model_version": "gemini-3.6-flash",
+          "finish_reasons": [
+            "STOP"
+          ],
+          "usage": {
+            "prompt_token_count": 2569,
+            "candidates_token_count": 872,
+            "thoughts_token_count": null,
+            "total_token_count": 3441,
+            "cached_content_token_count": null
+          },
+          "output_sha256": "ae35b539d8973ea00ebe5068babf7df05d8efb72080377f28bb638d022103873",
+          "output_utf8_bytes": 2087
+        }
+      ],
+      "sdk_invocations": [
+        {
+          "started_at": "2026-11-13T00:32:43.583907+00:00",
+          "schema_title": "SufficiencyAssessment",
+          "ended_at": "2026-11-13T00:32:50.474916+00:00",
+          "duration_seconds": 6.891,
+          "http_statuses": [
+            200
+          ]
+        },
+        {
+          "started_at": "2026-11-13T00:32:50.524192+00:00",
+          "schema_title": "GeneratedSolutionTurn",
+          "ended_at": "2026-11-13T00:33:01.176910+00:00",
+          "duration_seconds": 10.655,
+          "http_statuses": [
+            200
+          ]
+        }
+      ],
+      "ended_at": "2026-11-13T00:33:01.201915+00:00",
+      "validation": {
+        "pydantic_schema": "PASSED",
+        "synthetic_typed_output": {
+          "findings": [
+            {
+              "statement": "Pelanggan menyebut: Antreannya lama sekali.",
+              "references": {
+                "opinion_ids": [
+                  "10000000-0000-4000-8000-000000000001"
+                ],
+                "owner_message_ids": [],
+                "memory_ids": []
+              }
+            },
+            {
+              "statement": "Owner menyatakan: Saat jam ramai, dua barista menangani pesanan.",
+              "references": {
+                "opinion_ids": [],
+                "owner_message_ids": [
+                  "20000000-0000-4000-8000-000000000003"
+                ],
+                "memory_ids": []
+              }
+            }
+          ],
+          "customer_evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "quote": "Antreannya lama sekali.",
+              "note": ""
+            },
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000002",
+              "quote": "Pelayanannya lambat.",
+              "note": ""
+            }
+          ],
+          "hypotheses": [
+            {
+              "statement": "Hipotesis: Kecepatan pelayanan kasir atau barista mungkin belum optimal saat jam ramai.",
+              "confidence": "sedang",
+              "references": {
+                "opinion_ids": [
+                  "10000000-0000-4000-8000-000000000001"
+                ],
+                "owner_message_ids": [
+                  "20000000-0000-4000-8000-000000000003"
+                ],
+                "memory_ids": []
+              }
+            }
+          ],
+          "recommendations": [
+            {
+              "title": "Optimasi Alur Kerja Kasir",
+              "description": "Evaluasi dan tata ulang pembagian tugas barista saat pelayanan jam ramai.",
+              "priority": "tinggi",
+              "references": {
+                "opinion_ids": [],
+                "owner_message_ids": [
+                  "20000000-0000-4000-8000-000000000003"
+                ],
+                "memory_ids": [
+                  "30000000-0000-4000-8000-000000000004"
+                ]
+              }
+            }
+          ],
+          "success_indicators": [
+            {
+              "metric": "Waktu tunggu antrean pelanggan di kasir",
+              "target": "Usulan: Menurunkan waktu tunggu pelayanan",
+              "timeframe": "Usulan: 1 minggu"
+            }
+          ],
+          "memory_candidates": [
+            {
+              "fact_text": "Saat jam ramai, dua barista menangani pesanan.",
+              "source_owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ]
+            }
+          ]
+        },
+        "section_lengths": {
+          "findings": 2,
+          "customer_evidence": 2,
+          "hypotheses": 1,
+          "recommendations": 1,
+          "success_indicators": 1
+        },
+        "structural": "PASSED",
+        "grounding": "REJECTED",
+        "decisions": [
+          {
+            "claim_id": "findings[0].statement",
+            "label": "SUPPORTED",
+            "reason": "all_clauses_supported_with_provenance"
+          },
+          {
+            "claim_id": "findings[1].statement",
+            "label": "SUPPORTED",
+            "reason": "all_clauses_supported_with_provenance"
+          },
+          {
+            "claim_id": "hypotheses[0].statement",
+            "label": "NOT_APPLICABLE",
+            "reason": "tentative_hypothesis_not_established_cause"
+          },
+          {
+            "claim_id": "recommendations[0].title",
+            "label": "INSUFFICIENT_EVIDENCE",
+            "reason": "proposal_contains_unproved_premise_or_unresolved_language"
+          },
+          {
+            "claim_id": "recommendations[0].description",
+            "label": "NOT_APPLICABLE",
+            "reason": "proposal_with_no_unproved_factual_premise"
+          },
+          {
+            "claim_id": "success_indicators[0].metric",
+            "label": "NOT_APPLICABLE",
+            "reason": "proposal_with_no_unproved_factual_premise"
+          },
+          {
+            "claim_id": "success_indicators[0].target",
+            "label": "NOT_APPLICABLE",
+            "reason": "proposal_with_no_unproved_factual_premise"
+          },
+          {
+            "claim_id": "success_indicators[0].timeframe",
+            "label": "NOT_APPLICABLE",
+            "reason": "proposal_with_no_unproved_factual_premise"
+          }
+        ]
+      },
+      "actual_gemini_invocations": 2,
+      "dedicated_memory_invocations": 0,
+      "event": "CONSULTATION_EVENT_OWNER_REPLY",
+      "context_observations": {
+        "history_order_preserved": true,
+        "latest_owner_history_occurrences": 1,
+        "latest_owner_source_occurrences": 1,
+        "latest_owner_is_separate_context_view": true,
+        "ai_ids_excluded_from_owner_sources": true,
+        "previous_solution_source_kind": null,
+        "confirmed_memory_count": 4,
+        "asked_topics": [
+          "staffing"
+        ],
+        "skipped_topics": [],
+        "question_count": 1
+      },
+      "validation_reached": {
+        "pydantic": true,
+        "solution_structural": true,
+        "solution_grounding": true,
+        "memory": false
+      },
+      "all_response_validations": "NOT_PASSED",
+      "category_of_test": "C_REAL_PROVIDER_AUTHENTICATED_GRPC",
+      "id": "M6-B-COMP",
+      "scenario": "B",
+      "model": "gemini-3.6-flash",
+      "diagnostic_model_override": true,
+      "requested_api_version": "v1beta",
+      "requested_thinking": "low",
+      "total_duration_seconds": 17.767204
+    },
+    {
+      "case": "grpc",
+      "model_override": "gemini-3.6-flash",
+      "turn_budget_seconds": 45.0,
+      "output_token_budget": 2048,
+      "thinking": "LOW",
+      "api_version": "v1beta",
+      "started_at": "2026-11-13T00:33:16.426605+00:00",
+      "synthetic_request": {
+        "session_id": "40000000-0000-4000-8000-000000000001",
+        "request_id": "50000000-0000-4000-8000-000000000067",
+        "event": "CONSULTATION_EVENT_SKIP_QUESTION",
+        "context": {
+          "issue": {
+            "id": "60000000-0000-4000-8000-000000000001",
+            "title": "Antrean"
+          },
+          "stats": {
+            "unique_feedback_count": "2",
+            "opinion_count": "2",
+            "average_rating": 3.0,
+            "negative_count": "2",
+            "not_severe_count": "2"
+          },
+          "evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "opinion_text": "Antrean lama",
+              "evidence_text": "Antreannya lama sekali.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Antreannya lama sekali.",
+              "rating": 3.0
+            },
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000002",
+              "opinion_text": "Pelayanan lambat",
+              "evidence_text": "Pelayanannya lambat.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Pelayanannya lambat.",
+              "rating": 3.0
+            }
+          ],
+          "shop": {
+            "id": "70000000-0000-4000-8000-000000000001",
+            "name": "Kedai sintetis M6",
+            "category": "Kafe",
+            "scale": "Kecil"
+          },
+          "memories": [
+            {
+              "id": "30000000-0000-4000-8000-000000000001",
+              "fact_text": "Jam ramai pukul 17.00 sampai 19.00 setiap hari."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000002",
+              "fact_text": "Anggaran tambahan belum tersedia; langkah awal harus tanpa pembelian alat."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000003",
+              "fact_text": "Waktu observasi tersedia selama satu minggu."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000004",
+              "fact_text": "Owner ingin mengurangi antrean dengan memperbaiki alur kasir."
+            }
+          ]
+        },
+        "messages": [
+          {
+            "id": "90000000-0000-4000-8000-000000000001",
+            "role": "MESSAGE_ROLE_ATLAS_AI",
+            "content": "Berapa barista yang bekerja saat jam ramai?",
+            "topic_key": "staffing"
+          }
+        ],
+        "asked_topics": [
+          "staffing"
+        ],
+        "skipped_topics": [
+          "staffing"
+        ],
+        "question_count": 1
+      },
+      "automatic_retries": 0,
+      "bounded_corrections": 0,
+      "stage_durations_seconds": {
+        "assessment.langchain_invoke_and_parse": 9.121720606999588,
+        "assessment.pydantic": 2.6354995497968048e-05,
+        "solution.langchain_invoke_and_parse": 14.84130456600542,
+        "solution.pydantic": 5.052200140198693e-05,
+        "solution.structural": 0.0012718770012725145
+      },
+      "rpc_timeout_seconds": 60,
+      "configured_rpc_headroom_seconds": 15.0,
+      "rpc_started_at": "2026-11-13T00:33:16.436577+00:00",
+      "server_entry_time_remaining_seconds": 59.99914860725403,
+      "server_request_unchanged": true,
+      "pipeline_duration_seconds": 24.046064,
+      "rpc_ended_at": "2026-11-13T00:33:40.484364+00:00",
+      "rpc_duration_seconds": 24.050101,
+      "grpc_overhead_observed_seconds": 0.004037,
+      "status": "FAILED",
+      "category": "STRUCTURAL_REJECTION",
+      "grpc_status_equivalent": "INTERNAL",
+      "grpc_status_source": "actual_grpc",
+      "exception_chain": [
+        {
+          "type": "_InactiveRpcError",
+          "http_code": null
+        }
+      ],
+      "actual_grpc_status": "INTERNAL",
+      "duration_seconds": 24.063,
+      "http_events": [
+        {
+          "http_status": 200,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1beta/models/gemini-3.6-flash:generateContent"
+        },
+        {
+          "http_status": 200,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1beta/models/gemini-3.6-flash:generateContent"
+        }
+      ],
+      "effective_requests": [
+        {
+          "api_version": "v1beta",
+          "timeout_seconds": 44.74937042199599,
+          "max_output_tokens": 2048,
+          "thinking_level_requested": "low",
+          "actual_prompt_text_utf8_bytes": 7716,
+          "response_json_schema_utf8_bytes": 1215,
+          "effective_temperature": null,
+          "effective_thinking_config": {
+            "thinking_level": "LOW"
+          },
+          "provider_elapsed_seconds": 9.084
+        },
+        {
+          "api_version": "v1beta",
+          "timeout_seconds": 35.56715237999015,
+          "max_output_tokens": 2048,
+          "thinking_level_requested": "low",
+          "actual_prompt_text_utf8_bytes": 9075,
+          "response_json_schema_utf8_bytes": 2685,
+          "effective_temperature": null,
+          "effective_thinking_config": {
+            "thinking_level": "LOW"
+          },
+          "provider_elapsed_seconds": 14.839
+        }
+      ],
+      "provider_responses": [
+        {
+          "model_version": "gemini-3.6-flash",
+          "finish_reasons": [
+            "STOP"
+          ],
+          "usage": {
+            "prompt_token_count": 2125,
+            "candidates_token_count": 182,
+            "thoughts_token_count": 206,
+            "total_token_count": 2513,
+            "cached_content_token_count": null
+          },
+          "output_sha256": "1d04e78cc099e862d9c11891f60e42a8ec3492b405c79cf03cc77492a2868720",
+          "output_utf8_bytes": 657
+        },
+        {
+          "model_version": "gemini-3.6-flash",
+          "finish_reasons": [
+            "STOP"
+          ],
+          "usage": {
+            "prompt_token_count": 2392,
+            "candidates_token_count": 922,
+            "thoughts_token_count": null,
+            "total_token_count": 3314,
+            "cached_content_token_count": null
+          },
+          "output_sha256": "472c14404fba1cd9fc319dcd00a5ee15cf418fbe099783afc5c00d5c96423271",
+          "output_utf8_bytes": 2180
+        }
+      ],
+      "sdk_invocations": [
+        {
+          "started_at": "2026-11-13T00:33:16.537025+00:00",
+          "schema_title": "SufficiencyAssessment",
+          "ended_at": "2026-11-13T00:33:25.618350+00:00",
+          "duration_seconds": 9.084,
+          "http_statuses": [
+            200
+          ]
+        },
+        {
+          "started_at": "2026-11-13T00:33:25.642094+00:00",
+          "schema_title": "GeneratedSolutionTurn",
+          "ended_at": "2026-11-13T00:33:40.481421+00:00",
+          "duration_seconds": 14.839,
+          "http_statuses": [
+            200
+          ]
+        }
+      ],
+      "ended_at": "2026-11-13T00:33:40.489927+00:00",
+      "validation": {
+        "pydantic_schema": "PASSED",
+        "synthetic_typed_output": {
+          "findings": [
+            {
+              "statement": "Pelanggan menyebut: Antreannya lama sekali.",
+              "references": {
+                "opinion_ids": [
+                  "10000000-0000-4000-8000-000000000001"
+                ],
+                "owner_message_ids": [],
+                "memory_ids": []
+              }
+            },
+            {
+              "statement": "Pelanggan menyebut: Pelayanannya lambat.",
+              "references": {
+                "opinion_ids": [
+                  "10000000-0000-4000-8000-000000000002"
+                ],
+                "owner_message_ids": [],
+                "memory_ids": []
+              }
+            },
+            {
+              "statement": "Jam ramai pukul 17.00 sampai 19.00 setiap hari.",
+              "references": {
+                "opinion_ids": [],
+                "owner_message_ids": [],
+                "memory_ids": [
+                  "30000000-0000-4000-8000-000000000001"
+                ]
+              }
+            }
+          ],
+          "customer_evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "quote": "Antreannya lama sekali.",
+              "note": ""
+            },
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000002",
+              "quote": "Pelayanannya lambat.",
+              "note": ""
+            }
+          ],
+          "hypotheses": [
+            {
+              "statement": "Hipotesis: Penyebab antrean lama mungkin terjadi karena kendala pada alur pemesanan di kasir saat jam ramai.",
+              "confidence": "sedang",
+              "references": {
+                "opinion_ids": [
+                  "10000000-0000-4000-8000-000000000001"
+                ],
+                "owner_message_ids": [],
+                "memory_ids": [
+                  "30000000-0000-4000-8000-000000000004"
+                ]
+              }
+            }
+          ],
+          "recommendations": [
+            {
+              "title": "Optimasi Alur Kasir Saat Jam Ramai",
+              "description": "Evaluasi dan tata ulang alur kerja pencatatan pesanan di kasir tanpa pembelian alat baru.",
+              "priority": "tinggi",
+              "references": {
+                "opinion_ids": [],
+                "owner_message_ids": [],
+                "memory_ids": [
+                  "30000000-0000-4000-8000-000000000002",
+                  "30000000-0000-4000-8000-000000000004"
+                ]
+              }
+            }
+          ],
+          "success_indicators": [
+            {
+              "metric": "Waktu tunggu antrean kasir pada jam 17.00-19.00",
+              "target": "Usulan: Waktu antrean berkurang",
+              "timeframe": "Usulan: 1 minggu"
+            }
+          ],
+          "memory_candidates": []
+        },
+        "section_lengths": {
+          "findings": 3,
+          "customer_evidence": 2,
+          "hypotheses": 1,
+          "recommendations": 1,
+          "success_indicators": 1
+        },
+        "structural": "REJECTED",
+        "grounding": "NOT_REACHED",
+        "application_error": "Invalid solution output: unverified numeric factual text; cite matching operational provenance or an exact source excerpt"
+      },
+      "actual_gemini_invocations": 2,
+      "dedicated_memory_invocations": 0,
+      "event": "CONSULTATION_EVENT_SKIP_QUESTION",
+      "context_observations": {
+        "history_order_preserved": true,
+        "latest_owner_history_occurrences": 0,
+        "latest_owner_source_occurrences": 0,
+        "latest_owner_is_separate_context_view": false,
+        "ai_ids_excluded_from_owner_sources": true,
+        "previous_solution_source_kind": null,
+        "confirmed_memory_count": 4,
+        "asked_topics": [
+          "staffing"
+        ],
+        "skipped_topics": [
+          "staffing"
+        ],
+        "question_count": 1
+      },
+      "validation_reached": {
+        "pydantic": true,
+        "solution_structural": true,
+        "solution_grounding": false,
+        "memory": false
+      },
+      "all_response_validations": "NOT_PASSED",
+      "category_of_test": "C_REAL_PROVIDER_AUTHENTICATED_GRPC",
+      "id": "M6-C-COMP",
+      "scenario": "C",
+      "model": "gemini-3.6-flash",
+      "diagnostic_model_override": true,
+      "requested_api_version": "v1beta",
+      "requested_thinking": "low",
+      "total_duration_seconds": 24.065616
+    },
+    {
+      "case": "grpc",
+      "model_override": "gemini-3.6-flash",
+      "turn_budget_seconds": 45.0,
+      "output_token_budget": 2048,
+      "thinking": "LOW",
+      "api_version": "v1beta",
+      "started_at": "2026-11-13T00:34:45.128105+00:00",
+      "synthetic_request": {
+        "session_id": "40000000-0000-4000-8000-000000000001",
+        "request_id": "50000000-0000-4000-8000-000000000069",
+        "event": "CONSULTATION_EVENT_CONTINUE_DISCUSSION",
+        "context": {
+          "issue": {
+            "id": "60000000-0000-4000-8000-000000000001",
+            "title": "Antrean"
+          },
+          "stats": {
+            "unique_feedback_count": "2",
+            "opinion_count": "2",
+            "average_rating": 3.0,
+            "negative_count": "2",
+            "not_severe_count": "2"
+          },
+          "evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "opinion_text": "Antrean lama",
+              "evidence_text": "Antreannya lama sekali.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Antreannya lama sekali.",
+              "rating": 3.0
+            },
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000002",
+              "opinion_text": "Pelayanan lambat",
+              "evidence_text": "Pelayanannya lambat.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Pelayanannya lambat.",
+              "rating": 3.0
+            }
+          ],
+          "shop": {
+            "id": "70000000-0000-4000-8000-000000000001",
+            "name": "Kedai sintetis M6",
+            "category": "Kafe",
+            "scale": "Kecil"
+          },
+          "memories": [
+            {
+              "id": "30000000-0000-4000-8000-000000000001",
+              "fact_text": "Jam ramai pukul 17.00 sampai 19.00 setiap hari."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000002",
+              "fact_text": "Anggaran tambahan belum tersedia; langkah awal harus tanpa pembelian alat."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000003",
+              "fact_text": "Waktu observasi tersedia selama satu minggu."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000004",
+              "fact_text": "Owner ingin mengurangi antrean dengan memperbaiki alur kasir."
+            },
+            {
+              "id": "30000000-0000-4000-8000-000000000005",
+              "fact_text": "Jumlah barista dua orang."
+            }
+          ]
+        },
+        "messages": [
+          {
+            "id": "20000000-0000-4000-8000-000000000001",
+            "role": "MESSAGE_ROLE_OWNER",
+            "content": "Buat langkah observasi tanpa biaya. Penyebab antrean belum diketahui."
+          },
+          {
+            "id": "90000000-0000-4000-8000-000000000002",
+            "role": "MESSAGE_ROLE_ATLAS_AI",
+            "solution": {
+              "findings": [
+                {
+                  "statement": "Pelanggan menyebut: Antreannya lama sekali.",
+                  "references": {
+                    "opinion_ids": [
+                      "10000000-0000-4000-8000-000000000001"
+                    ]
+                  }
+                },
+                {
+                  "statement": "Owner menyatakan: Buat langkah observasi tanpa biaya. Penyebab antrean belum diketahui.",
+                  "references": {
+                    "owner_message_ids": [
+                      "20000000-0000-4000-8000-000000000001"
+                    ]
+                  }
+                },
+                {
+                  "statement": "Jam ramai pukul 17.00 sampai 19.00 setiap hari.",
+                  "references": {
+                    "memory_ids": [
+                      "30000000-0000-4000-8000-000000000001"
+                    ]
+                  }
+                }
+              ],
+              "customer_evidence": [
+                {
+                  "opinion_id": "10000000-0000-4000-8000-000000000001",
+                  "quote": "Antreannya lama sekali."
+                },
+                {
+                  "opinion_id": "10000000-0000-4000-8000-000000000002",
+                  "quote": "Pelayanannya lambat."
+                }
+              ],
+              "hypotheses": [
+                {
+                  "statement": "Hipotesis: Penyebab keluhan antrean pelanggan belum diketahui secara pasti dan mungkin terkait kendala alur kasir.",
+                  "confidence": "sedang",
+                  "references": {
+                    "opinion_ids": [
+                      "10000000-0000-4000-8000-000000000001"
+                    ],
+                    "owner_message_ids": [
+                      "20000000-0000-4000-8000-000000000001"
+                    ],
+                    "memory_ids": [
+                      "30000000-0000-4000-8000-000000000004"
+                    ]
+                  }
+                }
+              ],
+              "recommendations": [
+                {
+                  "title": "Observasi Alur Pelayanan Jam Ramai",
+                  "description": "Lakukan pemantauan manual alur antrean dan transaksi kasir tanpa biaya selama jam ramai.",
+                  "priority": "tinggi",
+                  "references": {
+                    "owner_message_ids": [
+                      "20000000-0000-4000-8000-000000000001"
+                    ],
+                    "memory_ids": [
+                      "30000000-0000-4000-8000-000000000001",
+                      "30000000-0000-4000-8000-000000000002"
+                    ]
+                  }
+                }
+              ],
+              "success_indicators": [
+                {
+                  "metric": "Jumlah pencatatan durasi transaksi kasir harian",
+                  "target": "Usulan: Terkumpul data transaksi selama 7 hari",
+                  "timeframe": "Usulan: 1 minggu"
+                }
+              ]
+            }
+          },
+          {
+            "id": "20000000-0000-4000-8000-000000000004",
+            "role": "MESSAGE_ROLE_OWNER",
+            "content": "Revisi langkah observasi agar berfokus pada alur pencatatan pesanan, tanpa pembelian alat."
+          }
+        ],
+        "previous_solution": {
+          "findings": [
+            {
+              "statement": "Pelanggan menyebut: Antreannya lama sekali.",
+              "references": {
+                "opinion_ids": [
+                  "10000000-0000-4000-8000-000000000001"
+                ]
+              }
+            },
+            {
+              "statement": "Owner menyatakan: Buat langkah observasi tanpa biaya. Penyebab antrean belum diketahui.",
+              "references": {
+                "owner_message_ids": [
+                  "20000000-0000-4000-8000-000000000001"
+                ]
+              }
+            },
+            {
+              "statement": "Jam ramai pukul 17.00 sampai 19.00 setiap hari.",
+              "references": {
+                "memory_ids": [
+                  "30000000-0000-4000-8000-000000000001"
+                ]
+              }
+            }
+          ],
+          "customer_evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "quote": "Antreannya lama sekali."
+            },
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000002",
+              "quote": "Pelayanannya lambat."
+            }
+          ],
+          "hypotheses": [
+            {
+              "statement": "Hipotesis: Penyebab keluhan antrean pelanggan belum diketahui secara pasti dan mungkin terkait kendala alur kasir.",
+              "confidence": "sedang",
+              "references": {
+                "opinion_ids": [
+                  "10000000-0000-4000-8000-000000000001"
+                ],
+                "owner_message_ids": [
+                  "20000000-0000-4000-8000-000000000001"
+                ],
+                "memory_ids": [
+                  "30000000-0000-4000-8000-000000000004"
+                ]
+              }
+            }
+          ],
+          "recommendations": [
+            {
+              "title": "Observasi Alur Pelayanan Jam Ramai",
+              "description": "Lakukan pemantauan manual alur antrean dan transaksi kasir tanpa biaya selama jam ramai.",
+              "priority": "tinggi",
+              "references": {
+                "owner_message_ids": [
+                  "20000000-0000-4000-8000-000000000001"
+                ],
+                "memory_ids": [
+                  "30000000-0000-4000-8000-000000000001",
+                  "30000000-0000-4000-8000-000000000002"
+                ]
+              }
+            }
+          ],
+          "success_indicators": [
+            {
+              "metric": "Jumlah pencatatan durasi transaksi kasir harian",
+              "target": "Usulan: Terkumpul data transaksi selama 7 hari",
+              "timeframe": "Usulan: 1 minggu"
+            }
+          ]
+        }
+      },
+      "automatic_retries": 0,
+      "bounded_corrections": 0,
+      "stage_durations_seconds": {
+        "assessment.langchain_invoke_and_parse": 13.82071518599696
+      },
+      "rpc_timeout_seconds": 60,
+      "configured_rpc_headroom_seconds": 15.0,
+      "rpc_started_at": "2026-11-13T00:34:45.137788+00:00",
+      "server_entry_time_remaining_seconds": 59.99862790107727,
+      "server_request_unchanged": true,
+      "pipeline_duration_seconds": 13.882703,
+      "rpc_ended_at": "2026-11-13T00:34:59.023475+00:00",
+      "rpc_duration_seconds": 13.889483,
+      "grpc_overhead_observed_seconds": 0.00678,
+      "status": "FAILED",
+      "category": "PROVIDER_HTTP_503",
+      "grpc_status_equivalent": "UNAVAILABLE",
+      "grpc_status_source": "actual_grpc",
+      "exception_chain": [
+        {
+          "type": "_InactiveRpcError",
+          "http_code": null
+        }
+      ],
+      "actual_grpc_status": "UNAVAILABLE",
+      "duration_seconds": 13.899,
+      "http_events": [
+        {
+          "http_status": 503,
+          "host": "generativelanguage.googleapis.com",
+          "path": "/v1beta/models/gemini-3.6-flash:generateContent"
+        }
+      ],
+      "effective_requests": [
+        {
+          "api_version": "v1beta",
+          "timeout_seconds": 44.74891643099545,
+          "max_output_tokens": 2048,
+          "thinking_level_requested": "low",
+          "actual_prompt_text_utf8_bytes": 12114,
+          "response_json_schema_utf8_bytes": 1215,
+          "effective_temperature": null,
+          "effective_thinking_config": {
+            "thinking_level": "LOW"
+          },
+          "provider_elapsed_seconds": 13.784
+        }
+      ],
+      "provider_responses": [],
+      "sdk_invocations": [
+        {
+          "started_at": "2026-11-13T00:34:45.242089+00:00",
+          "schema_title": "SufficiencyAssessment",
+          "exception_type": "ServerError",
+          "provider_code": 503,
+          "ended_at": "2026-11-13T00:34:59.022598+00:00",
+          "duration_seconds": 13.784,
+          "http_statuses": [
+            503
+          ]
+        }
+      ],
+      "ended_at": "2026-11-13T00:34:59.025222+00:00",
+      "validation": {
+        "structural": "NOT_REACHED",
+        "grounding": "NOT_REACHED"
+      },
+      "actual_gemini_invocations": 1,
+      "dedicated_memory_invocations": 0,
+      "event": "CONSULTATION_EVENT_CONTINUE_DISCUSSION",
+      "context_observations": {
+        "history_order_preserved": true,
+        "latest_owner_history_occurrences": 1,
+        "latest_owner_source_occurrences": 1,
+        "latest_owner_is_separate_context_view": true,
+        "ai_ids_excluded_from_owner_sources": true,
+        "previous_solution_source_kind": "historical_ai_output",
+        "confirmed_memory_count": 5,
+        "asked_topics": [],
+        "skipped_topics": [],
+        "question_count": 0
+      },
+      "validation_reached": {
+        "pydantic": false,
+        "solution_structural": false,
+        "solution_grounding": false,
+        "memory": false
+      },
+      "all_response_validations": "NOT_PASSED",
+      "category_of_test": "C_REAL_PROVIDER_AUTHENTICATED_GRPC",
+      "previous_solution_run_id": "P3",
+      "previous_solution_input_ledger": "p0_solution_live.json",
+      "previous_solution_role": "HISTORICAL_AI_INPUT_ONLY_NOT_A_NEW_LIVE_RESULT",
+      "id": "M6-E-COMP",
+      "scenario": "E",
+      "model": "gemini-3.6-flash",
+      "diagnostic_model_override": true,
+      "requested_api_version": "v1beta",
+      "requested_thinking": "low",
+      "total_duration_seconds": 13.900892
+    }
+  ],
+  "production_model_unchanged": "gemini-3.8-flash",
+  "production_turn_budget_seconds": 30.0,
+  "production_output_token_budget": 2048,
+  "limits": {
+    "attempts": 7,
+    "gemini_invocations": 11,
+    "automatic_retries": 0
+  },
+  "packages": {
+    "google-genai": "3.2.0",
+    "langchain-google-genai": "4.5.0",
+    "langchain-core": "1.8.0",
+    "pydantic": "2.14.3",
+    "grpcio": "1.85.1",
+    "protobuf": "7.36.2"
+  },
+    "overall_decision": "BLOCKED",
+    "acceptance": {
+      "offline_regression": "PASS",
+      "ruff": "PASS_WITH_DOCUMENTED_WINDOWS_EXECUTABLE_BIT_EXCLUSION",
+      "authenticated_mock_grpc": "PASS",
+      "fresh_real_provider_solution_grpc": "NOT_MET",
+      "live_event_coverage": "PARTIAL_START_NEXTQUESTION_ONLY",
+      "owner_memory_candidate_live_response": "UNVERIFIED",
+      "all_live_outputs_valid": "NOT_MET_REJECTIONS_PRESERVED",
+      "actual_latency_and_invocations": "RECORDED",
+      "go_or_production_readiness_claimed": false
+    },
+    "verification": {
+      "A_OFFLINE": {
+        "baseline": {
+          "passed": 873,
+          "duration_seconds": 10.85
+        },
+        "final": {
+          "passed": 899,
+          "duration_seconds": 6.42,
+          "output": "899 passed in 6.42s",
+          "external_network": "DISABLED",
+          "command": "python -m pytest -q -p no:cacheprovider"
+        }
+      },
+      "B_AUTHENTICATED_GRPC_MOCK": {
+        "status": "PASSED",
+        "m6_new_tests": 26,
+        "m6_native_grpc_tests": 16,
+        "actual_external_provider_requests": 0,
+        "all_five_events": true,
+        "solution_and_question_paths": true,
+        "valid_owner_memory_and_invalid_ai_id_discard_and_empty_memory": true,
+        "existing_invalid_token_auth_and_no_evidence_deadline_unavailable_regressions": true,
+        "evidence": "tests/test_consultation_m6_e2e.py plus existing regression suites; model boundaries mocked, native gRPC/interceptor/adapter/validators/serialization real"
+      },
+      "C_REAL_PROVIDER": {
+        "status": "BLOCKED_WITH_PARTIAL_NEXTQUESTION_SUCCESS",
+        "attempts": 7,
+        "authenticated_rpc_attempts": 6,
+        "actual_gemini_invocations": 9,
+        "successful_rpc_ids": [
+          "M6-A-COMP"
+        ],
+        "successful_solution_rpc_ids": [],
+        "successful_owner_memory_rpc_ids": [],
+        "reported_token_total": 18205,
+        "failed_requests_usage": "UNAVAILABLE_NOT_ASSUMED_ZERO",
+        "automatic_retries": 0,
+        "dedicated_memory_calls": 0,
+        "recorded_sdk_stages": [
+          "SufficiencyAssessment",
+          "GeneratedSolutionTurn",
+          "DiagnosticReply"
+        ]
+      },
+      "ruff": {
+        "status": "PASSED",
+        "command": "python -m ruff check --no-cache --config pyproject.toml --ignore EXE002 src/atlas_ai tests scripts",
+        "output": "All checks passed!",
+        "exclusion_reason": "Windows Docker bind mount exposes executable bits on Python files; no application lint rules disabled beyond EXE002",
+        "earlier_tooling_failures": [
+          "Read-only Ruff cache; fixed using --no-cache",
+          "EXE002 for bind-mounted Windows files; explicit exclusion"
+        ]
+      },
+      "credential_scan": {
+        "api_key_present_in_artifact": false,
+        "artifact_json_valid": true
+      },
+      "whitespace_check": {
+        "command": "git diff --check",
+        "exit_code": 0
+      }
+    },
+    "workspace_audit": {
+      "commit": "c3e1e589fca7333dc8189bd71ea308877a1ae682",
+      "branch": "main",
+      "preexisting_uncommitted_p0_m5_changes": true,
+      "feedback_relocation": "nlp deletion / untracked feedback already present; grpc_service imports atlas_ai.feedback.pipeline; M6 did not change feedback",
+      "m6_changed_files": [
+        "scripts/gemini_live_diagnostics.py",
+        "scripts/consultation_live_readiness.py",
+        "scripts/consultation_m6_e2e.py",
+        "tests/test_consultation_m6_e2e.py",
+        "docs/consultation-m6-e2e-validation.md",
+        "evaluation/m6_consultation_e2e.json"
+      ],
+      "production_pipeline_validator_prompt_auth_dependencies_model_timeout_changed": false,
+      "protected_sha256": {
+        "proto/atlas/ai/v1/ai.proto": "d53ca81dd992f26eaba97ae558643785d576fd02b30da685c1083504eebfd34d",
+        "src/atlas_ai/consultation/grounding.py": "f69b76313aea03bb1a2ff5474146a080ed6869d99ba15e05211706058544876a",
+        "src/atlas_ai/consultation/context.py": "1980fb7e361249ea1db9146d0b96b2d4985523d95c49528b969dbe8141b9310c",
+        "src/atlas_ai/feedback/pipeline.py": "b9567efbaf8a49541996675192cd03790641886e538e451fcf9dbecea9b1d022"
+      },
+      "historical_ledgers_unchanged": true,
+      "historical_ledger_sha256": {
+        "evaluation/functional_live_readiness.json": "fd1391443016186e2871b27c80f302321264a606fb7273c50c6f3e854c9c7e37",
+        "evaluation/functional_live_readiness_deadlines.json": "9d89b8d2df1cde1fbed46fbd18c0c61d786bc3090611c3cd7a3955652c4f39b8",
+        "evaluation/gemini_live_diagnostics.json": "ea015b14455a1ea45947ae09a8edcd0ba3c6337c458826bdb8286a4c035756a4",
+        "evaluation/grounding_alignment_rules_report.json": "a878718bdf00a6c07597fc6240fffa03a9f1ee37a807e0765bad663592353e33",
+        "evaluation/grounding_cases.json": "e5393728110919e8ff24fcdd13c4107f9c50e766bc1da766f5c6d2517ae123a0",
+        "evaluation/grounding_live_diagnostic.json": "7162b20d41793a31a724ee7539e6e87c1d6f6e07b77785d60905aa162c491327",
+        "evaluation/grounding_live_model_check.json": "c77572f8c784fa61489a1e2444b716e7e3acb3fe5fd7d0ce0a3b5f9982f4e4a1",
+        "evaluation/grounding_live_report.json": "8b4c0ff2fd4612ca695d49e316b22874ae398d83fe12ac811ce96880ec7fb19e",
+        "evaluation/grounding_live_smoke_report.json": "a4f14665a2fb89b34004dde85592254b5c0e306db4701a21d42ee06807b3b3ea",
+        "evaluation/grounding_rules_report.json": "27fe503b7bfa55549d203747b3d6fb23f3b5d16f5ab31f0fa15f46ceb3874847",
+        "evaluation/grounding_smoke_cases.json": "b2bbee2240211cd5def086b8b10865f36e24f6f91a1f27987ddeefddcb415650",
+        "evaluation/m5_memory_live.json": "46bff81281653d7212771d737b1742302fb8f68058500a9f151274f0e5187a9a",
+        "evaluation/m5_memory_mock_grpc.json": "88466a95135b220d3a0d5963df78f6a9ba509a6c693e7445764964713724e5e5",
+        "evaluation/m5_memory_report.json": "3fb01062f9b97e0082044d049f080f50790750aff5ba5ea8594d4f66185ed66e",
+        "evaluation/p0_acceptance_report.json": "ffba0f797f5ee61f16f55a8d837f6493e5adcb424319dffa2d36c4cd04389f18",
+        "evaluation/p0_c5_audit.json": "40f885eca1d8f379e3a921be7c11883d73ae4b726edb2ee25ef4fdb3858396d6",
+        "evaluation/p0_grounding_rules_report.json": "a792a6436e02b3d8e3a0a0e8a916c0fc25795171a7837c6beee99b4073ab329b",
+        "evaluation/p0_solution_live.json": "eeb503c00d115de3351c9ee48c82a8210f24174636cb047bef2fd5391cbc729a",
+        "evaluation/solution_alignment_c5_audit.json": "5a9e970dbd68522992ea0a036e8171c645d2364618c3a8965a5c28fa36625540",
+        "evaluation/solution_alignment_deadlines.json": "74de229aa615347d833efce24e0c7ea932108c2cdd4f246d6d29087f49520d83",
+        "evaluation/solution_alignment_live.json": "41256a8efe97482a884e8ce7ae45846c03ba66687e294a2091cf8c059007d77c"
+      },
+      "go_proto": {
+        "equal_ignoring_crlf_and_final_newline": true,
+        "go_blob": "22500463be61dce1c2764a3fcc7329e71aea4c67",
+        "url": "https://github.com/Elioth-Gray/atlas-backend-core/blob/main/proto/atlas/ai/v1/ai.proto"
+      },
+      "go_source_blobs": {
+        "client": "043268da183955bd3cc1b6e3df8b81f90a8744b7",
+        "config": "91af27c36fc0e08039f677d1c6e0bf6f3c561a7d",
+        "response_validation": "6600f5df31ca2a91400de8e3459b6ccf2ff9b363"
+      },
+      "go_deployment_or_database_tested": false
+    },
+    "deadline_audit": {
+      "production_total_budget_seconds": 30,
+      "comparator_diagnostic_total_budget_seconds": 45,
+      "native_grpc_caller_seconds": 60,
+      "go_source_default_consultation_seconds": 60,
+      "go_source_default_http_write_seconds": 90,
+      "actual_go_deployment_deadlines": "NOT_VERIFIED",
+      "policy": "One budget min(configured Python budget, incoming remaining), shared across context, assessment, solution, local validation/mapping. SDK receives remaining minus 0.25s. Earlier Go parent deadline wins.",
+      "cumulative_question_count": "Conservative >=4 cap unchanged; Python does not reset state"
+    },
+    "limitations": [
+      "No fresh M6 Solution completed grounding/protobuf/gRPC. P0 success is historical only.",
+      "Production preflight and D returned observable HTTP 504 before output, not local caller deadline exhaustion. Internal provider root cause unknown.",
+      "Comparator D passed schema/structure but hypothesis grounding rejected. Raw wording was not retained in that row; digest/verdict retained, cannot recover more precise lexical cause.",
+      "Comparator B included the new OWNER fact in a supported finding, but nominal recommendation title Optimasi Alur Kerja Kasir failed the bounded action recognizer; no semantic-falsity conclusion.",
+      "Comparator C metric contained 17.00-19.00 hours present in memory but uncitable in the metric field under current numeric policy. Structural rejection precedes grounding.",
+      "Comparator E used P0 P3 strictly as historical input and received HTTP 503 at assessment. No new output was replayed.",
+      "No production memory validation reached on owner-containing live turns. START returned legitimate [] with no owners. Mock candidate behavior is separate evidence.",
+      "No validator/prompt was changed to admit rejected samples; LLM semantic verifier remains disabled."
+    ],
+    "report": "docs/consultation-m6-e2e-validation.md"
+}

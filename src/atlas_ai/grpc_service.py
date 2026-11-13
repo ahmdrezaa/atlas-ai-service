@@ -3,7 +3,7 @@ import grpc
 from atlas.ai.v1 import ai_pb2_grpc
 from atlas_ai.consultation.assessment import ConsultationFailure
 from atlas_ai.consultation.pipeline import ConsultationPipeline
-from atlas_ai.nlp.pipeline import FeedbackPipeline
+from atlas_ai.feedback.pipeline import FeedbackPipeline
 
 
 class AtlasAIService(ai_pb2_grpc.AIServiceServicer):

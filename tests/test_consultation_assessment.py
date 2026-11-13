@@ -16,6 +16,7 @@ from atlas_ai.consultation.assessment import (
     ContextAssessor,
     GeminiSettings,
     SufficiencyAssessment,
+    compact_provider_schema,
     validate_question,
 )
 from atlas_ai.consultation.context import prepare_context
@@ -72,7 +73,7 @@ def test_question_path_for_all_events(valid_request, mocked_assessor):
         assert not response.memory_candidates
         structured.invoke.assert_called_once()
         factory.return_value.with_structured_output.assert_called_once_with(
-            SufficiencyAssessment,
+            compact_provider_schema(SufficiencyAssessment),
             method="json_schema",
         )
     assert valid_request.SerializeToString() == before
@@ -225,7 +226,7 @@ def test_prompt_injection_stays_in_data_and_continue_uses_previous_solution(
     )
     ConsultationPipeline(assessor).run(request)
     messages = structured.invoke.call_args.args[0].to_messages()
-    assert [m.type for m in messages] == ["system", "system", "human"]
+    assert [m.type for m in messages] == ["system", "system", "system", "human"]
     assert all(injection not in m.content for m in messages[:2])
     assert injection in messages[-1].content
     assert "test-only-key" not in "".join(m.content for m in messages)
