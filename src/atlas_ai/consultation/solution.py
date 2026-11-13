@@ -17,6 +17,7 @@ from atlas_ai.consultation.assessment import (
 )
 from atlas_ai.consultation.grounding import (
     NUMBER_WORDS,
+    TENTATIVE,
     GroundingClaim,
     attributed_text,
     cited_sources,
@@ -208,11 +209,7 @@ def validate_solution(
         if isinstance(item, GeneratedHypothesis) and (
             not text.startswith("Hipotesis:")
             or CERTAINTY.search(text)
-            or not re.search(
-                r"\b(mungkin|diduga|belum diketahui|perlu diverifikasi)\b",
-                text,
-                re.IGNORECASE,
-            )
+            or not TENTATIVE.search(text)
         ):
             _reject("hypothesis must be explicitly tentative")
     for item in solution.customer_evidence:

@@ -31,7 +31,12 @@ STAT_LABELS = {
     "not_severe_count": "opini tidak severe",
 }
 STAT = re.compile(r"\[\[stat:([a-z_]+)=(-?\d+(?:\.\d+)?)\]\]")
-GROUNDING_RULE_VERSION = "grounding-rules-v4"
+GROUNDING_RULE_VERSION = "grounding-rules-v5"
+TENTATIVE = re.compile(
+    r"\b(mungkin|diduga|belum diketahui|perlu diverifikasi|berpotensi dipengaruhi|"
+    r"ada kemungkinan|perlu ditelusuri apakah)\b",
+    re.IGNORECASE,
+)
 
 
 class GroundingLabel(str, Enum):
@@ -438,6 +443,25 @@ def _recommendation_title(
             label=GroundingLabel.INSUFFICIENT_EVIDENCE,
             reason="title_asserts_fact_or_outcome",
         )
+    if verdict.reason == "bounded_nominal_proposal":
+        description = claim.model_copy(
+            update={
+                "text": claim.recommendation_description or "",
+                "recommendation_description": None,
+            }
+        )
+        desc_verdict = evaluate_claim(description, context)
+        common = (
+            set(_normal(text).split())
+            & set(_normal(description.text).split())
+            & _source_words(cited_sources(claim, context))
+        )
+        if desc_verdict.label not in ACCEPTED_LABELS or len(common) < 2:
+            return GroundingDecision(
+                claim_id=claim.claim_id,
+                label=GroundingLabel.INSUFFICIENT_EVIDENCE,
+                reason="nominal_title_description_mismatch",
+            )
     if verdict.label in ACCEPTED_LABELS:
         return verdict  # Preserve already-supported imperative/advisory titles.
     description = (claim.recommendation_description or "").strip()
@@ -500,6 +524,117 @@ def _recommendation_title(
             reason="action_label_linked_to_validated_description_and_cited_subject",
         )
     return verdict
+
+
+def _source_words(sources: list[dict[str, str]]) -> set[str]:
+    return set().union(
+        *(
+            set(_normal(s["text"]).split())
+            for s in sources
+            if not _INSTRUCTIONS.search(s["text"])
+        )
+    )
+
+
+def _tentative_mechanism(text: str, sources: list[dict[str, str]]) -> bool:
+    """Bounded possibility: cited symptom + operational subject, never a new fact."""
+    clauses = [p.strip() for p in text.removeprefix("Hipotesis:").split(";")]
+    if any(
+        _normal(p)
+        not in {
+            "perlu diverifikasi",
+            "hal ini perlu diperiksa",
+            "hal ini perlu ditelusuri",
+        }
+        for p in clauses[1:]
+    ):
+        return False
+    body = re.sub(
+        r"^(?:ada kemungkinan|perlu ditelusuri apakah)\s+",
+        "",
+        clauses[0],
+        flags=re.IGNORECASE,
+    ).rstrip(".")
+    match = re.fullmatch(
+        r"(.+?)\s+(?:mungkin(?: terjadi)? karena|(?:mungkin |diduga )?(?:terkait|berkaitan dengan)|berpotensi dipengaruhi)\s+(.+)",
+        body,
+        re.IGNORECASE,
+    )
+    if not match or not TENTATIVE.search(text):
+        return False
+    symptom, mechanism = map(_normal, match.groups())
+    if not re.fullmatch(
+        r"(?:(?:lamanya|keluhan|durasi) )?(?:antrean|pelayanan)(?: lama)?", symptom
+    ):
+        return False
+    subject = set(mechanism.split()) - {"dan", "dengan"}
+    allowed = {
+        "koordinasi",
+        "pelayanan",
+        "kasir",
+        "barista",
+        "alur",
+        "pesanan",
+        "pembagian",
+        "tugas",
+        "kerja",
+    }
+    cited = _source_words(sources)
+    symptom_anchor = set(symptom.split()) & cited - _TOPIC_STOP
+    symptom_proof = symptom.replace("lamanya antrean", "antrean lama").replace(
+        "lamanya pelayanan", "pelayanan lama"
+    )
+    if not any(
+        s["kind"] == "customer"
+        and not _INSTRUCTIONS.search(s["text"])
+        and _affirmed_part(symptom_proof, _normal(s["text"]))
+        for s in sources
+    ):
+        return False
+    mechanism_anchor = (
+        subject
+        & _source_words([s for s in sources if s["kind"] in {"owner", "memory"}])
+        - _TOPIC_STOP
+    )
+    return bool(
+        symptom_anchor
+        and mechanism_anchor
+        and len(symptom_anchor | mechanism_anchor) >= 2
+        and len(subject) >= 2
+        and subject <= allowed
+    )
+
+
+def _nominal_proposal(text: str, sources: list[dict[str, str]]) -> bool:
+    """Action nominal morphology and a bounded object, not a new verb list."""
+    match = re.fullmatch(r"pe[a-z]+an\s+([a-z ]+)\.?", text, re.IGNORECASE)
+    if not match:
+        return False
+    # Resource commitments need a separate constraint proof; this bounded
+    # observation/workflow path does not infer permission from a resource name.
+    if re.match(
+        r"(?:penambahan|pengadaan|pembelian|pengurangan)\b", text, re.IGNORECASE
+    ):
+        return False
+    subject = set(_normal(match[1]).split()) - {"dan", "di", "pada", "terhadap"}
+    cited = _source_words(sources)
+    activities = {
+        "alur",
+        "pembagian",
+        "tugas",
+        "kerja",
+        "pelayanan",
+        "pencatatan",
+        "observasi",
+        "antrean",
+    }
+    if not subject & {"alur", "pembagian", "tugas", "pencatatan", "observasi"}:
+        return False
+    return bool(
+        len(subject & cited) >= 2
+        and subject <= cited | activities
+        and not _LABEL_ASSERTION.search(text)
+    )
 
 
 def _affirmed_part(atom: str, source: str) -> bool:
@@ -698,6 +833,13 @@ def evaluate_claim(
                 GroundingLabel.NOT_APPLICABLE,
                 "tentative_hypothesis_not_established_cause",
             )
+        elif (
+            not _PREMISE.search(text)
+            and not _CURRENT_ASSERTION.search(text)
+            and not _ACHIEVED.search(text)
+            and _tentative_mechanism(text, sources)
+        ):
+            label, reason = GroundingLabel.NOT_APPLICABLE, "bounded_tentative_mechanism"
     elif claim.kind in {"recommendation", "metric", "target", "timeframe"}:
         body = text.removeprefix("Usulan:").strip()
         # Explicit target/timeframe fields are proposals, not current resources.
@@ -762,6 +904,26 @@ def evaluate_claim(
             )
         else:
             reason = "proposal_contains_unproved_premise_or_unresolved_language"
+        if claim.kind == "recommendation":
+            if (
+                not _PREMISE.search(body)
+                and not _ACHIEVED.search(body)
+                and not _CURRENT_ASSERTION.search(body)
+                and _nominal_proposal(body, sources)
+            ):
+                label, reason = (
+                    GroundingLabel.NOT_APPLICABLE,
+                    "bounded_nominal_proposal",
+                )
+            if not _related_hypothesis(body, sources) and not re.search(
+                r"\b(alur|pesanan|antrean|pencatatan|shift|durasi|transaksi)\b",
+                body,
+                re.IGNORECASE,
+            ):
+                label, reason = (
+                    GroundingLabel.INSUFFICIENT_EVIDENCE,
+                    "action_has_no_cited_subject",
+                )
     else:
         label, reason = _fact(claim, sources)
     return GroundingDecision(claim_id=claim.claim_id, label=label, reason=reason)
