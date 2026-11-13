@@ -31,7 +31,7 @@ STAT_LABELS = {
     "not_severe_count": "opini tidak severe",
 }
 STAT = re.compile(r"\[\[stat:([a-z_]+)=(-?\d+(?:\.\d+)?)\]\]")
-GROUNDING_RULE_VERSION = "grounding-rules-v5"
+GROUNDING_RULE_VERSION = "grounding-rules-v6"
 TENTATIVE = re.compile(
     r"\b(mungkin|diduga|belum diketahui|perlu diverifikasi|berpotensi dipengaruhi|"
     r"ada kemungkinan|perlu ditelusuri apakah)\b",
@@ -785,6 +785,28 @@ def _statistics(text: str, context: ConsultationContext) -> tuple[GroundingLabel
     return GroundingLabel.SUPPORTED, "bounded_sql_claim"
 
 
+def _independent_actions(text: str) -> list[str]:
+    """Separate sentences and independently framed coordinated actions only.
+
+    Do not split shared noun phrases ("jumlah dan konsistensi isian roti") or
+    infer that arbitrary noun/adjective fragments are independent propositions.
+    This prevents cross-action borrowing; it does not prove semantic relevance
+    inside a single action. Returned slices are for checking, never output repair.
+    """
+    parts = []
+    for sentence in re.split(r"(?<!\d)[.;]|[.;](?!\d)", text):
+        start = 0
+        for match in re.finditer(r"\s+(?:dan|serta)\s+", sentence, re.IGNORECASE):
+            # Action nominals can share a trailing object ("pemantauan dan
+            # pencatatan ..."). Only a repeated imperative establishes this
+            # bounded coordination boundary; do not guess the nominal scope.
+            if _ACTION.match(sentence[match.end() :].strip()):
+                parts.append(sentence[start : match.start()].strip())
+                start = match.end()
+        parts.append(sentence[start:].strip())
+    return [part for part in parts if part]
+
+
 def evaluate_claim(
     claim: GroundingClaim, context: ConsultationContext
 ) -> GroundingDecision:
@@ -801,6 +823,39 @@ def evaluate_claim(
     elif claim.kind == "finding" and STAT.search(text):
         label, reason = _statistics(text, context)
     elif claim.kind == "hypothesis":
+        # Contrast introduces a separate proposition: uncertainty in the first
+        # clause does not make an asserted second clause tentative. Check facts
+        # using the existing provenance rules, not generated text as evidence.
+        contrast = re.split(
+            r"\s+(?:tetapi|namun|padahal|sedangkan)\s+",
+            text,
+            maxsplit=1,
+            flags=re.IGNORECASE,
+        )
+        if len(contrast) == 2:
+            left = evaluate_claim(
+                claim.model_copy(update={"text": contrast[0]}), context
+            )
+            right = contrast[1]
+            # "Owner menyatakan: mungkin ..." asserts what the owner said;
+            # uncertainty inside that attribution cannot waive source proof.
+            tentative = bool(TENTATIVE.search(right)) and not _ATTRIBUTION.match(right)
+            other = evaluate_claim(
+                claim.model_copy(
+                    update={
+                        "kind": "hypothesis" if tentative else "finding",
+                        "text": "Hipotesis: " + right if tentative else right,
+                    }
+                ),
+                context,
+            )
+            return GroundingDecision(
+                claim_id=claim.claim_id,
+                label=GroundingLabel.NOT_APPLICABLE
+                if left.label in ACCEPTED_LABELS and other.label in ACCEPTED_LABELS
+                else GroundingLabel.INSUFFICIENT_EVIDENCE,
+                reason="hypothesis_contrast_checked_independently",
+            )
         clauses = [
             part.strip()
             for part in re.split(r"[.;]", text.removeprefix("Hipotesis:"))
@@ -842,6 +897,25 @@ def evaluate_claim(
             label, reason = GroundingLabel.NOT_APPLICABLE, "bounded_tentative_mechanism"
     elif claim.kind in {"recommendation", "metric", "target", "timeframe"}:
         body = text.removeprefix("Usulan:").strip()
+        if claim.kind == "recommendation":
+            parts = _independent_actions(body)
+            if len(parts) > 1:
+                # Each independent action must pass the SAME checks with the
+                # SAME actual citations. No source comes from a sibling action.
+                prefix = "Usulan: " if text.startswith("Usulan:") else ""
+                decisions = [
+                    evaluate_claim(
+                        claim.model_copy(update={"text": prefix + part}), context
+                    )
+                    for part in parts
+                ]
+                return GroundingDecision(
+                    claim_id=claim.claim_id,
+                    label=GroundingLabel.NOT_APPLICABLE
+                    if all(d.label in ACCEPTED_LABELS for d in decisions)
+                    else GroundingLabel.INSUFFICIENT_EVIDENCE,
+                    reason="independent_actions_checked_separately",
+                )
         # Explicit target/timeframe fields are proposals, not current resources.
         # Check the existing operational premises embedded in actions instead.
         operations_supported = True

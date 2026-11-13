@@ -201,6 +201,10 @@ def validate_solution(
             text, sources, context, proposal=isinstance(item, GeneratedRecommendation)
         )
         if isinstance(item, GeneratedRecommendation):
+            # Local output policy, not a protobuf/historical-model constraint.
+            # Keep the provider schema and existing application error boundary.
+            if not item.description.strip():
+                _reject("recommendation description is blank")
             _check_numbers(item.description, sources, context, proposal=True)
         if isinstance(item, GeneratedFinding) and re.search(
             r"\b(disebabkan|penyebabnya|caused by|because of)\b", text, re.IGNORECASE
