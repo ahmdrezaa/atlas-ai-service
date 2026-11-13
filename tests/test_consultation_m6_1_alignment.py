@@ -202,9 +202,9 @@ def test_prompt_measurement_schedule_is_a_proposal_not_current_memory_evidence()
         mapped(request, payload).success_indicators[0].timeframe
         == indicator["timeframe"]
     )
-    assert SOLUTION_PROMPT_VERSION == "consultation-solution-v7"
-    assert "metric has NO references field" in SOLUTION_SYSTEM_PROMPT
-    assert "NO numbers" in SOLUTION_SYSTEM_PROMPT
+    assert SOLUTION_PROMPT_VERSION == "consultation-solution-v8"
+    assert "it has no reference" in SOLUTION_SYSTEM_PROMPT
+    assert "without numbers, clock ranges" in SOLUTION_SYSTEM_PROMPT
 
 
 def test_exact_c_stays_rejected_and_metric_only_change_does_not_repair_other_claims():
