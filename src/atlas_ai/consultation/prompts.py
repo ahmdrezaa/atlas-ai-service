@@ -86,7 +86,7 @@ ASSESSMENT_PROMPT = ChatPromptTemplate.from_messages(
     ]
 )
 
-SOLUTION_PROMPT_VERSION = "consultation-solution-v6"
+SOLUTION_PROMPT_VERSION = "consultation-solution-v7"
 
 SOLUTION_SYSTEM_PROMPT = """Generate one concise Indonesian Solution using the typed
 schema: findings, customer_evidence, hypotheses, recommendations, success_indicators.
@@ -115,10 +115,18 @@ MVP source contract:
   the cited sources. A reference proves the symptom, not the proposed cause. Do not
   introduce unrelated speculation, new factual operating conditions, an asserted
   'because' premise, or a proven explanation. Unknown cause is a valid hypothesis.
+  Avoid claims of verification, population scope or established causality, including
+  'terverifikasi', 'independen', 'mayoritas', 'selalu', 'penyebabnya', 'disebabkan'.
+  Illustrative tentative form: 'Hipotesis: antrean mungkin terkait alur pesanan;
+  perlu diverifikasi.' Use the actual cited symptom, never this example as evidence.
 - Recommendations are concrete proposed actions with a current source basis. Use
   one practical primary action and at most two alternatives. Safe Indonesian action
   and advisory wording is allowed. Keep each field short; avoid extra factual clauses.
   Unknown equipment/budget/staff availability must stay unknown, not become a premise.
+  A title is a short action label, consistent with the actual action in description
+  and the cited subject. Prefer 'Amati alur pesanan' with a description explaining
+  that observation. A descriptive label does not prove a condition or guarantee an
+  outcome. The description must stand on its own as a supported proposed action.
 - Existing operational numbers need matching cited owner/memory provenance: preserve
   the predicate, unit, value and time scope. An actual busy period is not opening hours
   or staffing. A supported existing number does not itself need 'Usulan:'. Other
@@ -130,6 +138,11 @@ MVP source contract:
   are future proposals, each starting 'Usulan:' when nonempty. A proposed collection
   goal and a proposed evaluation window are valid. Be measurable, practical and clear;
   do not claim that records exist, results improved, or targets were already achieved.
+  metric has NO references field: keep it generic and unqualified, with NO numbers,
+  clock ranges, staffing quantities or percentages, even if a memory contains them.
+  Example metric: 'Durasi tunggu antrean kasir'. Put a NEW proposed measurement
+  window in timeframe, e.g. 'Usulan: ukur selama satu minggu pada jam 17.00-19.00'.
+  This is a proposed schedule, not a historical fact or an implicit memory citation.
 - Confidence and priority are qualitative low/medium/high or rendah/sedang/tinggi,
   never probabilities. Use JSON null for unspecified labels. Do not invent calibration.
 

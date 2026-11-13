@@ -31,7 +31,7 @@ STAT_LABELS = {
     "not_severe_count": "opini tidak severe",
 }
 STAT = re.compile(r"\[\[stat:([a-z_]+)=(-?\d+(?:\.\d+)?)\]\]")
-GROUNDING_RULE_VERSION = "grounding-rules-v3"
+GROUNDING_RULE_VERSION = "grounding-rules-v4"
 
 
 class GroundingLabel(str, Enum):
@@ -57,6 +57,9 @@ class GroundingClaim(ContextModel):
     ]
     text: str
     references: References = Field(default_factory=References)
+    # Internal field linkage set only for Solution recommendation titles. The
+    # description is a proposal to validate, never an additional factual source.
+    recommendation_description: str | None = None
 
 
 class GroundingDecision(ContextModel):
@@ -383,6 +386,122 @@ def _action_framing(text: str) -> bool:
     )
 
 
+# Action-label intent is necessary, never sufficient for accepting a heading.
+# Descriptions keep the existing action/premise guards; the complete heading's
+# subject must also be bounded by that description AND its actual cited sources.
+_LABEL_INTENTS = (
+    (r"(?:optimasi|optimalisasi|perbaikan)", r"\b(?:evaluasi|tinjau|uji|tata ulang)\b"),
+    (r"penataan", r"\b(?:evaluasi|tinjau|tata ulang)\b"),
+    (r"pembagian", r"\b(?:evaluasi|pembagian|tata ulang)\b"),
+)
+_LABEL_ASSERTION = re.compile(
+    r"\b(pasti|dijamin|menjamin|jaminan|garansi|guaranteed|guarantee|"
+    r"rusak|kekurangan|kurang|adalah|berjumlah|tersedia|memiliki|"
+    r"meningkat|berkurang|naik|turun|semua|seluruh|karena|sebab|mengingat)\b",
+    re.IGNORECASE,
+)
+
+
+def _label_subject_words(text: str) -> set[str]:
+    # Work/tasks equivalence is for topic linkage only, never factual entailment.
+    text = re.sub(r"\btugas\b", "kerja", _normal(text))
+    return set(text.split()) - {
+        "alur",
+        "proses",
+        "dan",
+        "untuk",
+        "di",
+        "saat",
+        "pada",
+        "jam",
+        "yang",
+        "tanpa",
+        "dengan",
+    }
+
+
+def _recommendation_title(
+    claim: GroundingClaim, context: ConsultationContext
+) -> GroundingDecision:
+    text = claim.text.strip()
+    standalone = claim.model_copy(update={"recommendation_description": None})
+    verdict = evaluate_claim(standalone, context)
+    # Do not let even an imperative heading independently promise outcomes or
+    # assert an operational condition. Descriptions cannot launder such claims.
+    if (
+        _LABEL_ASSERTION.search(text)
+        or _ACHIEVED.search(text)
+        or _CURRENT_ASSERTION.search(text)
+    ):
+        return GroundingDecision(
+            claim_id=claim.claim_id,
+            label=GroundingLabel.INSUFFICIENT_EVIDENCE,
+            reason="title_asserts_fact_or_outcome",
+        )
+    if verdict.label in ACCEPTED_LABELS:
+        return verdict  # Preserve already-supported imperative/advisory titles.
+    description = (claim.recommendation_description or "").strip()
+    action = claim.model_copy(
+        update={"text": description, "recommendation_description": None}
+    )
+    action_verdict = evaluate_claim(action, context)
+    sources = cited_sources(claim, context)
+    words = text.split()
+    if (
+        not sources
+        or not description
+        or not 2 <= len(words) <= 8
+        or not re.fullmatch(r"[A-Za-z ]+", text)
+        or action_verdict.label != GroundingLabel.NOT_APPLICABLE
+        or not _related_hypothesis(description, sources)
+        or not any(
+            re.fullmatch(head, words[0], re.IGNORECASE)
+            and re.search(intent, description, re.IGNORECASE)
+            for head, intent in _LABEL_INTENTS
+        )
+    ):
+        return verdict
+    subject = _label_subject_words(" ".join(words[1:]))
+    description_words = _label_subject_words(description)
+    source_words = set().union(
+        *(
+            _label_subject_words(s["text"])
+            for s in sources
+            if not _INSTRUCTIONS.search(s["text"])
+        )
+    )
+    if (
+        subject
+        # A proposal can name an activity, but cannot supply new facts such as
+        # 'new machine' or 'tired cashier'. Other subject words must come from
+        # the cited sources, never merely from generated description prose.
+        and subject
+        <= (
+            source_words
+            | (
+                description_words
+                & {
+                    "kerja",
+                    "pembagian",
+                    "pencatatan",
+                    "pengukuran",
+                    "pengamatan",
+                    "observasi",
+                }
+            )
+        )
+        and subject & description_words
+        and subject & source_words
+        and not NUMBER_WORDS.search(text.casefold())
+    ):
+        return GroundingDecision(
+            claim_id=claim.claim_id,
+            label=GroundingLabel.NOT_APPLICABLE,
+            reason="action_label_linked_to_validated_description_and_cited_subject",
+        )
+    return verdict
+
+
 def _affirmed_part(atom: str, source: str) -> bool:
     for match in re.finditer(r"(?<!\w)" + re.escape(atom) + r"(?!\w)", source):
         previous = source[: match.start()].split()[-3:]
@@ -540,6 +659,10 @@ def evaluate_claim(
     label, reason = GroundingLabel.INSUFFICIENT_EVIDENCE, "unresolved_claim"
     if _UNIVERSAL.search(text) or _CERTAINTY.search(text):
         reason = "unproven_scope_causality_or_independent_verification"
+    elif (
+        claim.kind == "recommendation" and claim.recommendation_description is not None
+    ):
+        return _recommendation_title(claim, context)
     elif claim.kind == "finding" and STAT.search(text):
         label, reason = _statistics(text, context)
     elif claim.kind == "hypothesis":
@@ -662,6 +785,9 @@ def solution_claims(solution: "GeneratedSolution") -> list[GroundingClaim]:
                             kind=kind,
                             text=text,
                             references=item.references,
+                            recommendation_description=item.description
+                            if kind == "recommendation" and field == "title"
+                            else None,
                         )
                     )
     for index, item in enumerate(solution.customer_evidence):
