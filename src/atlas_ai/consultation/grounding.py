@@ -31,7 +31,7 @@ STAT_LABELS = {
     "not_severe_count": "opini tidak severe",
 }
 STAT = re.compile(r"\[\[stat:([a-z_]+)=(-?\d+(?:\.\d+)?)\]\]")
-GROUNDING_RULE_VERSION = "grounding-rules-v6"
+GROUNDING_RULE_VERSION = "grounding-rules-v7"
 TENTATIVE = re.compile(
     r"\b(mungkin|diduga|belum diketahui|perlu diverifikasi|berpotensi dipengaruhi|"
     r"ada kemungkinan|perlu ditelusuri apakah)\b",
@@ -807,6 +807,17 @@ def _independent_actions(text: str) -> list[str]:
     return [part for part in parts if part]
 
 
+def _action_before_purpose(text: str) -> str:
+    """Bound the action-object span for relevance, not for factual validation.
+
+    An intended purpose is generated reasoning, never evidence connecting an
+    otherwise unrelated action to cited sources. Keep the full original text
+    for premise, quantity, outcome and namespace checks. This bounded surface
+    distinction is not a general Indonesian dependency or semantic parser.
+    """
+    return re.split(r"\s+(?:untuk|agar)\s+", text, maxsplit=1, flags=re.IGNORECASE)[0]
+
+
 def evaluate_claim(
     claim: GroundingClaim, context: ConsultationContext
 ) -> GroundingDecision:
@@ -989,9 +1000,10 @@ def evaluate_claim(
                     GroundingLabel.NOT_APPLICABLE,
                     "bounded_nominal_proposal",
                 )
-            if not _related_hypothesis(body, sources) and not re.search(
+            action_object = _action_before_purpose(action)
+            if not _related_hypothesis(action_object, sources) and not re.search(
                 r"\b(alur|pesanan|antrean|pencatatan|shift|durasi|transaksi)\b",
-                body,
+                action_object,
                 re.IGNORECASE,
             ):
                 label, reason = (

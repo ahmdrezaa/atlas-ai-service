@@ -35,8 +35,6 @@ UNRESOLVED = {
     "a_two_speculations": "Modality and relevance inside shared coordination are unresolved",
     "a_bakery_causal": "Existing causal guard rejects a legitimate tentative bakery cause",
     "b_original": "Shared nominal coordination cannot yet establish semantic relevance",
-    "b_purpose_overlap": "Generated purpose cannot prove relevance but legacy overlap accepts it",
-    "b_repeated_word_attack": "Single-action relevance is still lexical, not semantic",
 }
 
 

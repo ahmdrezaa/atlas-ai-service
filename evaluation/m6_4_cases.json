@@ -1,0 +1,1530 @@
+{
+  "version": "m6.4-frozen-id-v1",
+  "scenarios": {
+    "queue": {
+      "request": {
+        "session_id": "40000000-0000-4000-8000-000000000001",
+        "request_id": "50000000-0000-4000-8000-000000000066",
+        "event": "CONSULTATION_EVENT_GENERATE_NOW",
+        "context": {
+          "issue": {
+            "id": "60000000-0000-4000-8000-000000000001",
+            "title": "antrean kasir"
+          },
+          "stats": {
+            "unique_feedback_count": "2",
+            "opinion_count": "2",
+            "average_rating": 3.0,
+            "negative_count": "2",
+            "not_severe_count": "2"
+          },
+          "evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "opinion_text": "Antreannya lama sekali.",
+              "evidence_text": "Antreannya lama sekali.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Antreannya lama sekali.",
+              "rating": 3.0
+            }
+          ],
+          "shop": {
+            "id": "70000000-0000-4000-8000-000000000001",
+            "name": "Kedai sintetis M6",
+            "category": "Kafe",
+            "scale": "Kecil"
+          },
+          "memories": [
+            {
+              "id": "30000000-0000-4000-8000-000000000001",
+              "fact_text": "Jumlah kasir 2 orang."
+            }
+          ]
+        },
+        "messages": [
+          {
+            "id": "20000000-0000-4000-8000-000000000003",
+            "role": "MESSAGE_ROLE_OWNER",
+            "content": "Kasir mencatat pesanan secara manual."
+          }
+        ],
+        "asked_topics": [
+          "staffing"
+        ],
+        "question_count": 1
+      },
+      "solution": {
+        "findings": [
+          {
+            "statement": "Pelanggan menyebut: Antreannya lama sekali.",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "customer_evidence": [
+          {
+            "opinion_id": "10000000-0000-4000-8000-000000000001",
+            "quote": "Antreannya lama sekali.",
+            "note": ""
+          }
+        ],
+        "hypotheses": [
+          {
+            "statement": "Hipotesis: penyebab keluhan antrean kasir belum diketahui; perlu diverifikasi.",
+            "confidence": "",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "recommendations": [
+          {
+            "title": "Evaluasi antrean kasir",
+            "description": "Evaluasi pembagian tugas kasir.",
+            "priority": "medium",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "success_indicators": [
+          {
+            "metric": "Catatan keluhan antrean kasir",
+            "target": "Usulan: catat keluhan pelanggan",
+            "timeframe": "Usulan: evaluasi selama satu minggu"
+          }
+        ],
+        "memory_candidates": []
+      }
+    },
+    "bakery": {
+      "request": {
+        "session_id": "40000000-0000-4000-8000-000000000001",
+        "request_id": "50000000-0000-4000-8000-000000000066",
+        "event": "CONSULTATION_EVENT_GENERATE_NOW",
+        "context": {
+          "issue": {
+            "id": "60000000-0000-4000-8000-000000000001",
+            "title": "isian roti"
+          },
+          "stats": {
+            "unique_feedback_count": "2",
+            "opinion_count": "2",
+            "average_rating": 3.0,
+            "negative_count": "2",
+            "not_severe_count": "2"
+          },
+          "evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "opinion_text": "Isian roti terlalu sedikit.",
+              "evidence_text": "Isian roti terlalu sedikit.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Isian roti terlalu sedikit.",
+              "rating": 3.0
+            }
+          ],
+          "shop": {
+            "id": "70000000-0000-4000-8000-000000000001",
+            "name": "Kedai sintetis M6",
+            "category": "Kafe",
+            "scale": "Kecil"
+          },
+          "memories": [
+            {
+              "id": "30000000-0000-4000-8000-000000000001",
+              "fact_text": "Jumlah kasir 2 orang."
+            }
+          ]
+        },
+        "messages": [
+          {
+            "id": "20000000-0000-4000-8000-000000000003",
+            "role": "MESSAGE_ROLE_OWNER",
+            "content": "Kami menakar isian roti secara manual."
+          }
+        ],
+        "asked_topics": [
+          "staffing"
+        ],
+        "question_count": 1
+      },
+      "solution": {
+        "findings": [
+          {
+            "statement": "Pelanggan menyebut: Isian roti terlalu sedikit.",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "customer_evidence": [
+          {
+            "opinion_id": "10000000-0000-4000-8000-000000000001",
+            "quote": "Isian roti terlalu sedikit.",
+            "note": ""
+          }
+        ],
+        "hypotheses": [
+          {
+            "statement": "Hipotesis: penyebab keluhan isian roti belum diketahui; perlu diverifikasi.",
+            "confidence": "",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "recommendations": [
+          {
+            "title": "Evaluasi isian roti",
+            "description": "Bandingkan jumlah isian roti antarproduk.",
+            "priority": "medium",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "success_indicators": [
+          {
+            "metric": "Catatan keluhan isian roti",
+            "target": "Usulan: catat keluhan pelanggan",
+            "timeframe": "Usulan: evaluasi selama satu minggu"
+          }
+        ],
+        "memory_candidates": []
+      }
+    },
+    "quality": {
+      "request": {
+        "session_id": "40000000-0000-4000-8000-000000000001",
+        "request_id": "50000000-0000-4000-8000-000000000066",
+        "event": "CONSULTATION_EVENT_GENERATE_NOW",
+        "context": {
+          "issue": {
+            "id": "60000000-0000-4000-8000-000000000001",
+            "title": "kualitas produk"
+          },
+          "stats": {
+            "unique_feedback_count": "2",
+            "opinion_count": "2",
+            "average_rating": 3.0,
+            "negative_count": "2",
+            "not_severe_count": "2"
+          },
+          "evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "opinion_text": "Kualitas produk tidak konsisten.",
+              "evidence_text": "Kualitas produk tidak konsisten.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Kualitas produk tidak konsisten.",
+              "rating": 3.0
+            }
+          ],
+          "shop": {
+            "id": "70000000-0000-4000-8000-000000000001",
+            "name": "Kedai sintetis M6",
+            "category": "Kafe",
+            "scale": "Kecil"
+          },
+          "memories": [
+            {
+              "id": "30000000-0000-4000-8000-000000000001",
+              "fact_text": "Jumlah kasir 2 orang."
+            }
+          ]
+        },
+        "messages": [
+          {
+            "id": "20000000-0000-4000-8000-000000000003",
+            "role": "MESSAGE_ROLE_OWNER",
+            "content": "Kami memeriksa kualitas produk sebelum dikirim."
+          }
+        ],
+        "asked_topics": [
+          "staffing"
+        ],
+        "question_count": 1
+      },
+      "solution": {
+        "findings": [
+          {
+            "statement": "Pelanggan menyebut: Kualitas produk tidak konsisten.",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "customer_evidence": [
+          {
+            "opinion_id": "10000000-0000-4000-8000-000000000001",
+            "quote": "Kualitas produk tidak konsisten.",
+            "note": ""
+          }
+        ],
+        "hypotheses": [
+          {
+            "statement": "Hipotesis: penyebab keluhan kualitas produk belum diketahui; perlu diverifikasi.",
+            "confidence": "",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "recommendations": [
+          {
+            "title": "Evaluasi kualitas produk",
+            "description": "Tinjau proses pemeriksaan kualitas produk.",
+            "priority": "medium",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "success_indicators": [
+          {
+            "metric": "Catatan keluhan kualitas produk",
+            "target": "Usulan: catat keluhan pelanggan",
+            "timeframe": "Usulan: evaluasi selama satu minggu"
+          }
+        ],
+        "memory_candidates": []
+      }
+    },
+    "packaging": {
+      "request": {
+        "session_id": "40000000-0000-4000-8000-000000000001",
+        "request_id": "50000000-0000-4000-8000-000000000066",
+        "event": "CONSULTATION_EVENT_GENERATE_NOW",
+        "context": {
+          "issue": {
+            "id": "60000000-0000-4000-8000-000000000001",
+            "title": "kemasan"
+          },
+          "stats": {
+            "unique_feedback_count": "2",
+            "opinion_count": "2",
+            "average_rating": 3.0,
+            "negative_count": "2",
+            "not_severe_count": "2"
+          },
+          "evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "opinion_text": "Kemasan bocor saat dibawa pulang.",
+              "evidence_text": "Kemasan bocor saat dibawa pulang.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Kemasan bocor saat dibawa pulang.",
+              "rating": 3.0
+            }
+          ],
+          "shop": {
+            "id": "70000000-0000-4000-8000-000000000001",
+            "name": "Kedai sintetis M6",
+            "category": "Kafe",
+            "scale": "Kecil"
+          },
+          "memories": [
+            {
+              "id": "30000000-0000-4000-8000-000000000001",
+              "fact_text": "Jumlah kasir 2 orang."
+            }
+          ]
+        },
+        "messages": [
+          {
+            "id": "20000000-0000-4000-8000-000000000003",
+            "role": "MESSAGE_ROLE_OWNER",
+            "content": "Kami menggunakan kemasan kertas."
+          }
+        ],
+        "asked_topics": [
+          "staffing"
+        ],
+        "question_count": 1
+      },
+      "solution": {
+        "findings": [
+          {
+            "statement": "Pelanggan menyebut: Kemasan bocor saat dibawa pulang.",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "customer_evidence": [
+          {
+            "opinion_id": "10000000-0000-4000-8000-000000000001",
+            "quote": "Kemasan bocor saat dibawa pulang.",
+            "note": ""
+          }
+        ],
+        "hypotheses": [
+          {
+            "statement": "Hipotesis: penyebab keluhan kemasan belum diketahui; perlu diverifikasi.",
+            "confidence": "",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "recommendations": [
+          {
+            "title": "Evaluasi kemasan",
+            "description": "Uji ketahanan kemasan saat dibawa pulang.",
+            "priority": "medium",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "success_indicators": [
+          {
+            "metric": "Catatan keluhan kemasan",
+            "target": "Usulan: catat keluhan pelanggan",
+            "timeframe": "Usulan: evaluasi selama satu minggu"
+          }
+        ],
+        "memory_candidates": []
+      }
+    },
+    "pricing": {
+      "request": {
+        "session_id": "40000000-0000-4000-8000-000000000001",
+        "request_id": "50000000-0000-4000-8000-000000000066",
+        "event": "CONSULTATION_EVENT_GENERATE_NOW",
+        "context": {
+          "issue": {
+            "id": "60000000-0000-4000-8000-000000000001",
+            "title": "harga produk"
+          },
+          "stats": {
+            "unique_feedback_count": "2",
+            "opinion_count": "2",
+            "average_rating": 3.0,
+            "negative_count": "2",
+            "not_severe_count": "2"
+          },
+          "evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "opinion_text": "Harga produk terlalu mahal.",
+              "evidence_text": "Harga produk terlalu mahal.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Harga produk terlalu mahal.",
+              "rating": 3.0
+            }
+          ],
+          "shop": {
+            "id": "70000000-0000-4000-8000-000000000001",
+            "name": "Kedai sintetis M6",
+            "category": "Kafe",
+            "scale": "Kecil"
+          },
+          "memories": [
+            {
+              "id": "30000000-0000-4000-8000-000000000001",
+              "fact_text": "Jumlah kasir 2 orang."
+            }
+          ]
+        },
+        "messages": [
+          {
+            "id": "20000000-0000-4000-8000-000000000003",
+            "role": "MESSAGE_ROLE_OWNER",
+            "content": "Kami memasang daftar harga produk."
+          }
+        ],
+        "asked_topics": [
+          "staffing"
+        ],
+        "question_count": 1
+      },
+      "solution": {
+        "findings": [
+          {
+            "statement": "Pelanggan menyebut: Harga produk terlalu mahal.",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "customer_evidence": [
+          {
+            "opinion_id": "10000000-0000-4000-8000-000000000001",
+            "quote": "Harga produk terlalu mahal.",
+            "note": ""
+          }
+        ],
+        "hypotheses": [
+          {
+            "statement": "Hipotesis: penyebab keluhan harga produk belum diketahui; perlu diverifikasi.",
+            "confidence": "",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "recommendations": [
+          {
+            "title": "Evaluasi harga produk",
+            "description": "Evaluasi kejelasan daftar harga produk.",
+            "priority": "medium",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "success_indicators": [
+          {
+            "metric": "Catatan keluhan harga produk",
+            "target": "Usulan: catat keluhan pelanggan",
+            "timeframe": "Usulan: evaluasi selama satu minggu"
+          }
+        ],
+        "memory_candidates": []
+      }
+    },
+    "orders": {
+      "request": {
+        "session_id": "40000000-0000-4000-8000-000000000001",
+        "request_id": "50000000-0000-4000-8000-000000000066",
+        "event": "CONSULTATION_EVENT_GENERATE_NOW",
+        "context": {
+          "issue": {
+            "id": "60000000-0000-4000-8000-000000000001",
+            "title": "pencatatan pesanan"
+          },
+          "stats": {
+            "unique_feedback_count": "2",
+            "opinion_count": "2",
+            "average_rating": 3.0,
+            "negative_count": "2",
+            "not_severe_count": "2"
+          },
+          "evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "opinion_text": "Pencatatan pesanan sering keliru.",
+              "evidence_text": "Pencatatan pesanan sering keliru.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Pencatatan pesanan sering keliru.",
+              "rating": 3.0
+            }
+          ],
+          "shop": {
+            "id": "70000000-0000-4000-8000-000000000001",
+            "name": "Kedai sintetis M6",
+            "category": "Kafe",
+            "scale": "Kecil"
+          },
+          "memories": [
+            {
+              "id": "30000000-0000-4000-8000-000000000001",
+              "fact_text": "Jumlah kasir 2 orang."
+            }
+          ]
+        },
+        "messages": [
+          {
+            "id": "20000000-0000-4000-8000-000000000003",
+            "role": "MESSAGE_ROLE_OWNER",
+            "content": "Pencatatan pesanan dilakukan secara manual."
+          }
+        ],
+        "asked_topics": [
+          "staffing"
+        ],
+        "question_count": 1
+      },
+      "solution": {
+        "findings": [
+          {
+            "statement": "Pelanggan menyebut: Pencatatan pesanan sering keliru.",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "customer_evidence": [
+          {
+            "opinion_id": "10000000-0000-4000-8000-000000000001",
+            "quote": "Pencatatan pesanan sering keliru.",
+            "note": ""
+          }
+        ],
+        "hypotheses": [
+          {
+            "statement": "Hipotesis: penyebab keluhan pencatatan pesanan belum diketahui; perlu diverifikasi.",
+            "confidence": "",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "recommendations": [
+          {
+            "title": "Evaluasi pencatatan pesanan",
+            "description": "Tinjau pencatatan pesanan secara manual.",
+            "priority": "medium",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "success_indicators": [
+          {
+            "metric": "Catatan keluhan pencatatan pesanan",
+            "target": "Usulan: catat keluhan pelanggan",
+            "timeframe": "Usulan: evaluasi selama satu minggu"
+          }
+        ],
+        "memory_candidates": []
+      }
+    },
+    "stock": {
+      "request": {
+        "session_id": "40000000-0000-4000-8000-000000000001",
+        "request_id": "50000000-0000-4000-8000-000000000066",
+        "event": "CONSULTATION_EVENT_GENERATE_NOW",
+        "context": {
+          "issue": {
+            "id": "60000000-0000-4000-8000-000000000001",
+            "title": "pencatatan pesanan"
+          },
+          "stats": {
+            "unique_feedback_count": "2",
+            "opinion_count": "2",
+            "average_rating": 3.0,
+            "negative_count": "2",
+            "not_severe_count": "2"
+          },
+          "evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "opinion_text": "Catatan stok sering keliru.",
+              "evidence_text": "Catatan stok sering keliru.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Catatan stok sering keliru.",
+              "rating": 3.0
+            }
+          ],
+          "shop": {
+            "id": "70000000-0000-4000-8000-000000000001",
+            "name": "Kedai sintetis M6",
+            "category": "Kafe",
+            "scale": "Kecil"
+          },
+          "memories": [
+            {
+              "id": "30000000-0000-4000-8000-000000000001",
+              "fact_text": "Jumlah kasir 2 orang."
+            }
+          ]
+        },
+        "messages": [
+          {
+            "id": "20000000-0000-4000-8000-000000000003",
+            "role": "MESSAGE_ROLE_OWNER",
+            "content": "Pencatatan stok dilakukan secara manual."
+          }
+        ],
+        "asked_topics": [
+          "staffing"
+        ],
+        "question_count": 1
+      },
+      "solution": {
+        "findings": [
+          {
+            "statement": "Pelanggan menyebut: Catatan stok sering keliru.",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "customer_evidence": [
+          {
+            "opinion_id": "10000000-0000-4000-8000-000000000001",
+            "quote": "Catatan stok sering keliru.",
+            "note": ""
+          }
+        ],
+        "hypotheses": [
+          {
+            "statement": "Hipotesis: pencatatan stok mungkin belum konsisten; perlu diverifikasi.",
+            "confidence": "",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "recommendations": [
+          {
+            "title": "Evaluasi pencatatan stok",
+            "description": "Tinjau pencatatan stok secara manual.",
+            "priority": "medium",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "success_indicators": [
+          {
+            "metric": "Catatan keluhan pencatatan pesanan",
+            "target": "Usulan: catat keluhan pelanggan",
+            "timeframe": "Usulan: evaluasi selama satu minggu"
+          }
+        ],
+        "memory_candidates": []
+      }
+    },
+    "queue_denial": {
+      "request": {
+        "session_id": "40000000-0000-4000-8000-000000000001",
+        "request_id": "50000000-0000-4000-8000-000000000066",
+        "event": "CONSULTATION_EVENT_GENERATE_NOW",
+        "context": {
+          "issue": {
+            "id": "60000000-0000-4000-8000-000000000001",
+            "title": "antrean kasir"
+          },
+          "stats": {
+            "unique_feedback_count": "2",
+            "opinion_count": "2",
+            "average_rating": 3.0,
+            "negative_count": "2",
+            "not_severe_count": "2"
+          },
+          "evidence": [
+            {
+              "opinion_id": "10000000-0000-4000-8000-000000000001",
+              "opinion_text": "Antreannya lama sekali.",
+              "evidence_text": "Antreannya lama sekali.",
+              "sentiment": "SENTIMENT_NEGATIVE",
+              "severity": "SEVERITY_NOT_SEVERE",
+              "full_feedback": "Antreannya lama sekali.",
+              "rating": 3.0
+            }
+          ],
+          "shop": {
+            "id": "70000000-0000-4000-8000-000000000001",
+            "name": "Kedai sintetis M6",
+            "category": "Kafe",
+            "scale": "Kecil"
+          },
+          "memories": [
+            {
+              "id": "30000000-0000-4000-8000-000000000001",
+              "fact_text": "Jumlah kasir 2 orang."
+            }
+          ]
+        },
+        "messages": [
+          {
+            "id": "20000000-0000-4000-8000-000000000003",
+            "role": "MESSAGE_ROLE_OWNER",
+            "content": "Mesin kasir tidak rusak."
+          }
+        ],
+        "asked_topics": [
+          "staffing"
+        ],
+        "question_count": 1
+      },
+      "solution": {
+        "findings": [
+          {
+            "statement": "Pelanggan menyebut: Antreannya lama sekali.",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "customer_evidence": [
+          {
+            "opinion_id": "10000000-0000-4000-8000-000000000001",
+            "quote": "Antreannya lama sekali.",
+            "note": ""
+          }
+        ],
+        "hypotheses": [
+          {
+            "statement": "Hipotesis: penyebab keluhan antrean kasir belum diketahui; perlu diverifikasi.",
+            "confidence": "",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "recommendations": [
+          {
+            "title": "Evaluasi antrean kasir",
+            "description": "Evaluasi pembagian tugas kasir.",
+            "priority": "medium",
+            "references": {
+              "opinion_ids": [
+                "10000000-0000-4000-8000-000000000001"
+              ],
+              "owner_message_ids": [
+                "20000000-0000-4000-8000-000000000003"
+              ],
+              "memory_ids": [
+                "30000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "success_indicators": [
+          {
+            "metric": "Catatan keluhan antrean kasir",
+            "target": "Usulan: catat keluhan pelanggan",
+            "timeframe": "Usulan: evaluasi selama satu minggu"
+          }
+        ],
+        "memory_candidates": []
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "queue_untuk_valid",
+      "scenario": "queue",
+      "field": "recommendations.description",
+      "value": "Evaluasi antrean kasir untuk memahami keluhan pelanggan.",
+      "expected": "valid",
+      "rationale": "Action itself investigates the cited subject; intended purpose is not factual proof."
+    },
+    {
+      "id": "queue_untuk_attack",
+      "scenario": "queue",
+      "field": "recommendations.description",
+      "value": "Evaluasi orbit satelit untuk memperbaiki antrean kasir.",
+      "expected": "invalid",
+      "rationale": "Unrelated action object borrows only its purpose from the evidence."
+    },
+    {
+      "id": "queue_agar_valid",
+      "scenario": "queue",
+      "field": "recommendations.description",
+      "value": "Evaluasi antrean kasir agar memahami keluhan pelanggan.",
+      "expected": "valid",
+      "rationale": "Action itself investigates the cited subject; intended purpose is not factual proof."
+    },
+    {
+      "id": "queue_agar_attack",
+      "scenario": "queue",
+      "field": "recommendations.description",
+      "value": "Evaluasi orbit satelit agar memperbaiki antrean kasir.",
+      "expected": "invalid",
+      "rationale": "Unrelated action object borrows only its purpose from the evidence."
+    },
+    {
+      "id": "queue_coordinate_fact",
+      "scenario": "queue",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: antrean kasir mungkin bermasalah dan gudang terbakar.",
+      "expected": "invalid",
+      "rationale": "Second independent asserted operational condition has no provenance."
+    },
+    {
+      "id": "queue_coordinate_speculation",
+      "scenario": "queue",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: antrean kasir mungkin bermasalah dan orbit satelit mungkin berubah.",
+      "expected": "invalid",
+      "rationale": "An independently modal unrelated subject cannot borrow the first topic."
+    },
+    {
+      "id": "queue_shared_object",
+      "scenario": "queue",
+      "field": "recommendations.description",
+      "value": "Evaluasi jumlah dan konsistensi antrean kasir.",
+      "expected": "valid",
+      "rationale": "Coordinated attributes share one cited object."
+    },
+    {
+      "id": "queue_causal",
+      "scenario": "queue",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: antrean kasir mungkin bermasalah karena pemeriksaan belum konsisten.",
+      "expected": "valid",
+      "rationale": "Tentative cause to investigate, not independently asserted as established."
+    },
+    {
+      "id": "bakery_untuk_valid",
+      "scenario": "bakery",
+      "field": "recommendations.description",
+      "value": "Evaluasi isian roti untuk memahami keluhan pelanggan.",
+      "expected": "valid",
+      "rationale": "Action itself investigates the cited subject; intended purpose is not factual proof."
+    },
+    {
+      "id": "bakery_untuk_attack",
+      "scenario": "bakery",
+      "field": "recommendations.description",
+      "value": "Evaluasi orbit satelit untuk memperbaiki isian roti.",
+      "expected": "invalid",
+      "rationale": "Unrelated action object borrows only its purpose from the evidence."
+    },
+    {
+      "id": "bakery_agar_valid",
+      "scenario": "bakery",
+      "field": "recommendations.description",
+      "value": "Evaluasi isian roti agar memahami keluhan pelanggan.",
+      "expected": "valid",
+      "rationale": "Action itself investigates the cited subject; intended purpose is not factual proof."
+    },
+    {
+      "id": "bakery_agar_attack",
+      "scenario": "bakery",
+      "field": "recommendations.description",
+      "value": "Evaluasi orbit satelit agar memperbaiki isian roti.",
+      "expected": "invalid",
+      "rationale": "Unrelated action object borrows only its purpose from the evidence."
+    },
+    {
+      "id": "bakery_coordinate_fact",
+      "scenario": "bakery",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: isian roti mungkin bermasalah dan gudang terbakar.",
+      "expected": "invalid",
+      "rationale": "Second independent asserted operational condition has no provenance."
+    },
+    {
+      "id": "bakery_coordinate_speculation",
+      "scenario": "bakery",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: isian roti mungkin bermasalah dan orbit satelit mungkin berubah.",
+      "expected": "invalid",
+      "rationale": "An independently modal unrelated subject cannot borrow the first topic."
+    },
+    {
+      "id": "bakery_shared_object",
+      "scenario": "bakery",
+      "field": "recommendations.description",
+      "value": "Evaluasi jumlah dan konsistensi isian roti.",
+      "expected": "valid",
+      "rationale": "Coordinated attributes share one cited object."
+    },
+    {
+      "id": "bakery_causal",
+      "scenario": "bakery",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: isian roti mungkin bermasalah karena pemeriksaan belum konsisten.",
+      "expected": "valid",
+      "rationale": "Tentative cause to investigate, not independently asserted as established."
+    },
+    {
+      "id": "quality_untuk_valid",
+      "scenario": "quality",
+      "field": "recommendations.description",
+      "value": "Evaluasi kualitas produk untuk memahami keluhan pelanggan.",
+      "expected": "valid",
+      "rationale": "Action itself investigates the cited subject; intended purpose is not factual proof."
+    },
+    {
+      "id": "quality_untuk_attack",
+      "scenario": "quality",
+      "field": "recommendations.description",
+      "value": "Evaluasi orbit satelit untuk memperbaiki kualitas produk.",
+      "expected": "invalid",
+      "rationale": "Unrelated action object borrows only its purpose from the evidence."
+    },
+    {
+      "id": "quality_agar_valid",
+      "scenario": "quality",
+      "field": "recommendations.description",
+      "value": "Evaluasi kualitas produk agar memahami keluhan pelanggan.",
+      "expected": "valid",
+      "rationale": "Action itself investigates the cited subject; intended purpose is not factual proof."
+    },
+    {
+      "id": "quality_agar_attack",
+      "scenario": "quality",
+      "field": "recommendations.description",
+      "value": "Evaluasi orbit satelit agar memperbaiki kualitas produk.",
+      "expected": "invalid",
+      "rationale": "Unrelated action object borrows only its purpose from the evidence."
+    },
+    {
+      "id": "quality_coordinate_fact",
+      "scenario": "quality",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: kualitas produk mungkin bermasalah dan gudang terbakar.",
+      "expected": "invalid",
+      "rationale": "Second independent asserted operational condition has no provenance."
+    },
+    {
+      "id": "quality_coordinate_speculation",
+      "scenario": "quality",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: kualitas produk mungkin bermasalah dan orbit satelit mungkin berubah.",
+      "expected": "invalid",
+      "rationale": "An independently modal unrelated subject cannot borrow the first topic."
+    },
+    {
+      "id": "quality_shared_object",
+      "scenario": "quality",
+      "field": "recommendations.description",
+      "value": "Evaluasi jumlah dan konsistensi kualitas produk.",
+      "expected": "valid",
+      "rationale": "Coordinated attributes share one cited object."
+    },
+    {
+      "id": "quality_causal",
+      "scenario": "quality",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: kualitas produk mungkin bermasalah karena pemeriksaan belum konsisten.",
+      "expected": "valid",
+      "rationale": "Tentative cause to investigate, not independently asserted as established."
+    },
+    {
+      "id": "packaging_untuk_valid",
+      "scenario": "packaging",
+      "field": "recommendations.description",
+      "value": "Evaluasi kemasan untuk memahami keluhan pelanggan.",
+      "expected": "valid",
+      "rationale": "Action itself investigates the cited subject; intended purpose is not factual proof."
+    },
+    {
+      "id": "packaging_untuk_attack",
+      "scenario": "packaging",
+      "field": "recommendations.description",
+      "value": "Evaluasi orbit satelit untuk memperbaiki kemasan.",
+      "expected": "invalid",
+      "rationale": "Unrelated action object borrows only its purpose from the evidence."
+    },
+    {
+      "id": "packaging_agar_valid",
+      "scenario": "packaging",
+      "field": "recommendations.description",
+      "value": "Evaluasi kemasan agar memahami keluhan pelanggan.",
+      "expected": "valid",
+      "rationale": "Action itself investigates the cited subject; intended purpose is not factual proof."
+    },
+    {
+      "id": "packaging_agar_attack",
+      "scenario": "packaging",
+      "field": "recommendations.description",
+      "value": "Evaluasi orbit satelit agar memperbaiki kemasan.",
+      "expected": "invalid",
+      "rationale": "Unrelated action object borrows only its purpose from the evidence."
+    },
+    {
+      "id": "packaging_coordinate_fact",
+      "scenario": "packaging",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: kemasan mungkin bermasalah dan gudang terbakar.",
+      "expected": "invalid",
+      "rationale": "Second independent asserted operational condition has no provenance."
+    },
+    {
+      "id": "packaging_coordinate_speculation",
+      "scenario": "packaging",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: kemasan mungkin bermasalah dan orbit satelit mungkin berubah.",
+      "expected": "invalid",
+      "rationale": "An independently modal unrelated subject cannot borrow the first topic."
+    },
+    {
+      "id": "packaging_shared_object",
+      "scenario": "packaging",
+      "field": "recommendations.description",
+      "value": "Evaluasi jumlah dan konsistensi kemasan.",
+      "expected": "valid",
+      "rationale": "Coordinated attributes share one cited object."
+    },
+    {
+      "id": "packaging_causal",
+      "scenario": "packaging",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: kemasan mungkin bermasalah karena pemeriksaan belum konsisten.",
+      "expected": "valid",
+      "rationale": "Tentative cause to investigate, not independently asserted as established."
+    },
+    {
+      "id": "pricing_untuk_valid",
+      "scenario": "pricing",
+      "field": "recommendations.description",
+      "value": "Evaluasi harga produk untuk memahami keluhan pelanggan.",
+      "expected": "valid",
+      "rationale": "Action itself investigates the cited subject; intended purpose is not factual proof."
+    },
+    {
+      "id": "pricing_untuk_attack",
+      "scenario": "pricing",
+      "field": "recommendations.description",
+      "value": "Evaluasi orbit satelit untuk memperbaiki harga produk.",
+      "expected": "invalid",
+      "rationale": "Unrelated action object borrows only its purpose from the evidence."
+    },
+    {
+      "id": "pricing_agar_valid",
+      "scenario": "pricing",
+      "field": "recommendations.description",
+      "value": "Evaluasi harga produk agar memahami keluhan pelanggan.",
+      "expected": "valid",
+      "rationale": "Action itself investigates the cited subject; intended purpose is not factual proof."
+    },
+    {
+      "id": "pricing_agar_attack",
+      "scenario": "pricing",
+      "field": "recommendations.description",
+      "value": "Evaluasi orbit satelit agar memperbaiki harga produk.",
+      "expected": "invalid",
+      "rationale": "Unrelated action object borrows only its purpose from the evidence."
+    },
+    {
+      "id": "pricing_coordinate_fact",
+      "scenario": "pricing",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: harga produk mungkin bermasalah dan gudang terbakar.",
+      "expected": "invalid",
+      "rationale": "Second independent asserted operational condition has no provenance."
+    },
+    {
+      "id": "pricing_coordinate_speculation",
+      "scenario": "pricing",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: harga produk mungkin bermasalah dan orbit satelit mungkin berubah.",
+      "expected": "invalid",
+      "rationale": "An independently modal unrelated subject cannot borrow the first topic."
+    },
+    {
+      "id": "pricing_shared_object",
+      "scenario": "pricing",
+      "field": "recommendations.description",
+      "value": "Evaluasi jumlah dan konsistensi harga produk.",
+      "expected": "valid",
+      "rationale": "Coordinated attributes share one cited object."
+    },
+    {
+      "id": "pricing_causal",
+      "scenario": "pricing",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: harga produk mungkin bermasalah karena pemeriksaan belum konsisten.",
+      "expected": "valid",
+      "rationale": "Tentative cause to investigate, not independently asserted as established."
+    },
+    {
+      "id": "orders_untuk_valid",
+      "scenario": "orders",
+      "field": "recommendations.description",
+      "value": "Evaluasi pencatatan pesanan untuk memahami keluhan pelanggan.",
+      "expected": "valid",
+      "rationale": "Action itself investigates the cited subject; intended purpose is not factual proof."
+    },
+    {
+      "id": "orders_untuk_attack",
+      "scenario": "orders",
+      "field": "recommendations.description",
+      "value": "Evaluasi orbit satelit untuk memperbaiki pencatatan pesanan.",
+      "expected": "invalid",
+      "rationale": "Unrelated action object borrows only its purpose from the evidence."
+    },
+    {
+      "id": "orders_agar_valid",
+      "scenario": "orders",
+      "field": "recommendations.description",
+      "value": "Evaluasi pencatatan pesanan agar memahami keluhan pelanggan.",
+      "expected": "valid",
+      "rationale": "Action itself investigates the cited subject; intended purpose is not factual proof."
+    },
+    {
+      "id": "orders_agar_attack",
+      "scenario": "orders",
+      "field": "recommendations.description",
+      "value": "Evaluasi orbit satelit agar memperbaiki pencatatan pesanan.",
+      "expected": "invalid",
+      "rationale": "Unrelated action object borrows only its purpose from the evidence."
+    },
+    {
+      "id": "orders_coordinate_fact",
+      "scenario": "orders",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: pencatatan pesanan mungkin bermasalah dan gudang terbakar.",
+      "expected": "invalid",
+      "rationale": "Second independent asserted operational condition has no provenance."
+    },
+    {
+      "id": "orders_coordinate_speculation",
+      "scenario": "orders",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: pencatatan pesanan mungkin bermasalah dan orbit satelit mungkin berubah.",
+      "expected": "invalid",
+      "rationale": "An independently modal unrelated subject cannot borrow the first topic."
+    },
+    {
+      "id": "orders_shared_object",
+      "scenario": "orders",
+      "field": "recommendations.description",
+      "value": "Evaluasi jumlah dan konsistensi pencatatan pesanan.",
+      "expected": "valid",
+      "rationale": "Coordinated attributes share one cited object."
+    },
+    {
+      "id": "orders_causal",
+      "scenario": "orders",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: pencatatan pesanan mungkin bermasalah karena pemeriksaan belum konsisten.",
+      "expected": "valid",
+      "rationale": "Tentative cause to investigate, not independently asserted as established."
+    },
+    {
+      "id": "stock_untuk_valid",
+      "scenario": "stock",
+      "field": "recommendations.description",
+      "value": "Evaluasi pencatatan stok untuk memahami keluhan pelanggan.",
+      "expected": "valid",
+      "rationale": "Action itself investigates the cited subject; intended purpose is not factual proof."
+    },
+    {
+      "id": "stock_untuk_attack",
+      "scenario": "stock",
+      "field": "recommendations.description",
+      "value": "Evaluasi orbit satelit untuk memperbaiki pencatatan stok.",
+      "expected": "invalid",
+      "rationale": "Unrelated action object borrows only its purpose from the evidence."
+    },
+    {
+      "id": "stock_agar_valid",
+      "scenario": "stock",
+      "field": "recommendations.description",
+      "value": "Evaluasi pencatatan stok agar memahami keluhan pelanggan.",
+      "expected": "valid",
+      "rationale": "Action itself investigates the cited subject; intended purpose is not factual proof."
+    },
+    {
+      "id": "stock_agar_attack",
+      "scenario": "stock",
+      "field": "recommendations.description",
+      "value": "Evaluasi orbit satelit agar memperbaiki pencatatan stok.",
+      "expected": "invalid",
+      "rationale": "Unrelated action object borrows only its purpose from the evidence."
+    },
+    {
+      "id": "stock_coordinate_fact",
+      "scenario": "stock",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: pencatatan stok mungkin bermasalah dan gudang terbakar.",
+      "expected": "invalid",
+      "rationale": "Second independent asserted operational condition has no provenance."
+    },
+    {
+      "id": "stock_coordinate_speculation",
+      "scenario": "stock",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: pencatatan stok mungkin bermasalah dan orbit satelit mungkin berubah.",
+      "expected": "invalid",
+      "rationale": "An independently modal unrelated subject cannot borrow the first topic."
+    },
+    {
+      "id": "stock_shared_object",
+      "scenario": "stock",
+      "field": "recommendations.description",
+      "value": "Evaluasi jumlah dan konsistensi pencatatan stok.",
+      "expected": "valid",
+      "rationale": "Coordinated attributes share one cited object."
+    },
+    {
+      "id": "stock_causal",
+      "scenario": "stock",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: pencatatan stok mungkin bermasalah karena pemeriksaan belum konsisten.",
+      "expected": "valid",
+      "rationale": "Tentative cause to investigate, not independently asserted as established."
+    },
+    {
+      "id": "product_different_financial_topic",
+      "scenario": "bakery",
+      "field": "recommendations.description",
+      "value": "Evaluasi derivatif valuta untuk usaha roti.",
+      "expected": "invalid",
+      "rationale": "Unseen unrelated financial object; bread in purpose supplies no relevance."
+    },
+    {
+      "id": "a_reported_denial",
+      "scenario": "queue_denial",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: antrean mungkin panjang tetapi Owner menyatakan: Mesin kasir tidak rusak.",
+      "expected": "valid",
+      "rationale": "Tentative symptom plus faithful attribution of the cited owner denial."
+    },
+    {
+      "id": "a_false_attribution",
+      "scenario": "queue_denial",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: antrean mungkin panjang tetapi Owner menyatakan: Mesin kasir rusak.",
+      "expected": "invalid",
+      "rationale": "Attribution contradicts the actual owner denial."
+    },
+    {
+      "id": "number_valid",
+      "scenario": "queue",
+      "field": "recommendations.description",
+      "value": "Amati antrean kasir dengan jumlah kasir 2 orang.",
+      "expected": "valid",
+      "rationale": "Operational role and quantity match cited confirmed memory."
+    },
+    {
+      "id": "number_invalid",
+      "scenario": "queue",
+      "field": "recommendations.description",
+      "value": "Amati antrean kasir dengan jumlah kasir 3 orang.",
+      "expected": "invalid",
+      "rationale": "Operational quantity conflicts with confirmed memory."
+    },
+    {
+      "id": "sql_invalid",
+      "scenario": "queue",
+      "field": "findings.statement",
+      "value": "Sebanyak 99 opini negatif.",
+      "expected": "invalid",
+      "rationale": "No source ID supports a fabricated SQL quantity."
+    },
+    {
+      "id": "finding_negation",
+      "scenario": "quality",
+      "field": "findings.statement",
+      "value": "Pelanggan menyebut: Kualitas produk konsisten.",
+      "expected": "invalid",
+      "rationale": "Erases the customer negation."
+    },
+    {
+      "id": "finding_owner",
+      "scenario": "queue",
+      "field": "findings.statement",
+      "value": "Owner menyatakan: Kasir mencatat pesanan secara manual.",
+      "expected": "valid",
+      "rationale": "Faithful attributed owner excerpt."
+    },
+    {
+      "id": "wrong_namespace",
+      "scenario": "queue",
+      "field": "recommendations.description",
+      "value": "Amati antrean kasir.",
+      "expected": "invalid",
+      "rationale": "A memory UUID is not an opinion UUID.",
+      "references": {
+        "opinion_ids": [
+          "30000000-0000-4000-8000-000000000001"
+        ]
+      }
+    },
+    {
+      "id": "missing_id",
+      "scenario": "queue",
+      "field": "hypotheses.statement",
+      "value": "Hipotesis: antrean mungkin panjang.",
+      "expected": "invalid",
+      "rationale": "Unknown UUID provides no provenance.",
+      "references": {
+        "opinion_ids": [
+          "10000000-0000-4000-8000-000000000099"
+        ]
+      }
+    },
+    {
+      "id": "no_refs",
+      "scenario": "bakery",
+      "field": "recommendations.description",
+      "value": "Amati isian roti.",
+      "expected": "invalid",
+      "rationale": "Proposals still need current source references.",
+      "references": {}
+    }
+  ]
+}
