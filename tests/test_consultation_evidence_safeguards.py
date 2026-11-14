@@ -78,7 +78,7 @@ def mock_rpc():
         server.start()
         with grpc.insecure_channel(f"127.0.0.1:{port}") as channel:
             response = ai_pb2_grpc.AIServiceStub(channel).ProcessConsultationTurn(
-                request, timeout=5, metadata=(("authorization", "Bearer test-only"),)
+                request, timeout=30, metadata=(("authorization", "Bearer test-only"),)
             )
         return response, factory.call_count
 

@@ -152,15 +152,21 @@ def _normal(text: str) -> str:
 
 
 _ATTRIBUTION = re.compile(
-    r"^(?:(pelanggan|customer|owner|pemilik)\s+(?:menyebut|menilai|melaporkan|menyatakan|mengatakan|mengeluhkan)"
+    r"^(?:(pelanggan|customer|owner|pemilik)\s+(?:menyebut|menilai|melaporkan|menyatakan|"
+    r"mengatakan|mengeluhkan|menulis|menjelaskan|menceritakan|menginformasikan|mengonfirmasi)"
     r"|menurut\s+(pelanggan|customer|owner|pemilik))\s*[:,]?\s*",
+    re.IGNORECASE,
+)
+# A confirmed-memory label; the claim is then checked against memory sources.
+_MEMORY_PREFIX = re.compile(
+    r"^(?:fakta|memori|catatan)\s+bisnis(?:\s+(?:yang\s+)?(?:terkonfirmasi|dikonfirmasi))?\s*:\s*",
     re.IGNORECASE,
 )
 
 
 def attributed_text(text: str) -> str:
     """Strip only the explicit reporting prefix, without modifying source content."""
-    return _ATTRIBUTION.sub("", text, count=1)
+    return _MEMORY_PREFIX.sub("", _ATTRIBUTION.sub("", text, count=1), count=1)
 
 
 def verbatim_quote_supported(quote: str, evidence: str, feedback: str) -> bool:
@@ -293,6 +299,17 @@ _CERTAINTY = re.compile(
     re.IGNORECASE,
 )
 _ACHIEVED = re.compile(r"\b(telah|sudah|tercapai|achieved|already)\b", re.IGNORECASE)
+_NEGATORS = {"belum", "tidak", "bukan", "tak"}
+
+
+def _asserts(pattern: re.Pattern, text: str) -> bool:
+    """A match counts unless directly negated ("belum terverifikasi", "tidak disebabkan")."""
+    for match in pattern.finditer(text):
+        if not _NEGATORS.intersection(_normal(text[: match.start()]).split()[-2:]):
+            return True
+    return False
+
+
 _PREMISE = re.compile(
     r"\b(tersedia|memiliki|dimiliki|yang ada|yang rusak)\b", re.IGNORECASE
 )
@@ -857,7 +874,11 @@ def evaluate_claim(
     text = claim.text.strip()
     sources = cited_sources(claim, context)
     label, reason = GroundingLabel.INSUFFICIENT_EVIDENCE, "unresolved_claim"
-    if _UNIVERSAL.search(text) or _CERTAINTY.search(text):
+    if _UNIVERSAL.search(text) or (
+        _asserts_with(_CERTAINTY, text, _HYPOTHESIS_HEDGES)
+        if claim.kind == "hypothesis"
+        else _asserts(_CERTAINTY, text)
+    ):
         reason = "unproven_scope_causality_or_independent_verification"
     elif (
         claim.kind == "recommendation" and claim.recommendation_description is not None
@@ -927,9 +948,7 @@ def evaluate_claim(
                 or _related_hypothesis(part, sources)
                 for part in clauses
             )
-            and not re.search(
-                r"\b(karena|sebab|mengingat|because)\b", text, re.IGNORECASE
-            )
+            and not _cause_asserts_fact(text)
         ):
             label, reason = (
                 GroundingLabel.NOT_APPLICABLE,
@@ -1061,6 +1080,185 @@ def evaluate_claim(
     return GroundingDecision(claim_id=claim.claim_id, label=label, reason=reason)
 
 
+_GUARANTEE = re.compile(
+    r"\b(pasti|dijamin|menjamin|jaminan|garansi|guaranteed|guarantee)\b", re.IGNORECASE
+)
+# Asserted conditions/resources that advice must not introduce as facts.
+_PROPOSAL_FACT = re.compile(
+    r"\b(rusak|lelah|tersedia|ketersediaan|memiliki|dimiliki)\b", re.IGNORECASE
+)
+_RESOURCE = (
+    r"(staf|karyawan|pegawai|barista|kasir|mesin|alat|peralatan|aplikasi|sistem|"
+    r"cabang|kendaraan)"
+)
+# Committing to resources the owner never confirmed (budget/staff/equipment).
+_RESOURCE_COMMIT = re.compile(
+    r"\b(penambahan|pengadaan|pembelian|membeli|beli|merekrut|rekrut|perekrutan|"
+    r"menambah|tambah|tambahkan)\s+(?:\w+\s+){0,2}?" + _RESOURCE + r"\b",
+    re.IGNORECASE,
+)
+_NEW_RESOURCE = re.compile(
+    r"\b" + _RESOURCE + r"\s+(baru|tambahan|otomatis|modern|digital)\b", re.IGNORECASE
+)
+_OUTCOME = re.compile(
+    r"\b(meningkat|naik|turun|menurun|berkurang|bertambah|puas)\b", re.IGNORECASE
+)
+_PURPOSE = re.compile(
+    r"\b(untuk|agar|supaya|diharapkan|harapannya|target|sasaran|guna)\b", re.IGNORECASE
+)
+_PROPOSAL_KINDS = {"recommendation", "metric", "target", "timeframe"}
+
+
+def _asserted_outcome(text: str) -> bool:
+    """An outcome stated as a result ("Pendapatan meningkat"), not as a purpose."""
+    for clause in re.split(r"[.;!?]", text):
+        for match in _OUTCOME.finditer(clause):
+            if not _PURPOSE.search(clause[: match.start()]):
+                return True
+    return False
+
+
+def _asserts_with(
+    pattern: re.Pattern, text: str, negators: set[str], window: int = 2
+) -> bool:
+    for match in pattern.finditer(text):
+        before = _normal(text[: match.start()]).split()[-window:]
+        if not negators.intersection(before):
+            return True
+    return False
+
+
+# Words that turn a condition into a risk/goal rather than an asserted state
+# ("risiko ... rusak", "agar tidak rusak", "mencegah kemasan rusak").
+_RISK_HEDGES = _NEGATORS | {
+    "risiko",
+    "potensi",
+    "kemungkinan",
+    "mencegah",
+    "menghindari",
+    "agar",
+    "supaya",
+    "jika",
+    "bila",
+    "apabila",
+}
+# A hedged cause in a hypothesis ("mungkin disebabkan oleh ...") is tentative.
+_HYPOTHESIS_HEDGES = _NEGATORS | {"mungkin", "diduga", "kemungkinan", "bisa"}
+
+
+def _cause_asserts_fact(text: str) -> bool:
+    """A tentative hypothesis may name a cause, but the cause must not be a new fact."""
+    _, *cause = re.split(
+        r"\s+(?:karena|sebab|mengingat|because)\s+",
+        text,
+        maxsplit=1,
+        flags=re.IGNORECASE,
+    )
+    if not cause:
+        return False
+    return bool(
+        _asserts_with(_PROPOSAL_FACT, cause[0], _NEGATORS)
+        or _PREMISE.search(cause[0])
+        or _asserted_outcome(cause[0])
+    )
+
+
+def evaluate_proposal(
+    claim: GroundingClaim, context: ConsultationContext
+) -> GroundingDecision:
+    """Advice is checked as advice, not as a fact (production path, P-B1).
+
+    No verb whitelist: any actionable wording is allowed. Still blocked: promised
+    outcomes, already-achieved results, universal or causal assertions, asserted
+    broken equipment, unproven operational numbers, and unsupported "karena" premises.
+    Numbers/ID namespaces are also checked structurally in solution.validate_solution.
+    """
+
+    def decision(label: GroundingLabel, reason: str) -> GroundingDecision:
+        return GroundingDecision(claim_id=claim.claim_id, label=label, reason=reason)
+
+    text = claim.text.strip()
+    body = text.removeprefix("Usulan:").strip()
+    if not body:
+        return decision(GroundingLabel.INSUFFICIENT_EVIDENCE, "empty_proposal")
+    if _GUARANTEE.search(body) or _ACHIEVED.search(body):
+        return decision(
+            GroundingLabel.INSUFFICIENT_EVIDENCE, "proposal_promises_outcome"
+        )
+    if _UNIVERSAL.search(body) or _asserts(_CERTAINTY, body):
+        return decision(
+            GroundingLabel.INSUFFICIENT_EVIDENCE, "proposal_asserts_scope_or_cause"
+        )
+    if claim.kind in {"target", "timeframe"}:
+        # Future goals ("tidak ada kemasan rusak") are not factual premises.
+        return decision(
+            GroundingLabel.NOT_APPLICABLE, "proposal_without_unproven_assertion"
+        )
+    if _asserts_with(_PROPOSAL_FACT, body, _RISK_HEDGES, window=4):
+        return decision(GroundingLabel.INSUFFICIENT_EVIDENCE, "proposal_asserts_fact")
+    if _asserts_with(_RESOURCE_COMMIT, body, _NEGATORS | {"tanpa"}) or _asserts_with(
+        _NEW_RESOURCE, body, _NEGATORS | {"tanpa"}
+    ):
+        return decision(
+            GroundingLabel.INSUFFICIENT_EVIDENCE,
+            "proposal_assumes_unconfirmed_resource",
+        )
+    if claim.kind == "metric" and _OUTCOME.search(body):
+        return decision(GroundingLabel.INSUFFICIENT_EVIDENCE, "metric_asserts_outcome")
+    if claim.kind == "recommendation" and _asserted_outcome(body):
+        return decision(
+            GroundingLabel.INSUFFICIENT_EVIDENCE, "proposal_asserts_outcome"
+        )
+    if claim.kind == "recommendation":
+        # A recommendation TITLE is a label: it must not assert a fact either.
+        if claim.recommendation_description is not None and (
+            _LABEL_ASSERTION.search(body) or _CURRENT_ASSERTION.search(body)
+        ):
+            return decision(
+                GroundingLabel.INSUFFICIENT_EVIDENCE, "title_asserts_fact_or_outcome"
+            )
+        sources = cited_sources(claim, context)
+        _, operations_supported = operational_number_context(
+            text, sources, action_window=True
+        )
+        if not operations_supported:
+            return decision(
+                GroundingLabel.INSUFFICIENT_EVIDENCE, "operational_number_unproven"
+            )
+        _, *premise = re.split(
+            r"\s+(?:karena|sebab|mengingat|because)\s+",
+            body,
+            maxsplit=1,
+            flags=re.IGNORECASE,
+        )
+        if premise:
+            verdict = evaluate_claim(
+                GroundingClaim(
+                    claim_id=claim.claim_id,
+                    kind="finding",
+                    text=premise[0],
+                    references=claim.references,
+                ),
+                context,
+            )
+            if verdict.label != GroundingLabel.SUPPORTED:
+                return decision(
+                    GroundingLabel.INSUFFICIENT_EVIDENCE, "proposal_premise_unsupported"
+                )
+    return decision(
+        GroundingLabel.NOT_APPLICABLE, "proposal_without_unproven_assertion"
+    )
+
+
+def production_verdict(
+    claim: GroundingClaim, context: ConsultationContext
+) -> GroundingDecision:
+    """The blocking check used for returned Solutions."""
+    if claim.kind in _PROPOSAL_KINDS:
+        return evaluate_proposal(claim, context)
+    return evaluate_claim(claim, context, semantic_checks=False)
+
+
 def solution_claims(solution: "GeneratedSolution") -> list[GroundingClaim]:
     """Keep component boundaries; evaluate each factual clause and proposal premise."""
     claims = []
@@ -1135,7 +1333,7 @@ def validate_grounding(
             raise ConsultationFailure(
                 grpc.StatusCode.CANCELLED, "Consultation cancelled"
             )
-        evidence = evaluate_claim(claim, context, semantic_checks=False)
+        evidence = production_verdict(claim, context)
         if evidence.label not in ACCEPTED_LABELS:
             raise ConsultationFailure(
                 grpc.StatusCode.INTERNAL,

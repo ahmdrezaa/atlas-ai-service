@@ -255,8 +255,8 @@ def test_long_history_rejected_without_invocation_or_truncation(
 
 def test_deadline_and_provider_timeout_configuration(request_factory, mocked_assessor):
     assessor, factory, structured = mocked_assessor
-    ConsultationPipeline(assessor).run(request_factory(), time_remaining=2)
-    assert factory.call_args.kwargs["timeout"] == pytest.approx(1.75, abs=0.05)
+    ConsultationPipeline(assessor).run(request_factory(), time_remaining=12)
+    assert factory.call_args.kwargs["timeout"] == pytest.approx(11.75, abs=0.05)
     assert factory.call_args.kwargs["max_retries"] == 0
     assert factory.call_args.kwargs["temperature"] == 0
     assert structured.invoke.call_args.kwargs["config"] == {"callbacks": []}
@@ -267,8 +267,8 @@ def test_max_python_budget_does_not_override_shorter_caller_deadline(
 ):
     assessor, factory, _ = mocked_assessor
     assessor.settings = assessor.settings.model_copy(update={"timeout_seconds": 55})
-    ConsultationPipeline(assessor).run(request_factory(), time_remaining=3)
-    assert factory.call_args.kwargs["timeout"] == pytest.approx(2.75, abs=0.05)
+    ConsultationPipeline(assessor).run(request_factory(), time_remaining=13)
+    assert factory.call_args.kwargs["timeout"] == pytest.approx(12.75, abs=0.05)
 
 
 @pytest.mark.parametrize(
@@ -301,7 +301,7 @@ def test_cancellation_after_invocation(request_factory, mocked_assessor):
 def test_post_invocation_deadline(request_factory, mocked_assessor, monkeypatch):
     assessor, _, _ = mocked_assessor
     monkeypatch.setattr(
-        "atlas_ai.consultation.assessment.time",
+        "atlas_ai.llm.time",
         SimpleNamespace(monotonic=Mock(side_effect=[10, 10, 100])),
     )
     with pytest.raises(ConsultationFailure) as error:

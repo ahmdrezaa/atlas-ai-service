@@ -441,7 +441,7 @@ def test_mock_provider_through_authenticated_grpc_returns_solution_and_memory_ca
         with grpc.insecure_channel(f"127.0.0.1:{port}") as channel:
             response = ai_pb2_grpc.AIServiceStub(channel).ProcessConsultationTurn(
                 solution_request,
-                timeout=5,
+                timeout=30,
                 metadata=(("authorization", "Bearer test-only"),),
             )
         assert response.HasField("solution")

@@ -259,3 +259,25 @@ def invalid_request(request, request_factory):
         target = target[int(part)] if part.isdecimal() else getattr(target, part)
     setattr(target, parts[-1], replacement)
     return value, error
+
+
+@pytest.fixture
+def feedback_request_factory():
+    """Path A request with valid IDs; tests override fields as needed."""
+
+    def make(text="Rotinya empuk, tapi isian coklatnya sedikit.", rating=4.0):
+        shop_id = str(uuid4())
+        return ai_pb2.ProcessFeedbackRequest(
+            shop_id=shop_id,
+            feedback=ai_pb2.Feedback(
+                id=str(uuid4()),
+                customer_name="Rahasia Pelanggan",
+                rating=rating,
+                text=text,
+            ),
+            shop=ai_pb2.ShopProfile(
+                id=shop_id, name="Toko Roti Uji", category="Bakery", scale="Mikro"
+            ),
+        )
+
+    return make

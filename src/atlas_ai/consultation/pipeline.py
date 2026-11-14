@@ -1,3 +1,4 @@
+import logging
 import time
 from collections.abc import Callable
 
@@ -15,6 +16,8 @@ from atlas_ai.consultation.context import prepare_context
 from atlas_ai.consultation.memory import memory_candidates_to_proto
 from atlas_ai.consultation.prompts import PROMPT_VERSION, SOLUTION_PROMPT_VERSION
 from atlas_ai.consultation.solution import SolutionGenerator
+
+logger = logging.getLogger(__name__)
 
 
 class ConsultationPipeline:
@@ -90,11 +93,29 @@ class ConsultationPipeline:
         )
         if must_generate(context) or assessment.decision == "GENERATE_SOLUTION":
             return solution_response(assessment.memory_candidates)
+        try:
+            question = validate_question(assessment.question, context)
+        except ConsultationFailure:
+            # P-B1: an invalid/repeated question should not fail the turn; give a
+            # solution instead when there is verifiable evidence to ground it.
+            if not has_evidence(context):
+                raise
+            logger.info(
+                "consultation_question_fallback session_id=%s", context.session_id
+            )
+            return solution_response(assessment.memory_candidates)
         return finish_response(
             ai_pb2.ProcessConsultationTurnResponse(
-                next_question=validate_question(assessment.question, context),
+                next_question=question,
                 memory_candidates=memory_protos(assessment.memory_candidates),
                 model_id=assessor.settings.model,
                 prompt_version=PROMPT_VERSION,
             )
         )
+
+
+def has_evidence(context) -> bool:
+    return any(
+        item.evidence_text.strip() or item.full_feedback.strip()
+        for item in context.representative_evidence
+    )

@@ -1,5 +1,6 @@
 """Typed solution generation, deterministic structural checks and protobuf mapping."""
 
+import logging
 import re
 import time
 from collections.abc import Callable
@@ -16,12 +17,15 @@ from atlas_ai.consultation.assessment import (
     invoke_structured,
 )
 from atlas_ai.consultation.grounding import (
+    ACCEPTED_LABELS,
     NUMBER_WORDS,
     TENTATIVE,
     GroundingClaim,
     attributed_text,
     cited_sources,
     operational_number_context,
+    production_verdict,
+    solution_claims,
     validate_grounding,
     verbatim_quote_supported,
 )
@@ -37,6 +41,8 @@ from atlas_ai.consultation.models import (
     SuccessIndicator,
 )
 from atlas_ai.consultation.prompts import SOLUTION_PROMPT
+
+logger = logging.getLogger(__name__)
 
 Text = Annotated[str, StringConstraints(min_length=1, max_length=3000)]
 Label = Annotated[
@@ -112,6 +118,11 @@ def solution_provider_schema() -> dict:
 
 
 NUMBER = re.compile(r"\d")
+ENUMERATOR = re.compile(
+    r"(?:\b(?:usulan\s+)?(?:alternatif|opsi|pilihan|langkah|tahap)\s+\d{1,2}\b\s*:?)"
+    r"|(?m:^\s*\d{1,2}[.)]\s+)",
+    re.IGNORECASE,
+)
 SQL_QUANTITY = re.compile(r"\b(opini|feedback|rata[- ]rata rating)\b", re.IGNORECASE)
 CERTAINTY = re.compile(
     r"\b(terbukti|dipastikan|penyebab pasti|proven|confirmed cause)\b", re.IGNORECASE
@@ -148,7 +159,8 @@ def _check_numbers(
 ) -> None:
     if "[[stat:" in text:
         _reject("aggregate statistics are context-only in MVP Solution output")
-    rest = text
+    # List numbering in advice ("Usulan alternatif 1:", "1. ...") is not a fact.
+    rest = ENUMERATOR.sub(" ", text) if proposal else text
     is_proposal = proposal and text.startswith("Usulan:")
     if (
         not is_proposal
@@ -186,59 +198,192 @@ def _check_numbers(
 
 
 def validate_solution(
+    solution: GeneratedSolution, context: ConsultationContext, *, notes: bool = True
+) -> None:
+    """Raise on the first structural problem (all items must be valid).
+
+    notes=False is the production structural stage: it skips the optional
+    customer_evidence.note (blanked) and hypothesis framing (dropped), which
+    prune_solution handles item by item. Fabrication checks always raise.
+    """
+    for item in (*solution.findings, *solution.hypotheses, *solution.recommendations):
+        _check_claim_item(item, context, framing=notes)
+    for item in solution.customer_evidence:
+        _check_quote(item, context)
+        if notes:
+            _check_note(item, context)
+    for item in solution.success_indicators:
+        _check_indicator(item, context)
+
+
+def check_fabrication(
     solution: GeneratedSolution, context: ConsultationContext
 ) -> None:
+    """Invented sources: reference IDs outside their namespace, non-verbatim quotes."""
     for item in (*solution.findings, *solution.hypotheses, *solution.recommendations):
-        sources = _sources(item.references, context)
-        text = (
-            item.title if isinstance(item, GeneratedRecommendation) else item.statement
-        )
-        if not text.strip():
-            _reject("required text is blank")
-        if not sources:
-            _reject("claim/action has no current sources")
-        _check_numbers(
-            text, sources, context, proposal=isinstance(item, GeneratedRecommendation)
-        )
-        if isinstance(item, GeneratedRecommendation):
-            # Local output policy, not a protobuf/historical-model constraint.
-            # Keep the provider schema and existing application error boundary.
-            if not item.description.strip():
-                _reject("recommendation description is blank")
-            _check_numbers(item.description, sources, context, proposal=True)
-        if isinstance(item, GeneratedFinding) and re.search(
-            r"\b(disebabkan|penyebabnya|caused by|because of)\b", text, re.IGNORECASE
-        ):
-            _reject("finding asserts a causal explanation")
-        if isinstance(item, GeneratedHypothesis) and (
-            not text.startswith("Hipotesis:")
-            or CERTAINTY.search(text)
-            or not TENTATIVE.search(text)
-        ):
-            _reject("hypothesis must be explicitly tentative")
+        _sources(item.references, context)
     for item in solution.customer_evidence:
-        source = context.sources.opinions.get(item.opinion_id)
-        if source is None or not verbatim_quote_supported(
-            item.quote, source.evidence_text, source.full_feedback
+        _check_quote(item, context)
+
+
+def _check_claim_item(
+    item, context: ConsultationContext, *, framing: bool = True
+) -> None:
+    sources = _sources(item.references, context)
+    text = item.title if isinstance(item, GeneratedRecommendation) else item.statement
+    if not text.strip():
+        _reject("required text is blank")
+    if not sources:
+        _reject("claim/action has no current sources")
+    _check_numbers(
+        text, sources, context, proposal=isinstance(item, GeneratedRecommendation)
+    )
+    if isinstance(item, GeneratedRecommendation):
+        # Local output policy, not a protobuf/historical-model constraint.
+        # Keep the provider schema and existing application error boundary.
+        if not item.description.strip():
+            _reject("recommendation description is blank")
+        _check_numbers(item.description, sources, context, proposal=True)
+    if isinstance(item, GeneratedFinding) and re.search(
+        r"\b(disebabkan|penyebabnya|caused by|because of)\b", text, re.IGNORECASE
+    ):
+        _reject("finding asserts a causal explanation")
+    if isinstance(item, GeneratedHypothesis) and framing:
+        _check_hypothesis_framing(item)
+
+
+def _check_hypothesis_framing(item) -> None:
+    """Wording, not fabrication: production drops a badly framed hypothesis."""
+    text = item.statement
+    if (
+        not text.startswith("Hipotesis:")
+        or CERTAINTY.search(text)
+        or not TENTATIVE.search(text)
+    ):
+        _reject("hypothesis must be explicitly tentative")
+
+
+def _check_quote(item, context: ConsultationContext) -> None:
+    source = context.sources.opinions.get(item.opinion_id)
+    if source is None or not verbatim_quote_supported(
+        item.quote, source.evidence_text, source.full_feedback
+    ):
+        _reject("customer quote is not verbatim in the cited source")
+
+
+def _check_note(item, context: ConsultationContext) -> None:
+    _check_numbers(item.note, [], context)
+
+
+def _check_indicator(item, context: ConsultationContext) -> None:
+    if not item.metric.strip():
+        _reject("success metric is blank")
+    _check_numbers(item.metric, [], context)
+    for value in (item.target, item.timeframe):
+        if value and (
+            not value.startswith("Usulan:") or not value.removeprefix("Usulan:").strip()
         ):
-            _reject("customer quote is not verbatim in the cited source")
-        _check_numbers(item.note, [], context)
-    for item in solution.success_indicators:
-        if not item.metric.strip():
-            _reject("success metric is blank")
-        _check_numbers(item.metric, [], context)
-        for value in (item.target, item.timeframe):
-            if value and (
-                not value.startswith("Usulan:")
-                or not value.removeprefix("Usulan:").strip()
-            ):
-                _reject("success target/timeframe must be explicitly proposed")
-            if "[[stat:" in value:
-                _reject("statistic markers are not proposed targets")
-            if re.search(
-                r"\b(telah|sudah|tercapai|achieved|already)\b", value, re.IGNORECASE
-            ):
-                _reject("proposed success indicator claims a historical achievement")
+            _reject("success target/timeframe must be explicitly proposed")
+        if "[[stat:" in value:
+            _reject("statistic markers are not proposed targets")
+        if re.search(
+            r"\b(telah|sudah|tercapai|achieved|already)\b", value, re.IGNORECASE
+        ):
+            _reject("proposed success indicator claims a historical achievement")
+
+
+SECTIONS = (
+    "findings",
+    "customer_evidence",
+    "hypotheses",
+    "recommendations",
+    "success_indicators",
+)
+
+
+def prune_solution(
+    solution: GeneratedSolution, context: ConsultationContext
+) -> tuple[GeneratedSolution, list[tuple[str, str]]]:
+    """Drop weakly grounded items instead of failing the whole turn (P-B1).
+
+    Policy:
+    - Fabrication (a non-verbatim quote, an invented or wrong-namespace reference
+      ID) REJECTS the whole output (checked in check_fabrication): a model that
+      invents sources is not trusted for the rest of that answer.
+    - Any other failing item is DROPPED: unverifiable numbers or statistics,
+      asserted causes in findings, untentative hypotheses, unproven advice, blank
+      or uncited text. Every remaining item passes the same checks as before and
+      nothing is rewritten. A dropped item never reaches the output.
+    - An invalid optional customer_evidence.note is blanked.
+    - Fails when a section would be empty (all five are required by Go).
+    """
+    dropped: list[tuple[str, str]] = []
+    claims: dict[str, list] = {}
+    for claim in solution_claims(solution):
+        claims.setdefault(claim.claim_id.rsplit(".", 1)[0], []).append(claim)
+
+    def grounding_problem(key: str) -> tuple[str, str] | None:
+        for claim in claims.get(key, []):
+            verdict = production_verdict(claim, context)
+            if verdict.label not in ACCEPTED_LABELS:
+                return claim.claim_id, f"{verdict.label.value}:{verdict.reason}"
+        return None
+
+    kept: dict[str, list] = {name: [] for name in SECTIONS}
+    for name in SECTIONS:
+        for index, item in enumerate(getattr(solution, name)):
+            key = f"{name}[{index}]"
+            if name == "customer_evidence":
+                _check_quote(item, context)  # Fabrication: always fatal.
+            else:
+                try:
+                    if name == "success_indicators":
+                        _check_indicator(item, context)
+                    else:
+                        _check_claim_item(item, context, framing=False)
+                except ConsultationFailure as exc:
+                    if "namespace" in str(exc):
+                        raise  # Invented/wrong-namespace reference ID.
+                    dropped.append(
+                        (key, str(exc).removeprefix("Invalid solution output: "))
+                    )
+                    continue
+            if name == "hypotheses":
+                try:
+                    _check_hypothesis_framing(item)
+                except ConsultationFailure:
+                    dropped.append((f"{key}.statement", "not_tentative"))
+                    continue
+            if name == "customer_evidence":
+                note_problem = None
+                try:
+                    _check_note(item, context)
+                except ConsultationFailure as exc:
+                    note_problem = str(exc)
+                note_problem = note_problem or grounding_problem(key)
+                if note_problem:
+                    dropped.append((f"{key}.note", "blanked"))
+                    item = item.model_copy(update={"note": ""})
+                kept[name].append(item)
+                continue
+            problem = grounding_problem(key)
+            if problem:
+                dropped.append(problem)
+                continue
+            kept[name].append(item)
+
+    empty = [name for name in SECTIONS if not kept[name]]
+    if empty:
+        reasons = "; ".join(
+            f"{key}: {why}" for key, why in dropped if key.split("[")[0] in empty
+        )
+        raise ConsultationFailure(
+            grpc.StatusCode.INTERNAL,
+            f"Solution grounding rejected {reasons} ({', '.join(empty)} empty)",
+        )
+    return GeneratedSolution.model_validate(
+        {name: [item.model_dump() for item in kept[name]] for name in SECTIONS}
+    ), dropped
 
 
 def solution_to_proto(
@@ -252,12 +397,21 @@ def solution_to_proto(
     started = time.monotonic()
     stage_started = time.monotonic() if timings is not None else 0
     try:
-        validate_solution(solution, context)
+        # Fabrication (non-verbatim quotes, invented reference IDs) rejects the output.
+        check_fabrication(solution, context)
     finally:
         if timings is not None:
             timings["solution.structural"] = time.monotonic() - stage_started
     stage_started = time.monotonic() if timings is not None else 0
     try:
+        # Drop weakly grounded items; the remainder must then pass every check.
+        solution, dropped = prune_solution(solution, context)
+        if dropped:
+            # Claim IDs and reason codes only; never generated or source text.
+            logger.info(
+                "solution_pruned dropped=%s",
+                ",".join(f"{key}={why[:80]}" for key, why in dropped),
+            )
         validate_grounding(
             solution,
             context,

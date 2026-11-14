@@ -1,9 +1,9 @@
 import grpc
 
 from atlas.ai.v1 import ai_pb2_grpc
-from atlas_ai.consultation.assessment import ConsultationFailure
 from atlas_ai.consultation.pipeline import ConsultationPipeline
 from atlas_ai.feedback.pipeline import FeedbackPipeline
+from atlas_ai.llm import AIFailure
 
 
 class AtlasAIService(ai_pb2_grpc.AIServiceServicer):
@@ -15,10 +15,18 @@ class AtlasAIService(ai_pb2_grpc.AIServiceServicer):
 
     def ProcessFeedback(self, request, context):
         try:
-            return self.feedback_pipeline.run(request)
-        except NotImplementedError as exc:
+            return self.feedback_pipeline.run(
+                request,
+                time_remaining=context.time_remaining(),
+                is_active=context.is_active,
+            )
+
+        except AIFailure as exc:
+            context.abort(exc.code, str(exc))
+
+        except ValueError as exc:
             context.abort(
-                grpc.StatusCode.UNIMPLEMENTED,
+                grpc.StatusCode.INVALID_ARGUMENT,
                 str(exc),
             )
 
@@ -30,7 +38,7 @@ class AtlasAIService(ai_pb2_grpc.AIServiceServicer):
                 is_active=context.is_active,
             )
 
-        except ConsultationFailure as exc:
+        except AIFailure as exc:
             context.abort(exc.code, str(exc))
 
         except ValueError as exc:

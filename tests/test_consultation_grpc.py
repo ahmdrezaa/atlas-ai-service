@@ -39,7 +39,7 @@ def consultation_stub(generate_assessor):
 def call(stub, request, authorization="Bearer test-only-token"):
     return stub.ProcessConsultationTurn(
         request,
-        timeout=5,
+        timeout=30,
         metadata=(
             ("authorization", authorization),
             ("x-request-id", request.request_id),

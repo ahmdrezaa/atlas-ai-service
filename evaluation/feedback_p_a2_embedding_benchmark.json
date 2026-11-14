@@ -1,0 +1,79 @@
+{
+  "milestone": "P-A2",
+  "created_at": "2026-11-14T07:19:33.579318+00:00",
+  "evaluation_type": "local CPU benchmark; similarity table is informational only",
+  "not_a_threshold_or_accuracy_score": true,
+  "embedding_model_id": "intfloat/multilingual-e5-small@query-l2-v1",
+  "model_revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+  "runtime": "onnxruntime CPUExecutionProvider, fp32 onnx/model.onnx",
+  "threads": 2,
+  "cpu_count": 16,
+  "python": "3.11.18",
+  "image_size_bytes": 1471356325,
+  "cold_load_seconds": 1.19,
+  "first_call_seconds": 0.008,
+  "warm_latency_by_batch_size": {
+    "1": {
+      "median_ms": 5.96,
+      "p95_ms": 6.79
+    },
+    "3": {
+      "median_ms": 16.88,
+      "p95_ms": 18.74
+    },
+    "8": {
+      "median_ms": 41.11,
+      "p95_ms": 43.62
+    }
+  },
+  "repeats": 20,
+  "peak_rss_mb": {
+    "before_load": 86.6,
+    "after": 936.9
+  },
+  "similarity_pairs": [
+    {
+      "a": "Kopi susunya kemanisan",
+      "b": "Es kopi terlalu manis",
+      "relation": "same_problem",
+      "cosine": 0.9182
+    },
+    {
+      "a": "Kopi susunya kemanisan",
+      "b": "Kopi susunya kurang manis",
+      "relation": "opposite_direction",
+      "cosine": 0.9579
+    },
+    {
+      "a": "Antrean kasir lama banget",
+      "b": "Minuman lama banget dibuatnya",
+      "relation": "different_stage",
+      "cosine": 0.9154
+    },
+    {
+      "a": "Antrean kasir lama banget",
+      "b": "Nunggu di kasir lama",
+      "relation": "same_problem",
+      "cosine": 0.9441
+    },
+    {
+      "a": "Isian coklat dikit",
+      "b": "Isian vanilla pelit",
+      "relation": "same_problem_other_variant",
+      "cosine": 0.8682
+    },
+    {
+      "a": "Tempat nyaman buat nugas",
+      "b": "Tempatnya kotor",
+      "relation": "opposite_direction",
+      "cosine": 0.901
+    },
+    {
+      "a": "Kuah bakso keasinan",
+      "b": "Parkiran sempit",
+      "relation": "unrelated",
+      "cosine": 0.8496
+    }
+  ],
+  "parity_check": "One-off throwaway-container comparison with sentence-transformers on 5 texts: min cosine 0.99999999, max abs diff 1.2e-7 (2026-11-14)."
+}

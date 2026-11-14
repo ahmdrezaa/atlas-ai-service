@@ -237,7 +237,9 @@ def test_mock_verifier_only_tests_wiring_not_accuracy(verifier_assessor):
             }
         ]
     }
-    decisions = verify_with_model([claim], CONTEXT, verifier_assessor, time_remaining=2)
+    decisions = verify_with_model(
+        [claim], CONTEXT, verifier_assessor, time_remaining=12
+    )
     assert decisions[claim.claim_id].label == GroundingLabel.SUPPORTED
     prompt = invoke.call_args.args[0].to_messages()
     assert [m.type for m in prompt] == ["system", "human"]
@@ -251,7 +253,7 @@ def test_mock_verifier_only_tests_wiring_not_accuracy(verifier_assessor):
     )
     assert "Historical" not in prompt[-1].content
     assert "secret-test-key" not in prompt[-1].content
-    assert 0 < verifier_assessor.model_factory.call_args.kwargs["timeout"] < 2
+    assert 10 <= verifier_assessor.model_factory.call_args.kwargs["timeout"] < 12
     assert VERIFIER_PROMPT_VERSION == "grounding-evaluation-v1"
 
 

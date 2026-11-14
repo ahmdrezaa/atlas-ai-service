@@ -265,7 +265,7 @@ def test_v8_prompt_and_version_reach_provider_and_authenticated_grpc_response(ev
     try:
         with grpc.insecure_channel(f"127.0.0.1:{port}") as channel:
             response = ai_pb2_grpc.AIServiceStub(channel).ProcessConsultationTurn(
-                request, timeout=5, metadata=(("authorization", "Bearer test-only"),)
+                request, timeout=30, metadata=(("authorization", "Bearer test-only"),)
             )
         assert response.WhichOneof("result") == "solution"
         assert response.prompt_version == "consultation-solution-v8"

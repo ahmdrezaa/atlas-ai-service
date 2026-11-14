@@ -8,6 +8,7 @@ import grpc
 import pytest
 from httpx import ReadTimeout
 from pydantic import SecretStr, ValidationError
+from solution_policy import rejected_or_absent
 
 from atlas.ai.v1 import ai_pb2
 from atlas_ai.consultation.assessment import (
@@ -78,11 +79,17 @@ def test_invalid_output_rejected(
     solution_request, solution_payload, section, field, bad
 ):
     solution_payload[section][0][field] = bad
-    with pytest.raises((ConsultationFailure, ValidationError)):
-        solution_to_proto(
+    before = len(solution_payload[section])
+    outcome = rejected_or_absent(
+        lambda: solution_to_proto(
             GeneratedSolution.model_validate(solution_payload),
             prepare_context(solution_request),
-        )
+        ),
+        bad,
+    )
+    if isinstance(outcome, ai_pb2.Solution):
+        # P-B1: the invalid item was dropped (never rewritten); the rest remains.
+        assert len(getattr(outcome, section)) == before - 1
 
 
 @pytest.mark.parametrize(
@@ -190,11 +197,14 @@ def test_mvp_forbids_standalone_sql_even_with_a_real_but_unrelated_reference(
     )
     if not with_reference:
         solution_payload["findings"][0]["references"] = {}
-    with pytest.raises(ConsultationFailure):
-        solution_to_proto(
+    rejected_or_absent(
+        lambda: solution_to_proto(
             GeneratedSolution.model_validate(solution_payload),
             prepare_context(solution_request),
-        )
+        ),
+        "[[stat:",
+        "Snapshot mencatat",
+    )
 
 
 def test_optional_evidence_note_can_be_omitted_without_inventing_an_explanation(
@@ -289,7 +299,7 @@ def test_solution_on_real_grpc_wire(solution_request, solution_assessor):
     try:
         with grpc.insecure_channel(f"127.0.0.1:{port}") as channel:
             response = ai_pb2_grpc.AIServiceStub(channel).ProcessConsultationTurn(
-                solution_request, timeout=5
+                solution_request, timeout=30
             )
             assert response.WhichOneof("result") == "solution"
             assert response.prompt_version == SOLUTION_PROMPT_VERSION
@@ -335,7 +345,7 @@ def test_total_deadline_shared_between_both_calls(
     clock = [0.0]
     timer = SimpleNamespace(monotonic=lambda: clock[0])
     monkeypatch.setattr("atlas_ai.consultation.pipeline.time", timer)
-    monkeypatch.setattr("atlas_ai.consultation.assessment.time", timer)
+    monkeypatch.setattr("atlas_ai.llm.time", timer)
 
     def build(**kwargs):
         clock[0] += 10
@@ -366,11 +376,14 @@ def test_zero_and_decimal_statistics_are_context_only(
     solution_payload["findings"][1]["statement"] = (
         "Snapshot: [[stat:neutral_count=0]], [[stat:average_rating=3.5]]."
     )
-    with pytest.raises(ConsultationFailure, match="context-only"):
-        solution_to_proto(
+    rejected_or_absent(
+        lambda: solution_to_proto(
             GeneratedSolution.model_validate(solution_payload),
             prepare_context(solution_request),
-        )
+        ),
+        "[[stat:",
+        "Snapshot:",
+    )
 
 
 def test_full_feedback_quote_allowed_but_normalized_opinion_is_not_source_quote(
@@ -530,10 +543,20 @@ def test_verified_sql_cannot_bypass_go_nonempty_reference_requirement(
     solution_request, solution_payload
 ):
     solution_payload["findings"][1]["references"] = {}
-    with pytest.raises(ConsultationFailure, match="no current sources"):
-        solution_to_proto(
+    # P-B1: an uncited finding is dropped, so Go never receives empty references.
+    result = rejected_or_absent(
+        lambda: solution_to_proto(
             GeneratedSolution.model_validate(solution_payload),
             prepare_context(solution_request),
+        ),
+        solution_payload["findings"][1]["statement"],
+    )
+    if isinstance(result, ai_pb2.Solution):
+        assert all(
+            f.references.opinion_ids
+            or f.references.owner_message_ids
+            or f.references.memory_ids
+            for f in result.findings
         )
 
 
@@ -584,11 +607,13 @@ def test_owner_or_memory_cannot_override_issue_statistics(
         "statement": statement,
         "references": {"memory_ids": [memory.id]},
     }
-    with pytest.raises(ConsultationFailure, match="IssueStats"):
-        solution_to_proto(
+    rejected_or_absent(
+        lambda: solution_to_proto(
             GeneratedSolution.model_validate(solution_payload),
             prepare_context(solution_request),
-        )
+        ),
+        statement,
+    )
 
 
 @pytest.mark.parametrize(

@@ -1,26 +1,18 @@
 """One Gemini assessment invocation plus deterministic question policy."""
 
-import json
-import os
 import re
-import time
 import unicodedata
 from collections.abc import Callable
 from difflib import SequenceMatcher
 from typing import Literal, TypeVar
 
 import grpc
-from httpx import TimeoutException
-from langchain_core.exceptions import ContextOverflowError, OutputParserException
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langsmith import tracing_context
 from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
-    SecretStr,
-    ValidationError,
     model_validator,
 )
 
@@ -28,42 +20,32 @@ from atlas.ai.v1 import ai_pb2
 from atlas_ai.consultation.memory import MemoryProposals
 from atlas_ai.consultation.models import ConsultationContext
 from atlas_ai.consultation.prompts import ASSESSMENT_PROMPT
+from atlas_ai.llm import (
+    AIFailure,
+    GeminiSettings,
+    compact_provider_schema,
+    invoke_gemini_structured,
+)
+
+__all__ = [
+    "QUESTION_LIMIT",
+    "AssessmentQuestion",
+    "ConsultationFailure",
+    "ContextAssessor",
+    "GeminiSettings",
+    "SufficiencyAssessment",
+    "compact_provider_schema",
+    "invoke_structured",
+    "must_generate",
+    "validate_question",
+]
 
 QUESTION_LIMIT = 4  # Conservative cumulative cap until Go supplies cycle scope.
 OutputModel = TypeVar("OutputModel", bound=BaseModel)
 
 
-class ConsultationFailure(Exception):
-    """Sanitized application failure; never include provider response or secrets."""
-
-    def __init__(self, code: grpc.StatusCode, message: str):
-        super().__init__(message)
-        self.code = code
-
-
-class GeminiSettings(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
-    model: str = ""
-    api_key: SecretStr = Field(default=SecretStr(""), repr=False)
-    timeout_seconds: float = Field(default=30, gt=0, le=55, allow_inf_nan=False)
-    max_context_bytes: int = Field(default=120000, ge=1024, le=1000000)
-    max_output_tokens: int = Field(default=2048, ge=256, le=8192)
-
-    @classmethod
-    def from_env(cls) -> "GeminiSettings":
-        try:
-            return cls(
-                model=os.getenv("GEMINI_MODEL", "").strip(),
-                api_key=SecretStr(os.getenv("GEMINI_API_KEY", "")),
-                timeout_seconds=os.getenv("GEMINI_TIMEOUT_SECONDS", "30"),
-                max_context_bytes=os.getenv("CONSULTATION_MAX_CONTEXT_BYTES", "120000"),
-                max_output_tokens=os.getenv("GEMINI_MAX_OUTPUT_TOKENS", "2048"),
-            )
-        except ValidationError:
-            raise ConsultationFailure(
-                grpc.StatusCode.FAILED_PRECONDITION,
-                "Invalid assessment configuration",
-            ) from None
+# Shared with Path A; kept under its historical name for existing imports.
+ConsultationFailure = AIFailure
 
 
 class AssessmentQuestion(BaseModel):
@@ -195,40 +177,6 @@ class ContextAssessor:
         )
 
 
-def compact_provider_schema(schema: type[BaseModel]) -> dict:
-    """Native provider grammar only; the complete Pydantic model validates locally."""
-    data = schema.model_json_schema()
-    definitions = data.get("$defs", {})
-    allowed = {
-        "type",
-        "properties",
-        "items",
-        "required",
-        "enum",
-        "anyOf",
-        "additionalProperties",
-    }
-
-    def compact(value):
-        if isinstance(value, list):
-            return [compact(item) for item in value]
-        if not isinstance(value, dict):
-            return value
-        if "$ref" in value:
-            return compact(definitions[value["$ref"].split("/")[-1]])
-        return {
-            key: (
-                {name: compact(item) for name, item in part.items()}
-                if key == "properties"
-                else compact(part)
-            )
-            for key, part in value.items()
-            if key in allowed
-        }
-
-    return {"title": schema.__name__, **compact(data)}
-
-
 def invoke_structured(
     context: ConsultationContext,
     settings: GeminiSettings,
@@ -243,109 +191,21 @@ def invoke_structured(
     provider_schema: dict | None = None,
     timings: dict[str, float] | None = None,
 ) -> OutputModel:
-    """Shared single-call Gemini boundary for assessment and solution generation."""
-    started = time.monotonic()
-    timeout = settings.timeout_seconds
-    if time_remaining is not None:
-        timeout = min(timeout, time_remaining - 0.25)
-    if timeout <= 0:
-        raise ConsultationFailure(
-            grpc.StatusCode.DEADLINE_EXCEEDED, "Consultation deadline exceeded"
-        )
-    deadline = started + timeout
-    if is_active is not None and not is_active():
-        raise ConsultationFailure(grpc.StatusCode.CANCELLED, "Consultation cancelled")
-
-    data = (
-        dict(input_data)
-        if input_data is not None
-        else context.model_dump(mode="json", exclude={"sources"})
-    )
-    if input_data is None:
+    """Consultation adapter over the shared Gemini boundary in ``atlas_ai.llm``."""
+    if input_data is not None:
+        data = dict(input_data)
+    else:
+        data = context.model_dump(mode="json", exclude={"sources"})
         data["event_name"] = ai_pb2.ConsultationEvent.Name(context.event)
-    # format_prompt is local formatting, not a traced Runnable invocation.
-    prompt = prompt_template.format_prompt(
-        context_json=json.dumps(data, ensure_ascii=False)
+    return invoke_gemini_structured(
+        settings,
+        model_factory,
+        prompt_template,
+        schema,
+        stage=stage,
+        input_data=data,
+        time_remaining=time_remaining,
+        is_active=is_active,
+        provider_schema=provider_schema,
+        timings=timings,
     )
-    size = sum(len(message.content.encode("utf-8")) for message in prompt.to_messages())
-    if size > settings.max_context_bytes:
-        raise ConsultationFailure(
-            grpc.StatusCode.RESOURCE_EXHAUSTED,
-            f"{stage} context exceeds configured byte limit; no sources were truncated",
-        )
-    if not settings.model or not settings.api_key.get_secret_value().strip():
-        raise ConsultationFailure(
-            grpc.StatusCode.FAILED_PRECONDITION,
-            "GEMINI_MODEL and GEMINI_API_KEY must be configured",
-        )
-    timeout = deadline - time.monotonic()
-    if timeout <= 0:
-        raise ConsultationFailure(
-            grpc.StatusCode.DEADLINE_EXCEEDED,
-            "Consultation deadline exceeded",
-        )
-    try:
-        # Explicit native JSON schema: no tools/agents, no retries, no raw traces.
-        with tracing_context(enabled=False):
-            model = model_factory(
-                model=settings.model,
-                api_key=settings.api_key,
-                temperature=0,
-                timeout=timeout,
-                max_retries=0,
-                max_output_tokens=settings.max_output_tokens,
-                vertexai=False,
-                cache=False,
-            )
-            structured = model.with_structured_output(
-                provider_schema if provider_schema is not None else schema,
-                method="json_schema",
-            )
-            stage_started = time.monotonic() if timings is not None else 0
-            try:
-                result = structured.invoke(prompt, config={"callbacks": []})
-            finally:
-                if timings is not None:
-                    timings[f"{stage.lower()}.langchain_invoke_and_parse"] = (
-                        time.monotonic() - stage_started
-                    )
-            if isinstance(result, BaseModel):
-                result = result.model_dump()
-            stage_started = time.monotonic() if timings is not None else 0
-            try:
-                result = schema.model_validate(result)
-            finally:
-                if timings is not None:
-                    timings[f"{stage.lower()}.pydantic"] = (
-                        time.monotonic() - stage_started
-                    )
-    except (ValidationError, OutputParserException):
-        raise ConsultationFailure(
-            grpc.StatusCode.INTERNAL, f"Invalid structured {stage.lower()} output"
-        ) from None
-    except (TimeoutError, TimeoutException):
-        raise ConsultationFailure(
-            grpc.StatusCode.DEADLINE_EXCEEDED, f"{stage} provider timed out"
-        ) from None
-    except ContextOverflowError:
-        raise ConsultationFailure(
-            grpc.StatusCode.RESOURCE_EXHAUSTED,
-            f"{stage} exceeds model context limit",
-        ) from None
-    # SDK/transport exceptions must never expose raw request text or secrets.
-    except Exception as exc:  # noqa: BLE001
-        if getattr(exc, "code", None) in {408, 504}:
-            raise ConsultationFailure(
-                grpc.StatusCode.DEADLINE_EXCEEDED,
-                f"{stage} provider timed out",
-            ) from None
-        raise ConsultationFailure(
-            grpc.StatusCode.UNAVAILABLE, f"{stage} provider unavailable"
-        ) from None
-    if is_active is not None and not is_active():
-        raise ConsultationFailure(grpc.StatusCode.CANCELLED, "Consultation cancelled")
-    if time.monotonic() >= deadline:
-        raise ConsultationFailure(
-            grpc.StatusCode.DEADLINE_EXCEEDED, f"{stage} deadline exceeded"
-        )
-    return result

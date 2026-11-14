@@ -10,6 +10,7 @@ requires-python = ">=3.11,<3.13"
 
 dependencies = [
     "grpcio>=1.85.1",
+    "grpcio-health-checking>=1.85.1,<2",
     "protobuf>=7.35.1,<8",
     "pydantic>=2,<3",
     "langchain",
@@ -17,6 +18,9 @@ dependencies = [
     "langchain-google-genai>=4.5,<5",
     "httpx>=0.28,<1",
     "langsmith",
+    "numpy>=2,<3",
+    "onnxruntime>=1.20,<2",
+    "tokenizers>=0.20,<1",
 ]
 
 [project.optional-dependencies]
@@ -32,3 +36,8 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+[tool.ruff]
+# Generated protobuf stubs: never lint or auto-fix (an "unused" import there is
+# required to register google/protobuf/timestamp.proto).
+extend-exclude = ["src/atlas/ai/v1/ai_pb2.py", "src/atlas/ai/v1/ai_pb2_grpc.py"]

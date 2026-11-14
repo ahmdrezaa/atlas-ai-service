@@ -19,6 +19,10 @@ SEMANTIC_ONLY = {
     if c["id"].endswith(("_untuk_attack", "_agar_attack"))
     or c["id"] == "product_different_financial_topic"
 }
+# P-B1: tentative "mungkin ... karena ..." hypotheses (labelled valid) were a known
+# false rejection (strict xfail); they are now accepted. A cause clause that asserts
+# a new fact ("karena mesin rusak") is still rejected (test_diagnostic_policy).
+CAUSAL_FIXED = {c["id"] for c in DATA["cases"] if c["id"].endswith("_causal")}
 
 
 @pytest.mark.parametrize(
@@ -31,9 +35,7 @@ SEMANTIC_ONLY = {
                 strict=True,
                 reason="Unresolved coordination/modal scope or tentative causal interpretation",
             )
-            if case["id"].endswith(
-                ("_coordinate_fact", "_coordinate_speculation", "_causal")
-            )
+            if case["id"].endswith(("_coordinate_fact", "_coordinate_speculation"))
             else [],
         )
         for case in DATA["cases"]
@@ -82,4 +84,4 @@ def test_frozen_measurement_has_only_authorized_policy_differences():
         c["id"]
         for c in current["cases"]
         if c["accepted"] != previous[c["id"]]["accepted"]
-    } == SEMANTIC_ONLY
+    } == SEMANTIC_ONLY | CAUSAL_FIXED

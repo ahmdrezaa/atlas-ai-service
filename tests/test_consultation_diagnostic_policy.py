@@ -113,13 +113,38 @@ def test_source_words_cannot_be_recombined_into_a_new_operational_condition():
         check(request, payload)
 
 
-def test_retained_causal_guard_is_an_explicit_conservative_limit():
+@pytest.mark.parametrize(
+    "cause",
+    [
+        "takaran belum konsisten",
+        "pemeriksaan isian belum rutin",
+    ],
+)
+def test_tentative_cause_is_allowed_in_a_hypothesis(cause):
+    # P-B1: the former conservative limit (any "karena" rejected) is lifted for a
+    # tentative hypothesis whose cause clause asserts no new fact.
     request, payload = turn("bakery")
     payload["hypotheses"][0]["statement"] = (
-        "Hipotesis: isian roti mungkin sedikit karena takaran belum konsisten."
+        f"Hipotesis: isian roti mungkin sedikit karena {cause}."
     )
-    # Cause/premise scope cannot yet be separated safely; user safeguard 9 keeps
-    # the guard rather than treating an arbitrary causal tail as proven evidence.
+    proto, _ = check(request, payload)
+    assert proto.hypotheses[0].statement.endswith(f"karena {cause}.")
+
+
+@pytest.mark.parametrize(
+    "cause",
+    [
+        "mesin pengisi rusak",
+        "keuntungan meningkat",
+        "alat takar yang tersedia sudah tua",
+    ],
+)
+def test_cause_clause_cannot_assert_a_new_fact(cause):
+    request, payload = turn("bakery")
+    payload["hypotheses"][0]["statement"] = (
+        f"Hipotesis: isian roti mungkin sedikit karena {cause}."
+    )
+    # The only hypothesis is dropped -> section empty -> the turn is rejected.
     with pytest.raises(ConsultationFailure):
         check(request, payload)
 

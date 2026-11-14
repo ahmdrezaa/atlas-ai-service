@@ -1,6 +1,7 @@
 import json
 
 import pytest
+from google.protobuf.json_format import MessageToDict
 
 from atlas_ai.consultation.assessment import ConsultationFailure
 from atlas_ai.consultation.context import prepare_context
@@ -27,11 +28,21 @@ def test_frozen_whole_solution_policy(case):
             )
             assert any(d.label not in ACCEPTED_LABELS for d in diagnostics)
     else:
-        with pytest.raises(ConsultationFailure):
-            solution_to_proto(
+        # P-B1: an invalid item may be rejected with the turn OR pruned; either way
+        # its text must never reach the returned Solution.
+        try:
+            result = solution_to_proto(
                 GeneratedSolutionTurn.model_validate(payload).solution_output(),
                 prepare_context(request),
             )
+        except ConsultationFailure:
+            return
+        assert case["id"] in PRUNED, case["id"]
+        assert case["text"] not in json.dumps(MessageToDict(result), ensure_ascii=False)
+
+
+# Invalid findings now dropped from an otherwise valid Solution (not rejected).
+PRUNED = {"invented_finding", "negation_flip", "sample_population", "sql_false"}
 
 
 def test_frozen_comparison_exposes_authorized_nonblocking_relevance():
@@ -48,9 +59,11 @@ def test_frozen_comparison_exposes_authorized_nonblocking_relevance():
     )
     # Frozen quality labels are unchanged; this semantic-only case is now returned
     # under the user's Gemini-first policy, with its diagnostic still negative.
+    # PRUNED cases count as "accepted" here because the turn succeeds, but their
+    # text is verified absent in test_frozen_whole_solution_policy.
     assert {c["id"] for c in current["cases"] if not c["valid"] and c["accepted"]} == {
         "rec_irrelevant"
-    }
+    } | PRUNED
 
 
 @pytest.mark.parametrize(
@@ -76,7 +89,6 @@ def test_frozen_comparison_exposes_authorized_nonblocking_relevance():
         ("description", "Penambahan barista kasir."),
         ("description", "Penataan mesin kasir rusak."),
         ("description", "Penataan alur kasir. Pendapatan meningkat."),
-        ("description", "Penataan harga Bitcoin kasir."),
     ],
 )
 def test_additional_premise_and_resource_attacks(field, text):
@@ -108,6 +120,19 @@ def test_nominal_title_needs_a_consistent_independent_description():
         GeneratedSolutionTurn.model_validate(payload).solution_output(),
         prepare_context(request),
     )
+    assert any(d.label not in ACCEPTED_LABELS for d in diagnostics)
+
+
+def test_off_topic_nominal_action_is_relevance_diagnostic_not_blocking():
+    # P-B1: relevance is diagnostic (same policy as "Evaluasi harga Bitcoin." above);
+    # lexical relevance would also reject valid advice. A semantic (LLM) relevance
+    # check is the planned B2 follow-up.
+    request, payload = case_input(
+        {"field": "description", "text": "Penataan harga Bitcoin kasir."}
+    )
+    solution = GeneratedSolutionTurn.model_validate(payload).solution_output()
+    assert solution_to_proto(solution, prepare_context(request)).recommendations
+    diagnostics = validate_grounding(solution, prepare_context(request))
     assert any(d.label not in ACCEPTED_LABELS for d in diagnostics)
 
 

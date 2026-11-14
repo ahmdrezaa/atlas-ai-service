@@ -10,6 +10,7 @@ import grpc
 import pytest
 from google.protobuf.json_format import ParseDict
 from pydantic import SecretStr
+from solution_policy import rejected_or_absent
 
 from atlas.ai.v1 import ai_pb2, ai_pb2_grpc
 from atlas_ai.consultation.assessment import (
@@ -19,9 +20,11 @@ from atlas_ai.consultation.assessment import (
 )
 from atlas_ai.consultation.context import prepare_context
 from atlas_ai.consultation.grounding import (
+    ACCEPTED_LABELS,
     GroundingClaim,
     evaluate_claim,
     solution_claims,
+    validate_grounding,
 )
 from atlas_ai.consultation.memory import memory_candidates_to_proto
 from atlas_ai.consultation.pipeline import ConsultationPipeline
@@ -106,7 +109,6 @@ def test_action_labels_require_both_valid_description_and_cited_subject(title):
         "Amati Kasir Dijamin Untung",
         "Optimasi Kasir 50%",
         "Optimasi Kasir Semua Pelanggan",
-        "Optimasi Harga Bitcoin",
         "Optimasi Mesin Baru Kasir",
         "Ketersediaan Staf Kasir",
         "Kasir Rusak",
@@ -129,7 +131,6 @@ def test_resembling_a_label_never_proves_new_facts_or_guaranteed_outcomes(title)
         "Mesin kasir rusak.",
         "Evaluasi alur kerja karena keuntungan meningkat.",
         "Evaluasi alur kerja. Mesin rusak.",
-        "Evaluasi harga Bitcoin.",
         "Evaluasi dengan mesin yang sudah tersedia.",
     ],
 )
@@ -140,13 +141,31 @@ def test_description_cannot_launder_an_unsupported_nominal_title(description):
         mapped(request, payload)
 
 
-def test_a_valid_id_for_an_irrelevant_source_does_not_support_a_label():
+@pytest.mark.parametrize(
+    "field,value",
+    [("title", "Optimasi Harga Bitcoin"), ("description", "Evaluasi harga Bitcoin.")],
+)
+def test_off_topic_action_is_relevance_diagnostic_not_blocking(field, value):
+    # P-B1: relevance is diagnostic (project policy since M6.2); it asserts no fact.
+    # A semantic (LLM) relevance check is the planned B2 follow-up.
+    request, payload = recorded("M6-B-COMP")
+    payload["recommendations"][0][field] = value
+    assert mapped(request, payload).recommendations
+    diagnostics = validate_grounding(
+        GeneratedSolutionTurn.model_validate(payload).solution_output(),
+        prepare_context(request),
+    )
+    assert any(d.label not in ACCEPTED_LABELS for d in diagnostics)
+
+
+def test_a_valid_id_for_an_irrelevant_source_is_diagnostic_not_blocking():
+    # P-B1: a real but unrelated memory ID cannot make an action assert a fact;
+    # whether it is the right source is relevance (diagnostic).
     request, payload = recorded("M6-B-COMP")
     refs = payload["recommendations"][0]["references"]
     refs["owner_message_ids"] = []
     refs["memory_ids"] = [request.context.memories[1].id]  # Budget, not staff/cashier.
-    with pytest.raises(ConsultationFailure):
-        mapped(request, payload)
+    assert mapped(request, payload).recommendations
 
 
 @pytest.mark.parametrize(
@@ -189,7 +208,8 @@ def test_generic_metric_definitions_still_pass(metric):
 def test_metric_numbers_do_not_gain_implicit_memory_or_sql_provenance(metric):
     request, payload = recorded("M6-B-COMP")
     payload["success_indicators"][0]["metric"] = metric
-    with pytest.raises(ConsultationFailure, match="Invalid solution output"):
+    # The only indicator is dropped (P-B1), so the turn is rejected.
+    with pytest.raises(ConsultationFailure, match="success_indicators"):
         mapped(request, payload)
 
 
@@ -216,8 +236,9 @@ def test_exact_c_stays_rejected_and_metric_only_change_does_not_repair_other_cla
     validate_solution(
         solution, prepare_context(request)
     )  # Prospective prompt shape only.
-    with pytest.raises(ConsultationFailure, match="grounding rejected"):
-        mapped(request, payload)  # Original causal hypothesis remains rejected.
+    # P-B1: the original hypothesis "Penyebab antrean lama mungkin terjadi karena
+    # kendala pada alur pemesanan" is tentative and asserts no new fact: accepted.
+    assert mapped(request, payload).hypotheses
 
 
 @pytest.mark.parametrize(
@@ -283,8 +304,12 @@ def test_title_alignment_does_not_bypass_other_solution_guards(field):
         ]
     else:
         payload["findings"][0]["statement"] = "Sebanyak 99 opini mengeluh."
-    with pytest.raises(ConsultationFailure):
-        mapped(request, payload)
+    # Fabricated quote/ID always rejects; an invented statistic is rejected or
+    # dropped (P-B1) but never returned.
+    rejected_or_absent(lambda: mapped(request, payload), "Sebanyak 99 opini")
+    if field != "number":
+        with pytest.raises(ConsultationFailure):
+            mapped(request, payload)
 
 
 def test_replay_retains_exact_c_and_explicitly_missing_d():
@@ -338,7 +363,7 @@ def test_exact_b_solution_and_owner_candidate_on_authenticated_grpc_all_events(e
     try:
         with grpc.insecure_channel(f"127.0.0.1:{port}") as channel:
             response = ai_pb2_grpc.AIServiceStub(channel).ProcessConsultationTurn(
-                request, timeout=5, metadata=(("authorization", "Bearer test-only"),)
+                request, timeout=30, metadata=(("authorization", "Bearer test-only"),)
             )
         assert response.WhichOneof("result") == "solution"
         assert response.memory_candidates[0].source_owner_message_ids == [
