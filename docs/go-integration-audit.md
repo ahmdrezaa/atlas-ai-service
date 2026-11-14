@@ -133,3 +133,28 @@ Real Go API, same compose environment. Per-RPC records come from the new structu
 - Failures were provider 503s after the one bounded retry; Go answered "temporarily unavailable" and the session
   stayed retryable (G5). No memory candidates this run because the owner reply never succeeded.
 - Earlier the same day the OWNER_REPLY → solution → idempotent replay → Save + 2 memories path passed (§7).
+
+## 9. OpenAI run (2026-11-14) — PASSED
+
+Provider switched to OpenAI: Path A `gpt-6-luna`, Path B `gpt-6.1-terra`. Prices used for cost metrics are
+the official standard-tier prices ($0.10/$0.50 and $1.00/$5.00 per 1M input/output tokens).
+
+| Check | Result |
+| --- | --- |
+| Model access (`/v1/models`) | both models available |
+| Path A extraction benchmark (9 bakery cases) | **9/9 OK**, 18/18 coarse checks, 0 dropped; latency 1.5 / 3.4 / 6.4 s (min/median/max); 18,203 in + 2,393 out tokens, **$0.0030 total** |
+| B2 relevance (injected "Evaluasi Harga Bitcoin") | dropped, both bakery recommendations kept, 2.2 s |
+| Path B probe, prompt v9 (Gemini-tuned) | questions 7/7, **solutions 1/7** |
+| Path B probe, prompt v10 + checker fixes + repair | questions **7/7**, solutions **7/7** (1 used the repair) |
+
+- Path B v10 latency: question 3.7–6.5 s; solution 11.2–15.0 s, 24.6 s when the repair ran (Go allows 60 s,
+  our turn budget is 45 s). Cost: ≈ $0.0035 per question, ≈ $0.008 per solution ($0.016 with repair).
+- Root cause of the v9 failures (replayed offline, see `docs/consultation-p-b1-reliability.md` P-B3):
+  three checker false positives on OpenAI wording plus one checker bug; one rejection was a genuine
+  fabricated reference ID and stays fatal.
+- Go + FE manual run: the first "Buat solusi" on "Ada Jarum di Roti" (v9) was rejected by grounding and the
+  second succeeded; this is what P-B3 fixes. Path A planets formed from complaints with the judge merging
+  same-problem feedback.
+- Local setup problems found and documented in `docs/local-testing.md`: missing `CORS_ALLOWED_ORIGINS` in Go's
+  `.env` (preflight 405), token mismatch Go ≠ AI (`UNAUTHENTICATED`), and an exhausted OpenAI credit balance
+  (HTTP 429 `insufficient_quota`).

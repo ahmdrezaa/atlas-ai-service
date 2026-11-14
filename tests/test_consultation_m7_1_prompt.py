@@ -55,7 +55,7 @@ def test_predefined_solutions_exercise_actual_acceptance_guards(scenario, varian
     assert result["accepted"] == (variant == "valid")
     assert request.SerializeToString() == before
     if result["accepted"]:
-        assert result["response"]["prompt_version"] == "consultation-solution-v9"
+        assert result["response"]["prompt_version"] == "consultation-solution-v10"
         assert set(result["response"]["solution"]) == {
             "findings",
             "customer_evidence",
@@ -94,7 +94,7 @@ def test_prompt_version_and_provider_local_wire_schemas_are_compatible():
     def canonical(value):
         return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
 
-    assert SOLUTION_PROMPT_VERSION == "consultation-solution-v9"
+    assert SOLUTION_PROMPT_VERSION == "consultation-solution-v10"
     assert canonical(solution_provider_schema()) == BASELINE["provider_schema_sha256"]
     assert (
         canonical(GeneratedSolutionTurn.model_json_schema())
@@ -280,7 +280,7 @@ def test_current_prompt_and_version_reach_provider_and_authenticated_grpc_respon
                 request, timeout=30, metadata=(("authorization", "Bearer test-only"),)
             )
         assert response.WhichOneof("result") == "solution"
-        assert response.prompt_version == "consultation-solution-v9"
+        assert response.prompt_version == "consultation-solution-v10"
         assert response.model_id == "mock-not-live"
         assert (
             ai_pb2.ProcessConsultationTurnResponse.FromString(

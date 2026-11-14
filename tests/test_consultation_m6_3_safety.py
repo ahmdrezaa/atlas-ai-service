@@ -225,6 +225,7 @@ def test_blank_output_on_authenticated_grpc_is_internal_not_request_error(event)
             )
         assert error.value.code() == grpc.StatusCode.INTERNAL
         assert "description is blank" in error.value.details()
-        assert factory.call_count == (1 if event == 4 else 2)
+        # One bounded Solution repair (P-B3) before the turn fails.
+        assert factory.call_count == (2 if event == 4 else 3)
     finally:
         server.stop(0).wait(timeout=5)

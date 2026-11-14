@@ -222,7 +222,7 @@ def test_prompt_measurement_schedule_is_a_proposal_not_current_memory_evidence()
         mapped(request, payload).success_indicators[0].timeframe
         == indicator["timeframe"]
     )
-    assert SOLUTION_PROMPT_VERSION == "consultation-solution-v9"
+    assert SOLUTION_PROMPT_VERSION == "consultation-solution-v10"
     assert "it has no reference" in SOLUTION_SYSTEM_PROMPT
     assert "without numbers, clock ranges" in SOLUTION_SYSTEM_PROMPT
 

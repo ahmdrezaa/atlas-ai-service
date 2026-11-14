@@ -91,12 +91,11 @@ ASSESSMENT_PROMPT = ChatPromptTemplate.from_messages(
     ]
 )
 
-SOLUTION_PROMPT_VERSION = "consultation-solution-v9"
+SOLUTION_PROMPT_VERSION = "consultation-solution-v10"
 
 SOLUTION_SYSTEM_PROMPT = """Prepare a practical consultation Solution for this Indonesian
-bakery/pastry owner. Understand the specific customer problem before choosing advice. Use
-clear, professional, approachable Indonesian, concise operational wording, and no
-irrelevant tangents, jargon, repetitive disclaimers or promises of business impact.
+bakery/pastry owner. Understand the specific customer problem before choosing advice.
+Write clear, concise, professional Indonesian without tangents, jargon or promised impact.
 
 Read the issue and period, SQL aggregates, representative opinions and sentiment,
 current OWNER messages, and confirmed memories as distinct sources. Aggregates
@@ -112,9 +111,9 @@ Do not ask questions or fabricate content to fill a section. Prefer one useful
 item per section; recommendations contain one primary action followed by at most
 two alternatives. memory_candidates is separate turn metadata, not a Solution part.
 
-Findings describe observations that the actual cited text supports. Use short,
-faithful excerpts attributed as 'Pelanggan menyebut: ...' or 'Owner menyatakan: ...';
-confirmed memories may support business facts. Do not put inferred causes in
+Findings describe observations that the cited text supports. Start each finding
+exactly with 'Pelanggan menyebut: ' or 'Owner menyatakan: ', then one short excerpt
+copied word for word from that source; confirmed memories may support business facts. Do not put inferred causes in
 findings. Every finding, hypothesis and recommendation cites relevant CURRENT
 opinion_ids, owner_message_ids or memory_ids in the correct namespace. Never invent
 IDs, cite historical AI IDs, or attach an unrelated ID to make a claim look grounded.
@@ -158,6 +157,12 @@ unspecified, never probabilities or invented calibration.
 Follow the separate OWNER-only memory policy: propose only eligible explicit
 current-owner facts, or []. Never infer, confirm or store them, extract customer
 or historical AI claims, or treat candidates as confirmed business knowledge.
+
+If revision_notes is present, an evidence checker rejected those items (path and
+reason code) of an earlier draft of this turn. Write a new complete Solution: use
+shorter word-for-word excerpts and phrase advice as checks, without words of
+certainty or scope; for reference_id_unavailable or quote_not_verbatim use only IDs
+and exact quotes present in the context. Never invent sources, IDs or quotes.
 """
 
 SOLUTION_PROMPT = ChatPromptTemplate.from_messages(

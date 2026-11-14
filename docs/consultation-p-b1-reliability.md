@@ -83,3 +83,30 @@ Live (bakery): extraction benchmark 9/9 OK, 18/18 coarse checks, 0.9–1.9 s; Pa
 3 stale-bread complaints → 1 planet (judge merged 2), START question "Berapa lama roti didiamkan sebelum
 dikemas setelah keluar dari oven?"; later turns were blocked by sustained Google HTTP 503 (provider overload),
 not by validation. Known limitation: "suhunya sudah turun" (a condition) is still blocked.
+
+## P-B3: OpenAI stability (2026-11-14)
+Probe on `gpt-6.1-terra` with the Gemini-tuned prompt v9: solutions **1/7**, questions 7/7. Offline replay of
+every captured claim showed the outputs were faithful; the checker misread OpenAI wording:
+
+| Rejection | Cause | Fix |
+| --- | --- | --- |
+| `unproven_scope_causality_or_independent_verification` (hypotheses, 4) | "penyebabnya **belum diketahui**" read as certainty | `_CAUSE_DISCLAIMER` removes negated-cause disclaimers before certainty checks; "penyebabnya adalah …", "disebabkan oleh …", "terbukti" still count |
+| `proposal_asserts_fact` (advice, 3) | "catat **apakah** … rusak", "tinjau **apakah** … memiliki", "tersedia **jika ada**" | `_asserts_proposal_fact`: a condition inside an indirect question in the same sentence, or followed by "jika/bila ada / memungkinkan", is a check; the next sentence is still checked |
+| `no_bounded_source_proof_for_clause` on an exact quote | **bug**: `evidence_text + "\n" + full_feedback` were normalised into one string, so the 3-word negation window saw "tidak" from the previous line | lines/sentences of a source are checked separately |
+| non-standard attribution ("Dalam sampel, pelanggan menyebut:"), paraphrase ("diminta" ≠ "saya minta") | genuine | still dropped per item; prompt v10 asks for an exact prefix and a word-for-word excerpt |
+| invented/wrong-namespace reference ID | genuine fabrication | whole draft discarded; one full rewrite, then fatal |
+
+Prompt `consultation-solution-v10` (still under the M7.1 size budget, 4,798 bytes): exact finding prefix,
+word-for-word excerpt, and instructions for `revision_notes`.
+
+Repair (`SolutionGenerator.generate`): when pruning empties a section (`GroundingRejected`), the Solution is
+regenerated **once**, only if a full extra call fits (≥ max(12 s, elapsed + 3 s) left), with `revision_notes`
+= item paths + checker reason codes only (sanitized, ≤ 20, never text). A fabricated draft (invented/
+wrong-namespace reference ID → `reference_id_unavailable`, non-verbatim quote → `quote_not_verbatim`) is
+**discarded whole** and rewritten once the same way; nothing from it is ever used. A second failure, and every
+other failure, stays fatal. Recorded as stage `solution_repair`; `CONSULTATION_SOLUTION_REPAIR=false` disables it.
+
+Result (live, same 7 fixtures): solutions **7/7**, questions 7/7; replay of the v9 captures with the fixed
+checker alone: 6/7 (the remaining one is the genuine fabrication). Tests:
+`tests/test_consultation_openai_grounding.py` (each fix with its unsafe variants still rejected),
+`tests/test_consultation_repair.py`; all M6/M7 attack corpora unchanged and passing.

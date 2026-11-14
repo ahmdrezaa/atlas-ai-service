@@ -48,7 +48,11 @@ Isi di `.env` (sisanya biarkan default):
 JWT_SECRET=<nilai acak langkah 1>
 AI_GRPC_TOKEN=<token langkah 1>
 DOCKER_AI_GRPC_ADDR=atlas-ai:50051
+CORS_ALLOWED_ORIGINS=http://localhost:5173
 ```
+
+`CORS_ALLOWED_ORIGINS` sudah ada di `.env.example`. Kalau `.env` dibuat dari nol, baris ini wajib
+ditambahkan; tanpa baris ini signup dari browser gagal dengan "Terjadi kesalahan".
 
 Jalankan:
 
@@ -155,10 +159,12 @@ record ke file, isi `ATLAS_TRACE_FILE=/tmp/atlas-trace.jsonl` di `.env`.
 
 | Gejala | Penyebab umum | Perbaikan |
 |---|---|---|
+| Signup/login di FE: "Terjadi kesalahan", log Go `OPTIONS ... status=405` | `CORS_ALLOWED_ORIGINS` tidak ada di `.env` Go | Tambahkan `CORS_ALLOWED_ORIGINS=http://localhost:5173`, lalu restart Go |
 | Log Go `UNAUTHENTICATED` | `AI_GRPC_TOKEN` (Go) ≠ `GRPC_AUTH_TOKEN` (AI) | Samakan token, lalu restart kedua service |
 | Log Go `connection refused` / `no such host atlas-ai` | AI belum jalan atau tidak memakai overlay integrasi | Jalankan langkah 3 dengan `-f compose.integration.yaml` |
 | `network atlas-backend-dev_default not found` saat start AI | Go belum dijalankan | Jalankan langkah 2 dulu |
 | Status `FAILED_PRECONDITION` di log AI | `OPENAI_API_KEY` kosong/salah, nama model salah, atau akun tidak punya akses ke model | Cek `.env` AI; nama model harus persis |
+| Semua feedback `UNAVAILABLE`, log AI `429 Too Many Requests` padahal volume kecil | Saldo kredit OpenAI habis (`insufficient_quota`) | Isi kredit di halaman billing OpenAI; job `PENDING` diproses ulang otomatis |
 | Status `UNAVAILABLE` sesekali | OpenAI 5xx/429. 5xx sudah dicoba ulang 1x; feedback dicoba ulang Go sampai 8x | Tunggu, atau cek kuota/rate limit akun |
 | `DEADLINE_EXCEEDED` di konsultasi | Model lambat; anggaran 45 dtk dari batas Go 60 dtk | Cek `latency_ms` per `llm_calls`; pertimbangkan `CONSULTATION_REASONING_EFFORT=low` |
 | Feedback tetap `PENDING` | Worker Go belum polling, atau `DOCKER_AI_GRPC_ADDR` kosong | Cek log Go; isi `DOCKER_AI_GRPC_ADDR=atlas-ai:50051` |

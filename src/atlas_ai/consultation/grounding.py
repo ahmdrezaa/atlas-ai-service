@@ -300,6 +300,17 @@ _CERTAINTY = re.compile(
 )
 _ACHIEVED = re.compile(r"\b(telah|sudah|tercapai|achieved|already)\b", re.IGNORECASE)
 _NEGATORS = {"belum", "tidak", "bukan", "tak"}
+# "penyebabnya belum diketahui" DISCLAIMS a cause (OpenAI wording, 2026-11-14); it
+# is removed before certainty checks. "penyebabnya adalah ..." still counts.
+_CAUSE_DISCLAIMER = re.compile(
+    r"\b(?:penyebab(?:nya)?(?:\s+pasti)?|disebabkan\s+oleh\s+apa)\s+(?:masih\s+)?"
+    r"(?:belum|tidak|tak)\s+(?:diketahui|pasti|jelas|dipastikan|terbukti|terverifikasi)\b",
+    re.IGNORECASE,
+)
+
+
+def _without_disclaimers(text: str) -> str:
+    return _CAUSE_DISCLAIMER.sub(" ", text)
 
 
 def _asserts(pattern: re.Pattern, text: str) -> bool:
@@ -746,9 +757,16 @@ def _fact(
         positive = negative = False
         for source in eligible:
             text = _normal(source["text"])
-            positive |= _affirmed_part(atom, text)
+            segments = [
+                _normal(part)
+                for part in re.split(r"[\n.;!?]+", source["text"])
+                if part.strip()
+            ]
+            positive |= any(_affirmed_part(atom, part) for part in segments)
             negative |= any(
-                _affirmed_part(opposite, text) for opposite in _opposites(atom)
+                _affirmed_part(opposite, part)
+                for opposite in _opposites(atom)
+                for part in segments
             )
             if re.search(r"\d", atom):
                 pattern = re.sub(r"\d+", r"__NUMBER__", re.escape(atom)).replace(
@@ -874,10 +892,11 @@ def evaluate_claim(
     text = claim.text.strip()
     sources = cited_sources(claim, context)
     label, reason = GroundingLabel.INSUFFICIENT_EVIDENCE, "unresolved_claim"
+    checked = _without_disclaimers(text)
     if _UNIVERSAL.search(text) or (
-        _asserts_with(_CERTAINTY, text, _HYPOTHESIS_HEDGES)
+        _asserts_with(_CERTAINTY, checked, _HYPOTHESIS_HEDGES)
         if claim.kind == "hypothesis"
-        else _asserts(_CERTAINTY, text)
+        else _asserts(_CERTAINTY, checked)
     ):
         reason = "unproven_scope_causality_or_independent_verification"
     elif (
@@ -1156,6 +1175,30 @@ _RISK_HEDGES = _NEGATORS | {
 _HYPOTHESIS_HEDGES = _NEGATORS | {"mungkin", "diduga", "kemungkinan", "bisa"}
 
 
+# "catat apakah tutup terbuka atau kemasan rusak", "tinjau apakah batch ... memiliki
+# perbedaan": the condition is what the owner should CHECK, not an asserted state.
+_INDIRECT_QUESTION = re.compile(r"\b(apakah|seberapa|bagaimana)\b", re.IGNORECASE)
+# "alat takar yang tersedia jika ada": availability is explicitly conditional.
+_CONDITIONAL_AFTER = re.compile(
+    r"^\W*(?:jika|bila|apabila|kalau)\s+(?:ada|memungkinkan|tersedia|sudah\s+ada)\b",
+    re.IGNORECASE,
+)
+
+
+def _asserts_proposal_fact(body: str) -> bool:
+    for match in _PROPOSAL_FACT.finditer(body):
+        before = _normal(body[: match.start()]).split()[-4:]
+        if _RISK_HEDGES.intersection(before):
+            continue
+        clause = re.split(r"[.;!?]", body[: match.start()])[-1]
+        if _INDIRECT_QUESTION.search(clause):
+            continue
+        if _CONDITIONAL_AFTER.search(body[match.end() :]):
+            continue
+        return True
+    return False
+
+
 def _cause_asserts_fact(text: str) -> bool:
     """A tentative hypothesis may name a cause, but the cause must not be a new fact."""
     _, *cause = re.split(
@@ -1195,7 +1238,7 @@ def evaluate_proposal(
         return decision(
             GroundingLabel.INSUFFICIENT_EVIDENCE, "proposal_promises_outcome"
         )
-    if _UNIVERSAL.search(body) or _asserts(_CERTAINTY, body):
+    if _UNIVERSAL.search(body) or _asserts(_CERTAINTY, _without_disclaimers(body)):
         return decision(
             GroundingLabel.INSUFFICIENT_EVIDENCE, "proposal_asserts_scope_or_cause"
         )
@@ -1214,7 +1257,7 @@ def evaluate_proposal(
         return decision(
             GroundingLabel.NOT_APPLICABLE, "proposal_without_unproven_assertion"
         )
-    if _asserts_with(_PROPOSAL_FACT, body, _RISK_HEDGES, window=4):
+    if _asserts_proposal_fact(body):
         return decision(GroundingLabel.INSUFFICIENT_EVIDENCE, "proposal_asserts_fact")
     if _asserts_with(_RESOURCE_COMMIT, body, _NEGATORS | {"tanpa"}) or _asserts_with(
         _NEW_RESOURCE, body, _NEGATORS | {"tanpa"}

@@ -1,6 +1,7 @@
 """Typed solution generation, deterministic structural checks and protobuf mapping."""
 
 import logging
+import os
 import re
 import time
 from collections.abc import Callable
@@ -49,6 +50,47 @@ from atlas_ai.consultation.relevance import (
 )
 
 logger = logging.getLogger(__name__)
+
+# One bounded regeneration when grounding empties a section (OpenAI wording varies
+# between runs; the checker itself is never relaxed). Only if a full extra call fits.
+REPAIR_MIN_SECONDS = 12.0
+REPAIR_MARGIN_SECONDS = 3.0
+_SAFE_REASON = re.compile(r"[^A-Za-z0-9_:/ .\[\]-]")
+
+
+class GroundingRejected(ConsultationFailure):
+    """prune_solution emptied a section. ``dropped`` holds (item key, reason code)
+    pairs; reasons are fixed checker codes, never generated or source text."""
+
+    def __init__(self, message: str, dropped: list[tuple[str, str]]):
+        super().__init__(grpc.StatusCode.INTERNAL, message)
+        self.dropped = dropped
+
+
+class FabricationRejected(GroundingRejected):
+    """Invented reference ID or non-verbatim quote. The whole draft is discarded
+    (never partially used); it may only be rewritten from scratch once."""
+
+
+def repair_enabled() -> bool:
+    return os.getenv("CONSULTATION_SOLUTION_REPAIR", "true").strip().lower() not in {
+        "0",
+        "false",
+        "no",
+        "off",
+    }
+
+
+def revision_notes(dropped: list[tuple[str, str]]) -> list[dict[str, str]]:
+    """Item keys and checker reason codes only (sanitized, bounded)."""
+    return [
+        {
+            "item": _SAFE_REASON.sub("", key)[:60],
+            "reason": _SAFE_REASON.sub("", why)[:100],
+        }
+        for key, why in dropped[:20]
+    ]
+
 
 Text = Annotated[str, StringConstraints(min_length=1, max_length=3000)]
 Label = Annotated[
@@ -225,11 +267,29 @@ def validate_solution(
 def check_fabrication(
     solution: GeneratedSolution, context: ConsultationContext
 ) -> None:
-    """Invented sources: reference IDs outside their namespace, non-verbatim quotes."""
-    for item in (*solution.findings, *solution.hypotheses, *solution.recommendations):
-        _sources(item.references, context)
-    for item in solution.customer_evidence:
-        _check_quote(item, context)
+    """Invented sources: reference IDs outside their namespace, non-verbatim quotes.
+
+    Every violation is collected (item key + fixed reason code); any violation
+    rejects the whole draft with the first violation's message."""
+    dropped: list[tuple[str, str]] = []
+    first: str | None = None
+    for name in ("findings", "hypotheses", "recommendations", "customer_evidence"):
+        for index, item in enumerate(getattr(solution, name)):
+            try:
+                if name == "customer_evidence":
+                    _check_quote(item, context)
+                else:
+                    _sources(item.references, context)
+            except ConsultationFailure as exc:
+                first = first or str(exc)
+                code = (
+                    "quote_not_verbatim"
+                    if name == "customer_evidence"
+                    else "reference_id_unavailable"
+                )
+                dropped.append((f"{name}[{index}]", code))
+    if first is not None:
+        raise FabricationRejected(first, dropped)
 
 
 def _check_claim_item(
@@ -383,9 +443,9 @@ def prune_solution(
         reasons = "; ".join(
             f"{key}: {why}" for key, why in dropped if key.split("[")[0] in empty
         )
-        raise ConsultationFailure(
-            grpc.StatusCode.INTERNAL,
+        raise GroundingRejected(
             f"Solution grounding rejected {reasons} ({', '.join(empty)} empty)",
+            dropped,
         )
     return GeneratedSolution.model_validate(
         {name: [item.model_dump() for item in kept[name]] for name in SECTIONS}
@@ -507,29 +567,61 @@ class SolutionGenerator:
                 "Solution requires verifiable customer evidence; no-evidence policy needs Go agreement",
             )
         started = time.monotonic()
-        result = invoke_structured(
-            context,
-            self.assessor.settings,
-            self.assessor.model_factory,
-            SOLUTION_PROMPT,
-            GeneratedSolutionTurn,
-            stage="Solution",
-            time_remaining=time_remaining,
-            is_active=is_active,
-            provider_schema=solution_provider_schema(),
-            timings=self.timings,
-        )
-        solution = result.solution_output()
-        response = solution_to_proto(
-            solution,
-            context,
-            time_remaining=None
-            if time_remaining is None
-            else time_remaining - (time.monotonic() - started),
-            is_active=is_active,
-            timings=self.timings,
-            refine=self._relevance(context, is_active),
-        )
+
+        def remaining() -> float | None:
+            if time_remaining is None:
+                return None
+            return time_remaining - (time.monotonic() - started)
+
+        def draft(notes: list[dict[str, str]] | None = None):
+            data = None
+            if notes is not None:
+                data = context.model_dump(mode="json", exclude={"sources"})
+                data["event_name"] = ai_pb2.ConsultationEvent.Name(context.event)
+                data["revision_notes"] = notes
+            result = invoke_structured(
+                context,
+                self.assessor.settings,
+                self.assessor.model_factory,
+                SOLUTION_PROMPT,
+                GeneratedSolutionTurn,
+                stage="Solution" if notes is None else "Solution_repair",
+                time_remaining=remaining(),
+                is_active=is_active,
+                input_data=data,
+                provider_schema=solution_provider_schema(),
+                timings=self.timings,
+            )
+            response = solution_to_proto(
+                result.solution_output(),
+                context,
+                time_remaining=remaining(),
+                is_active=is_active,
+                timings=self.timings,
+                refine=self._relevance(context, is_active),
+            )
+            return result, response
+
+        try:
+            result, response = draft()
+        except GroundingRejected as exc:
+            # An emptied section or a fabricated draft (discarded whole) is
+            # rewritten once from scratch, with item keys + reason codes only.
+            # Every other failure stays fatal; a second failure is final.
+            budget = remaining()
+            needed = max(
+                REPAIR_MIN_SECONDS, time.monotonic() - started + REPAIR_MARGIN_SECONDS
+            )
+            if not repair_enabled() or (budget is not None and budget < needed):
+                raise
+            if is_active is not None and not is_active():
+                raise
+            notes = revision_notes(exc.dropped)
+            logger.info(
+                "solution_repair dropped=%s",
+                ",".join(f"{n['item']}={n['reason']}" for n in notes),
+            )
+            result, response = draft(notes)
         if time_remaining is not None and time.monotonic() - started >= time_remaining:
             raise ConsultationFailure(
                 grpc.StatusCode.DEADLINE_EXCEEDED, "Solution deadline exceeded"
