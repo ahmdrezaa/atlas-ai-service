@@ -3,7 +3,7 @@
 
 | Metadata | Detail |
 |---|---|
-| **Versi** | 1.1 — Implementation Baseline (revisi atas v1.0, 13 November 2026) |
+| **Versi** | 1.2 — Provider LLM diganti ke OpenAI (revisi atas v1.1; v1.0 13 November 2026) |
 | **Tanggal** | 14 November 2026 (Asia/Jakarta) |
 | **Status** | **Approved architecture baseline; implementation and model-quality verification pending** |
 | **Produk** | ATLAS — Customer Feedback Intelligence & Guided AI Consultation for UMKM |
@@ -14,6 +14,17 @@
 | **Pemilik implementasi Path A** | Reza; berkoordinasi dengan Suthe untuk kontrak dan candidate retrieval |
 
 > **Instruksi untuk Codex:** Dokumen ini adalah PRD target, bukan laporan bahwa implementasinya sudah selesai. **Baca source terbaru sebelum mengubah kode.** Hindari memperluas scope, mengarang default algoritma atau metrik, mengubah protobuf, dan mengubah Path B Guided Consultation tanpa persetujuan eksplisit (pengecualian terbatas: ADR-A13).
+
+### Ringkasan perubahan v1.1 → v1.2 (14 November 2026)
+
+| Bagian | Perubahan |
+| --- | --- |
+| ADR-A02 / A05 / A13 | Provider LLM **OpenAI** menggantikan Gemini untuk kedua path (ADR-A15). Path A memakai `FEEDBACK_MODEL=gpt-6-luna`, Path B memakai `CONSULTATION_MODEL=gpt-6.1-terra`; keduanya dipilih pemilik produk |
+| FR-06 | Structured output OpenAI `json_schema` + `strict: true`. Field opsional dikirim sebagai nullable lalu `null` dibuang sebelum validasi Pydantic, jadi skema lokal tidak berubah |
+| FR-09 / FR-11 | Batas minimal 10 dtk (khusus Gemini) dihapus. `FEEDBACK_MATCH_TIMEOUT_SECONDS` default 10 |
+| Konfigurasi | `GEMINI_*` / `FEEDBACK_GEMINI_*` diganti `OPENAI_API_KEY`, `FEEDBACK_MODEL`, `FEEDBACK_PRICE_*`, `FEEDBACK_REASONING_EFFORT` |
+
+> Sejak v1.2, penyebutan "Gemini" di bagian lain dokumen ini merujuk ke **LLM provider** (sekarang OpenAI). Angka benchmark lama yang menyebut Gemini adalah catatan historis dan harus diukur ulang di Fase 3.
 
 ### Ringkasan perubahan v1.0 → v1.1
 
@@ -84,6 +95,7 @@ Feedback UMKM sering berbahasa Indonesia informal, memiliki beberapa aspek dan s
 | ADR-A12 | Saran dan permintaan pelanggan diekstraksi sebagai opini | **Dipilih** |
 | ADR-A13 | Pemanggil Gemini berada di modul bersama `src/atlas_ai/llm.py`, dipakai Path A dan Path B; perilaku Path B tidak berubah | **Disetujui** |
 | ADR-A14 | Thin slice end-to-end lebih dulu; matching lanjutan setelah integrasi Go | **Dipilih** |
+| ADR-A15 | **OpenAI menggantikan Gemini** sebagai satu-satunya LLM provider (Path A dan B), lewat `src/atlas_ai/llm.py`: strict JSON schema, tanpa retry SDK, satu retry terbatas untuk 5xx/koneksi putus, 429 tidak di-retry, 401/403/404 → `FAILED_PRECONDITION` | **Dipilih (v1.2)** |
 
 ### 2.1 Diagram alur
 
@@ -283,6 +295,7 @@ Yang **tidak** diekstraksi: pertanyaan murni (`Buka jam berapa?`), fakta tanpa p
 - Satu Gemini invocation per feedback untuk ekstraksi.
 - LangChain `ChatPromptTemplate` + `ChatGoogleGenerativeAI.with_structured_output` melalui `atlas_ai.llm` (ADR-A13), provider-compatible schema dan Pydantic lokal.
 - Prompt memuat aturan batas opini, informal Indonesian, negasi, non-inference, saran/permintaan, severe rubric, dan perlindungan prompt injection.
+- Semua contoh prompt memakai kasus **bakery/pastry** (target MVP), berbeda dari skenario acceptance (prompt `feedback-extraction-v4`, `feedback-match-v2`).
 - Few-shot kecil (±7) untuk mixed sentiment, slang, negasi, variant, safety, saran, netral evaluatif (`biasa aja`), dan no-opinion; **jangan memasukkan kasus benchmark/acceptance ke few-shot** (diuji otomatis).
 - Kebenaran semantik tidak dapat dibuktikan hanya dengan Pydantic atau substring; gunakan live evaluation terpisah.
 
@@ -337,8 +350,8 @@ Opini yang dibuang dicatat hanya dengan kode alasan (`INVALID_FIELDS`, `EVIDENCE
 
 **Implementasi P-A5 (2026-11-14)**
 - Jalur cepat: judul kandidat yang sama persis (case/spasi diabaikan) langsung dipakai tanpa Gemini.
-- Tahap 2 adalah **satu** panggilan Gemini per feedback untuk semua opini NEGATIVE yang punya kandidat (prompt `feedback-match-v1`), memakai model `FEEDBACK_GEMINI_MODEL`.
-- Nilai *provisional*: `FEEDBACK_MATCH_THRESHOLD=0.88`, `FEEDBACK_MATCH_TOP_K=3`, `FEEDBACK_MATCH_TIMEOUT_SECONDS=10` (minimum 10: Gemini menolak deadline di bawah 10 dtk dengan HTTP 400), `FEEDBACK_MATCH_JUDGE=true`. Threshold hanya menentukan apakah judge dipanggil; E5 tidak pernah merge sendiri.
+- Tahap 2 adalah **satu** panggilan Gemini per feedback untuk semua opini NEGATIVE yang punya kandidat (prompt `feedback-match-v1`), memakai model `FEEDBACK_MODEL`.
+- Nilai *provisional*: `FEEDBACK_MATCH_THRESHOLD=0.85` (diturunkan dari 0.88: pada teks bakery masalah berbeda ~0,855–0,865 dan masalah sama ~0,89–0,90), `FEEDBACK_MATCH_TOP_K=3`, `FEEDBACK_MATCH_TIMEOUT_SECONDS=10` (v1.2: tanpa batas minimal provider; 10 dtk memberi ruang untuk satu retry 5xx), `FEEDBACK_MATCH_JUDGE=true`. Threshold hanya menentukan apakah judge dipanggil; E5 tidak pernah merge sendiri.
 - Hasil run sintetis: 6/6 sesuai harapan (`docs/go-integration-audit.md` §6). Belum ada kalibrasi golden pairs.
 
 **Aturan umum**
@@ -364,7 +377,7 @@ Opini yang dibuang dicatat hanya dengan kode alasan (`INVALID_FIELDS`, `EVIDENCE
 ### FR-11 Time budget and concurrency
 
 - Go `AI_FEEDBACK_TIMEOUT=30s` adalah budget seluruh RPC (validasi, Gemini, E5, matching, serialisasi, jaringan). Sisakan headroom.
-- Konfigurasi Path A terpisah dari Path B: `FEEDBACK_GEMINI_MODEL` (wajib, tidak fallback ke model Path B), `FEEDBACK_GEMINI_API_KEY` (fallback `GEMINI_API_KEY`), `FEEDBACK_EXTRACTION_TIMEOUT_SECONDS` (titik awal 20), `FEEDBACK_MATCH_TIMEOUT_SECONDS` (titik awal 5, P-A5), `FEEDBACK_MAX_OUTPUT_TOKENS` (titik awal 1024), `FEEDBACK_MAX_CONTEXT_BYTES`, `FEEDBACK_MAX_OPINIONS`, `FEEDBACK_MAX_TEXT_CHARS`. Semua default bersifat *provisional*.
+- Konfigurasi Path A terpisah dari Path B: `FEEDBACK_MODEL` (wajib, tidak fallback ke model Path B), `OPENAI_API_KEY` (dipakai bersama Path B), `FEEDBACK_EXTRACTION_TIMEOUT_SECONDS` (titik awal 20), `FEEDBACK_MATCH_TIMEOUT_SECONDS` (titik awal 10, P-A5), `FEEDBACK_REASONING_EFFORT` (opsional), `FEEDBACK_PRICE_INPUT_PER_1M_USD` / `FEEDBACK_PRICE_OUTPUT_PER_1M_USD` (harga resmi, hanya untuk metrik biaya), `FEEDBACK_MAX_OUTPUT_TOKENS` (titik awal 1024), `FEEDBACK_MAX_CONTEXT_BYTES`, `FEEDBACK_MAX_OPINIONS`, `FEEDBACK_MAX_TEXT_CHARS`. Semua default bersifat *provisional*.
 - Hormati `context.time_remaining()` dan `context.is_active()`; jangan memulai model call saat budget tidak cukup.
 - Tidak ada retry generatif tersembunyi; Go worker sudah memiliki retry/backoff.
 - Benchmark kandidat model **di awal P-A1**. Data Path B menunjukkan `gemini-3.8-flash` pernah HTTP 504 di ~8,5 dtk dan ~28,5 dtk.

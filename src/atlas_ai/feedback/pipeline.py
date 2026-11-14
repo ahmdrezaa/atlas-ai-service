@@ -1,8 +1,8 @@
 """ProcessFeedback orchestration (Path A).
 
-validate + Gemini extraction -> per-opinion validation -> E5 embeddings ->
+validate + LLM extraction -> per-opinion validation -> E5 embeddings ->
 issue matching -> protobuf. Matching (P-A5): exact title match first, then E5
-retrieval narrows candidates and a Gemini judge decides the merge; any judge
+retrieval narrows candidates and an LLM judge decides the merge; any judge
 failure falls back to a new issue (see feedback/matching.py).
 """
 
@@ -14,6 +14,7 @@ from collections.abc import Callable
 import grpc
 
 from atlas.ai.v1 import ai_pb2
+from atlas_ai import observability
 from atlas_ai.feedback.embeddings import (
     EMBEDDING_MODEL_ID,
     E5Embedder,
@@ -109,31 +110,37 @@ class FeedbackPipeline:
         def remaining() -> float | None:
             return None if deadline is None else deadline - time.monotonic()
 
-        outcome = extractor.extract(
-            request, time_remaining=remaining(), is_active=is_active, timings=timings
-        )
+        with observability.span("extraction"):
+            outcome = extractor.extract(
+                request,
+                time_remaining=remaining(),
+                is_active=is_active,
+                timings=timings,
+            )
         if not outcome.opinions:
             self._log(request, outcome, MatchStats(), started)
             return ai_pb2.ProcessFeedbackResponse()
 
-        vectors = embedder.embed(
-            [item.opinion_text for item in outcome.opinions],
-            time_remaining=remaining(),
-            is_active=is_active,
-            timings=timings,
-        )
-        assignments, stats = assign_issues(
-            outcome.opinions,
-            vectors,
-            request,
-            embedder=embedder,
-            cache=self._title_cache,
-            settings=match_settings,
-            judge=judge,
-            remaining=remaining,
-            is_active=is_active,
-            timings=timings,
-        )
+        with observability.span("embedding"):
+            vectors = embedder.embed(
+                [item.opinion_text for item in outcome.opinions],
+                time_remaining=remaining(),
+                is_active=is_active,
+                timings=timings,
+            )
+        with observability.span("matching"):
+            assignments, stats = assign_issues(
+                outcome.opinions,
+                vectors,
+                request,
+                embedder=embedder,
+                cache=self._title_cache,
+                settings=match_settings,
+                judge=judge,
+                remaining=remaining,
+                is_active=is_active,
+                timings=timings,
+            )
         opinions = [
             ai_pb2.ExtractedOpinion(
                 opinion_text=item.opinion_text,

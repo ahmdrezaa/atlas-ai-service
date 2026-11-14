@@ -7,6 +7,7 @@ import grpc
 import pytest
 from httpx import ReadTimeout
 from langchain_core.exceptions import OutputParserException
+from openai_offline import OfflineOpenAI
 from pydantic import SecretStr
 
 from atlas.ai.v1 import ai_pb2
@@ -14,14 +15,17 @@ from atlas_ai.consultation.assessment import (
     AssessmentQuestion,
     ConsultationFailure,
     ContextAssessor,
-    GeminiSettings,
+    LLMSettings,
     SufficiencyAssessment,
     compact_provider_schema,
+    cycle_question_count,
+    must_generate,
     validate_question,
 )
 from atlas_ai.consultation.context import prepare_context
 from atlas_ai.consultation.pipeline import ConsultationPipeline
 from atlas_ai.consultation.prompts import PROMPT_VERSION
+from atlas_ai.llm import strict_provider_schema
 
 
 def output(**changes):
@@ -46,7 +50,7 @@ def mocked_assessor():
     factory = Mock()
     structured = factory.return_value.with_structured_output.return_value
     structured.invoke.return_value = output()
-    settings = GeminiSettings(model="mock-gemini", api_key=SecretStr("test-only-key"))
+    settings = LLMSettings(model="mock-gemini", api_key=SecretStr("test-only-key"))
     return ContextAssessor(settings, factory), factory, structured
 
 
@@ -73,8 +77,10 @@ def test_question_path_for_all_events(valid_request, mocked_assessor):
         assert not response.memory_candidates
         structured.invoke.assert_called_once()
         factory.return_value.with_structured_output.assert_called_once_with(
-            compact_provider_schema(SufficiencyAssessment),
+            strict_provider_schema(compact_provider_schema(SufficiencyAssessment)),
             method="json_schema",
+            strict=True,
+            include_raw=True,  # token usage (observability); parsing unchanged
         )
     assert valid_request.SerializeToString() == before
 
@@ -107,10 +113,11 @@ def test_generate_decision_without_evidence_fails_explicitly(
         ConsultationPipeline(assessor).run(request)
 
 
-@pytest.mark.parametrize("count", [4, 5, 100])
-def test_cumulative_limit_even_on_continue_bypasses_model(
+@pytest.mark.parametrize("count", [8, 9, 100])
+def test_session_limit_even_on_continue_bypasses_model(
     request_factory, mocked_assessor, count
 ):
+    # G2: 8 questions per session (Go's question_count never resets).
     assessor, factory, _ = mocked_assessor
     request = request_factory(ai_pb2.CONSULTATION_EVENT_CONTINUE_DISCUSSION)
     request.question_count = count
@@ -118,6 +125,61 @@ def test_cumulative_limit_even_on_continue_bypasses_model(
         ConsultationPipeline(assessor).run(request)
     assert request.question_count == count
     factory.assert_not_called()
+
+
+def _ai_question(request, topic):
+    request.messages.add(
+        id=str(uuid4()),
+        role=ai_pb2.MESSAGE_ROLE_ATLAS_AI,
+        content=f"Pertanyaan tentang {topic}?",
+        topic_key=topic,
+    )
+
+
+def _owner(request, text="Jawaban owner."):
+    request.messages.add(id=str(uuid4()), role=ai_pb2.MESSAGE_ROLE_OWNER, content=text)
+
+
+def test_cycle_limit_four_questions_forces_generation(request_factory):
+    # G2: 4 questions in the current cycle force a solution even if the session
+    # total is below 8.
+    request = request_factory(ai_pb2.CONSULTATION_EVENT_START)
+    for topic in ("a", "b", "c", "d"):
+        _ai_question(request, topic)
+        _owner(request)
+    request.event = ai_pb2.CONSULTATION_EVENT_OWNER_REPLY
+    request.question_count = 4
+    context = prepare_context(request)
+    assert cycle_question_count(context) == 4 and must_generate(context)
+
+
+def test_new_cycle_after_solution_allows_questions_again(request_factory):
+    # After a Solution, a revision discussion may ask again (cycle count resets),
+    # while the session-wide count from Go keeps growing.
+    request = request_factory(ai_pb2.CONSULTATION_EVENT_START)
+    for topic in ("a", "b", "c", "d"):
+        _ai_question(request, topic)
+        _owner(request)
+    request.messages.add(
+        id=str(uuid4()),
+        role=ai_pb2.MESSAGE_ROLE_ATLAS_AI,
+        solution=ai_pb2.Solution(findings=[ai_pb2.Finding(statement="x")]),
+    )
+    _owner(request, "Tolong revisi, kami tidak bisa beli alat.")
+    request.event = ai_pb2.CONSULTATION_EVENT_CONTINUE_DISCUSSION
+    request.question_count = 4
+    context = prepare_context(request)
+    assert cycle_question_count(context) == 0 and not must_generate(context)
+    for topic in ("e", "f", "g"):
+        _ai_question(request, topic)
+        _owner(request)
+    request.question_count = 7
+    context = prepare_context(request)
+    assert cycle_question_count(context) == 3 and not must_generate(context)
+    _ai_question(request, "h")
+    _owner(request)
+    request.question_count = 8
+    assert must_generate(prepare_context(request))  # cycle 4 AND session 8
 
 
 @pytest.mark.parametrize(
@@ -258,7 +320,8 @@ def test_deadline_and_provider_timeout_configuration(request_factory, mocked_ass
     ConsultationPipeline(assessor).run(request_factory(), time_remaining=12)
     assert factory.call_args.kwargs["timeout"] == pytest.approx(11.75, abs=0.05)
     assert factory.call_args.kwargs["max_retries"] == 0
-    assert factory.call_args.kwargs["temperature"] == 0
+    # Temperature is only sent when LLM_TEMPERATURE is configured.
+    assert "temperature" not in factory.call_args.kwargs
     assert structured.invoke.call_args.kwargs["config"] == {"callbacks": []}
 
 
@@ -299,10 +362,21 @@ def test_cancellation_after_invocation(request_factory, mocked_assessor):
 
 
 def test_post_invocation_deadline(request_factory, mocked_assessor, monkeypatch):
-    assessor, _, _ = mocked_assessor
+    assessor, _, structured = mocked_assessor
+    # The clock jumps past the deadline exactly when the provider call returns.
+    state = {"invoked": False}
+    result = structured.invoke.return_value
+
+    def invoke(*args, **kwargs):
+        state["invoked"] = True
+        return result
+
+    structured.invoke.side_effect = invoke
     monkeypatch.setattr(
         "atlas_ai.llm.time",
-        SimpleNamespace(monotonic=Mock(side_effect=[10, 10, 100])),
+        SimpleNamespace(
+            monotonic=lambda: 100 if state["invoked"] else 10, sleep=lambda s: None
+        ),
     )
     with pytest.raises(ConsultationFailure) as error:
         ConsultationPipeline(assessor).run(request_factory())
@@ -310,19 +384,19 @@ def test_post_invocation_deadline(request_factory, mocked_assessor, monkeypatch)
 
 
 def test_missing_configuration_and_secret_repr(request_factory):
-    settings = GeminiSettings()
+    settings = LLMSettings()
     factory = Mock()
     with pytest.raises(ConsultationFailure) as error:
         ConsultationPipeline(ContextAssessor(settings, factory)).run(request_factory())
     assert error.value.code == grpc.StatusCode.FAILED_PRECONDITION
     factory.assert_not_called()
-    assert "secret-key" not in repr(GeminiSettings(api_key=SecretStr("secret-key")))
+    assert "secret-key" not in repr(LLMSettings(api_key=SecretStr("secret-key")))
 
 
 def test_invalid_environment_is_sanitized(monkeypatch):
-    monkeypatch.setenv("GEMINI_TIMEOUT_SECONDS", "bad-sensitive-value")
+    monkeypatch.setenv("CONSULTATION_TIMEOUT_SECONDS", "bad-sensitive-value")
     with pytest.raises(ConsultationFailure) as error:
-        GeminiSettings.from_env()
+        LLMSettings.from_env()
     assert "bad-sensitive-value" not in str(error.value)
 
 
@@ -368,34 +442,21 @@ def test_tracing_is_disabled_even_if_enabled_in_environment(
     ConsultationPipeline(assessor).run(request_factory())
 
 
-def test_real_langchain_schema_and_sdk_configuration_offline(
-    request_factory, monkeypatch
-):
-    from google.genai import types
-    from langchain_google_genai import ChatGoogleGenerativeAI
-
-    response = types.GenerateContentResponse(
-        candidates=[
-            types.Candidate(
-                content=types.Content(
-                    role="model", parts=[types.Part(text=json.dumps(output()))]
-                ),
-                finish_reason="STOP",
-            )
-        ]
-    )
-    provider = Mock(return_value=response)
-    monkeypatch.setattr("google.genai.models.Models.generate_content", provider)
-    settings = GeminiSettings(
-        model="gemini-test-offline", api_key=SecretStr("test-only-key")
-    )
-    assessor = ContextAssessor(settings, ChatGoogleGenerativeAI)
+def test_real_langchain_schema_and_sdk_configuration_offline(request_factory):
+    provider = OfflineOpenAI(output())
+    settings = LLMSettings(model="gpt-test-offline", api_key=SecretStr("test-only-key"))
+    assessor = ContextAssessor(settings, provider)
     result = ConsultationPipeline(assessor).run(request_factory())
     assert result.WhichOneof("result") == "next_question"
-    provider.assert_called_once()
-    config = provider.call_args.kwargs["config"]
-    assert config.response_mime_type == "application/json"
-    assert config.response_json_schema
-    assert not config.tools
-    assert 0 < config.http_options.timeout <= 30000
-    assert config.http_options.retry_options.attempts == 0
+    (request,) = provider.requests
+    assert request["path"] == "/v1/chat/completions"
+    response_format = request["response_format"]
+    assert response_format["type"] == "json_schema"
+    assert response_format["json_schema"]["strict"] is True
+    schema = response_format["json_schema"]["schema"]
+    assert schema["additionalProperties"] is False
+    assert set(schema["required"]) == set(schema["properties"])
+    assert "tools" not in request
+    assert request["max_completion_tokens"] == settings.max_output_tokens
+    (kwargs,) = provider.model_kwargs
+    assert 0 < kwargs["timeout"] <= 30 and kwargs["max_retries"] == 0

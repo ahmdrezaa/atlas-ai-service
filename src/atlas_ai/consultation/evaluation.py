@@ -16,7 +16,7 @@ from atlas.ai.v1 import ai_pb2
 from atlas_ai.consultation.assessment import (
     ConsultationFailure,
     ContextAssessor,
-    GeminiSettings,
+    LLMSettings,
     invoke_structured,
 )
 from atlas_ai.consultation.context import prepare_context
@@ -359,9 +359,9 @@ def main():
     args = parser.parse_args()
     if args.env_file:
         allowed = {
-            "GEMINI_API_KEY",
-            "GEMINI_MODEL",
-            "GEMINI_TIMEOUT_SECONDS",
+            "OPENAI_API_KEY",
+            "CONSULTATION_MODEL",
+            "CONSULTATION_TIMEOUT_SECONDS",
             "CONSULTATION_MAX_CONTEXT_BYTES",
         }
         for line in args.env_file.read_text(encoding="utf-8-sig").splitlines():
@@ -371,7 +371,7 @@ def main():
     try:
         assessor = None
         if args.live:
-            settings = GeminiSettings.from_env().model_copy(
+            settings = LLMSettings.from_env().model_copy(
                 update={"max_output_tokens": 8192}
             )
             assessor = ContextAssessor(settings)

@@ -13,7 +13,7 @@ class FeedbackModel(BaseModel):
 
 
 class OpinionDraft(FeedbackModel):
-    """One opinion exactly as Gemini proposed it; validated item by item."""
+    """One opinion exactly as the LLM proposed it; validated item by item."""
 
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
     opinion_text: Annotated[NonBlank, StringConstraints(max_length=500)]

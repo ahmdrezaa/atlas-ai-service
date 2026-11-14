@@ -13,7 +13,7 @@ from atlas.ai.v1 import ai_pb2
 from atlas_ai.consultation.assessment import (
     ConsultationFailure,
     ContextAssessor,
-    GeminiSettings,
+    LLMSettings,
     SufficiencyAssessment,
 )
 from atlas_ai.consultation.context import prepare_context
@@ -49,9 +49,9 @@ def test_fixture_has_one_unknown_operational_gap_and_real_source_ids():
 
 
 def test_assessment_prompt_clarifies_single_variable_without_relaxing_guard():
-    assert PROMPT_VERSION == "consultation-assessment-v4"
+    assert PROMPT_VERSION == "consultation-assessment-v6"
     assert "ONLY ONE" in ASSESSMENT_SYSTEM_PROMPT
-    assert "peak_hours_and_staffing" in ASSESSMENT_SYSTEM_PROMPT
+    assert "baking_schedule_and_staffing" in ASSESSMENT_SYSTEM_PROMPT
     assert "One question mark is not enough" in ASSESSMENT_SYSTEM_PROMPT
 
 
@@ -155,7 +155,7 @@ def test_question_validation_time_cannot_escape_shared_turn_budget(monkeypatch):
     clock = [0.0]
     monkeypatch.setattr(module, "time", SimpleNamespace(monotonic=lambda: clock[0]))
     assessor = Mock(spec=ContextAssessor)
-    assessor.settings = GeminiSettings(model="mock")
+    assessor.settings = LLMSettings(model="mock")
     assessor.assess.return_value = SufficiencyAssessment(
         decision="ASK_QUESTION",
         reason="Staff count unknown",

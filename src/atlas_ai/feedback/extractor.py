@@ -1,11 +1,11 @@
-"""Gemini opinion extraction for ProcessFeedback (Path A, P-A1)."""
+"""LLM opinion extraction for ProcessFeedback (Path A, P-A1)."""
 
 import logging
 import os
 from collections.abc import Callable
 
 import grpc
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from atlas.ai.v1 import ai_pb2
@@ -18,9 +18,9 @@ from atlas_ai.feedback.prompts import EXTRACTION_PROMPT, FEEDBACK_PROMPT_VERSION
 from atlas_ai.feedback.validation import validate_feedback_request, validate_opinions
 from atlas_ai.llm import (
     AIFailure,
-    GeminiSettings,
+    LLMSettings,
     compact_provider_schema,
-    invoke_gemini_structured,
+    invoke_llm_structured,
 )
 
 logger = logging.getLogger(__name__)
@@ -46,16 +46,13 @@ class FeedbackLimits(BaseModel):
             ) from None
 
 
-def feedback_settings_from_env() -> GeminiSettings:
+def feedback_settings_from_env() -> LLMSettings:
     """Path A configuration, separate from Path B. The model never falls back."""
-    return GeminiSettings.from_env(
-        model_env="FEEDBACK_GEMINI_MODEL",
-        api_key_envs=("FEEDBACK_GEMINI_API_KEY", "GEMINI_API_KEY"),
+    return LLMSettings.from_env(
+        prefix="FEEDBACK",
         timeout_env="FEEDBACK_EXTRACTION_TIMEOUT_SECONDS",
         timeout_default="20",
-        max_context_bytes_env="FEEDBACK_MAX_CONTEXT_BYTES",
         max_context_bytes_default="32000",
-        max_output_tokens_env="FEEDBACK_MAX_OUTPUT_TOKENS",
         max_output_tokens_default="1024",
         stage="feedback",
     )
@@ -78,8 +75,8 @@ def extraction_input(request: ai_pb2.ProcessFeedbackRequest) -> dict:
 class FeedbackExtractor:
     def __init__(
         self,
-        settings: GeminiSettings,
-        model_factory: Callable = ChatGoogleGenerativeAI,
+        settings: LLMSettings,
+        model_factory: Callable = ChatOpenAI,
         limits: FeedbackLimits | None = None,
     ):
         self.settings = settings
@@ -99,14 +96,14 @@ class FeedbackExtractor:
         timings: dict[str, float] | None = None,
     ) -> ExtractionOutcome:
         validate_feedback_request(request, max_text_chars=self.limits.max_text_chars)
-        output = invoke_gemini_structured(
+        output = invoke_llm_structured(
             self.settings,
             self.model_factory,
             EXTRACTION_PROMPT,
             ExtractionOutput,
             stage="Extraction",
             label="Feedback",
-            config_names="FEEDBACK_GEMINI_MODEL and GEMINI_API_KEY",
+            config_names="FEEDBACK_MODEL and OPENAI_API_KEY",
             input_data=extraction_input(request),
             time_remaining=time_remaining,
             is_active=is_active,

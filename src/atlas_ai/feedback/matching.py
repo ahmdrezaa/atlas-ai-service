@@ -1,6 +1,6 @@
 """Issue matching for ProcessFeedback (Path A, P-A5).
 
-E5 narrows the candidates, Gemini decides the merge. A wrong merge is the most
+E5 narrows the candidates, an LLM judge decides the merge. A wrong merge is the most
 harmful error, so E5 similarity alone never merges (opposite-direction pairs can
 score higher than same-problem pairs, see evaluation/feedback_p_a2_*). Any judge
 failure falls back to a new issue; matching never fails the feedback.
@@ -17,7 +17,7 @@ from typing import Literal
 
 import grpc
 import numpy as np
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from atlas.ai.v1 import ai_pb2
@@ -25,10 +25,11 @@ from atlas_ai.feedback.embeddings import E5Embedder, filter_candidate_vectors
 from atlas_ai.feedback.models import ValidatedOpinion
 from atlas_ai.feedback.prompts import MATCH_PROMPT
 from atlas_ai.llm import (
+    MIN_CALL_SECONDS,
     AIFailure,
-    GeminiSettings,
+    LLMSettings,
     compact_provider_schema,
-    invoke_gemini_structured,
+    invoke_llm_structured,
 )
 
 logger = logging.getLogger(__name__)
@@ -37,20 +38,22 @@ NONE = "NONE"
 
 class MatchSettings(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
-    # Provisional values, NOT calibrated: E5 cosine is not a probability and even
-    # unrelated Indonesian complaints score ~0.85. The threshold only gates whether
-    # the Gemini judge is consulted; it never merges by itself.
-    threshold: float = Field(default=0.88, ge=0, le=1)
+    # Provisional values, NOT calibrated: E5 cosine is not a probability. In bakery
+    # text different problems score ~0.855-0.865 and the same problem ~0.89-0.90
+    # (2026-11-14), so the gate is set for recall. It only decides whether the
+    # LLM judge is consulted; it never merges by itself.
+    threshold: float = Field(default=0.85, ge=0, le=1)
     top_k: int = Field(default=3, ge=1, le=10)
-    # Gemini rejects request deadlines under 10 s (llm.PROVIDER_MIN_TIMEOUT_SECONDS).
-    judge_timeout_seconds: float = Field(default=10, ge=10, le=20)
+    # One small call; 10 s leaves room for the one bounded retry on a provider 5xx.
+    # The RPC deadline still caps the actual call.
+    judge_timeout_seconds: float = Field(default=10, ge=1, le=20)
     judge_enabled: bool = True
 
     @classmethod
     def from_env(cls) -> "MatchSettings":
         try:
             return cls(
-                threshold=os.getenv("FEEDBACK_MATCH_THRESHOLD", "0.88"),
+                threshold=os.getenv("FEEDBACK_MATCH_THRESHOLD", "0.85"),
                 top_k=os.getenv("FEEDBACK_MATCH_TOP_K", "3"),
                 judge_timeout_seconds=os.getenv("FEEDBACK_MATCH_TIMEOUT_SECONDS", "10"),
                 judge_enabled=os.getenv("FEEDBACK_MATCH_JUDGE", "true"),
@@ -185,13 +188,13 @@ def _normalize(matrix: np.ndarray) -> np.ndarray:
 
 
 class MergeJudge:
-    """One small Gemini call per feedback; failures never fail the feedback."""
+    """One small LLM call per feedback; failures never fail the feedback."""
 
     def __init__(
         self,
-        settings: GeminiSettings,
+        settings: LLMSettings,
         match: MatchSettings,
-        model_factory: Callable = ChatGoogleGenerativeAI,
+        model_factory: Callable = ChatOpenAI,
     ):
         self.settings = settings.model_copy(
             update={"timeout_seconds": match.judge_timeout_seconds}
@@ -207,14 +210,14 @@ class MergeJudge:
         timings: dict[str, float] | None = None,
     ) -> dict[int, str]:
         """items: [{opinion_index, opinion_text, sentiment, variant, candidates}]."""
-        output = invoke_gemini_structured(
+        output = invoke_llm_structured(
             self.settings,
             self.model_factory,
             MATCH_PROMPT,
             MatchOutput,
             stage="Match",
             label="Feedback",
-            config_names="FEEDBACK_GEMINI_MODEL and GEMINI_API_KEY",
+            config_names="FEEDBACK_MODEL and OPENAI_API_KEY",
             input_data={"opinions": items},
             time_remaining=time_remaining,
             is_active=is_active,
@@ -292,7 +295,8 @@ def assign_issues(
             budget = remaining()
             if judge is None or not settings.judge_enabled:
                 stats.judge_status = "disabled"
-            elif budget is not None and budget < settings.judge_timeout_seconds + 0.5:
+            elif budget is not None and budget < MIN_CALL_SECONDS + 0.5:
+                # Not even one useful call fits: keep a new planet.
                 stats.judge_status = "skipped_budget"
             else:
                 try:

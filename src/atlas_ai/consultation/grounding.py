@@ -202,7 +202,7 @@ def verbatim_quote_supported(quote: str, evidence: str, feedback: str) -> bool:
 _OPERATIONAL = re.compile(
     r"\b(?:jam (?:ramai|sibuk|buka|tutup|operasional) "
     r"\d{1,2} \d{2}(?: (?:sampai|hingga) \d{1,2} \d{2})?"
-    r"|jumlah (?:barista|staf|kasir|karyawan) \d+ orang"
+    r"|jumlah (?:barista|staf|kasir|karyawan|baker) \d+ orang"
     r"|shift (?:pagi|sore|malam) \d+ orang)\b"
 )
 _UNCERTAIN_OPERATION = re.compile(
@@ -939,7 +939,8 @@ def evaluate_claim(
                 for part in clauses
             )
             and not _PREMISE.search(text)
-            and not _CURRENT_ASSERTION.search(text)
+            # "saat ini" inside an all-tentative hypothesis names the current
+            # practice ("metode penyegelan saat ini mungkin ..."), not a new fact.
             and not _ACHIEVED.search(text)
             and (not semantic_checks or _related_hypothesis(text, sources))
             and all(
@@ -1107,6 +1108,15 @@ _PURPOSE = re.compile(
     r"\b(untuk|agar|supaya|diharapkan|harapannya|target|sasaran|guna)\b", re.IGNORECASE
 )
 _PROPOSAL_KINDS = {"recommendation", "metric", "target", "timeframe"}
+# In advice, "sudah" usually states a condition ("pastikan roti sudah dingin sebelum
+# dikemas"); only an achieved RESULT is blocked ("sudah meningkat", "tercapai").
+_ACHIEVED_RESULT = re.compile(
+    r"\b(tercapai|achieved|already)\b"
+    r"|\b(telah|sudah)\s+(?:\w+\s+)?(meningkat\w*|naik\w*|turun\w*|menurun\w*|"
+    r"berkurang|mengurangi\w*|bertambah|menambah\w*|membaik|memperbaiki|berhasil|"
+    r"teratasi|terselesaikan|efektif|terbukti|cepat|lancar|bagus|optimal|maksimal)\b",
+    re.IGNORECASE,
+)
 
 
 def _asserted_outcome(text: str) -> bool:
@@ -1181,7 +1191,7 @@ def evaluate_proposal(
     body = text.removeprefix("Usulan:").strip()
     if not body:
         return decision(GroundingLabel.INSUFFICIENT_EVIDENCE, "empty_proposal")
-    if _GUARANTEE.search(body) or _ACHIEVED.search(body):
+    if _GUARANTEE.search(body) or _ACHIEVED_RESULT.search(body):
         return decision(
             GroundingLabel.INSUFFICIENT_EVIDENCE, "proposal_promises_outcome"
         )
@@ -1191,6 +1201,16 @@ def evaluate_proposal(
         )
     if claim.kind in {"target", "timeframe"}:
         # Future goals ("tidak ada kemasan rusak") are not factual premises.
+        return decision(
+            GroundingLabel.NOT_APPLICABLE, "proposal_without_unproven_assertion"
+        )
+    if claim.kind == "metric":
+        # A metric names what to measure ("Keluhan kemasan rusak"); it may name a
+        # condition but must not state a result.
+        if _OUTCOME.search(body):
+            return decision(
+                GroundingLabel.INSUFFICIENT_EVIDENCE, "metric_asserts_outcome"
+            )
         return decision(
             GroundingLabel.NOT_APPLICABLE, "proposal_without_unproven_assertion"
         )
@@ -1212,7 +1232,10 @@ def evaluate_proposal(
     if claim.kind == "recommendation":
         # A recommendation TITLE is a label: it must not assert a fact either.
         if claim.recommendation_description is not None and (
-            _LABEL_ASSERTION.search(body) or _CURRENT_ASSERTION.search(body)
+            _LABEL_ASSERTION.search(body)
+            or _CURRENT_ASSERTION.search(body)
+            # A short title has no room for a condition: "sudah" claims a state.
+            or _ACHIEVED.search(body)
         ):
             return decision(
                 GroundingLabel.INSUFFICIENT_EVIDENCE, "title_asserts_fact_or_outcome"

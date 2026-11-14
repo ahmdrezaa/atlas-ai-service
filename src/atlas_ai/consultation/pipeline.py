@@ -5,10 +5,11 @@ from collections.abc import Callable
 import grpc
 
 from atlas.ai.v1 import ai_pb2
+from atlas_ai import observability
 from atlas_ai.consultation.assessment import (
     ConsultationFailure,
     ContextAssessor,
-    GeminiSettings,
+    LLMSettings,
     must_generate,
     validate_question,
 )
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class ConsultationPipeline:
-    """Pipeline Guided AI Consultation berbasis Gemini."""
+    """Pipeline Guided AI Consultation berbasis LLM (OpenAI)."""
 
     def __init__(self, assessor: ContextAssessor | None = None):
         self.assessor = assessor
@@ -35,8 +36,9 @@ class ConsultationPipeline:
         timings: dict[str, float] | None = None,
     ) -> ai_pb2.ProcessConsultationTurnResponse:
         started = time.monotonic()
-        context = prepare_context(request)
-        assessor = self.assessor or ContextAssessor(GeminiSettings.from_env())
+        with observability.span("context"):
+            context = prepare_context(request)
+        assessor = self.assessor or ContextAssessor(LLMSettings.from_env())
         # One total turn budget, shared by assessment and generation.
         budget = assessor.settings.timeout_seconds
         if time_remaining is not None:
@@ -71,9 +73,10 @@ class ConsultationPipeline:
         def solution_response(
             prior_candidates=(),
         ) -> ai_pb2.ProcessConsultationTurnResponse:
-            solution, candidates = SolutionGenerator(
-                assessor, timings=timings
-            ).generate(context, time_remaining=remaining(), is_active=is_active)
+            with observability.span("solution"):
+                solution, candidates = SolutionGenerator(
+                    assessor, timings=timings
+                ).generate(context, time_remaining=remaining(), is_active=is_active)
             return finish_response(
                 ai_pb2.ProcessConsultationTurnResponse(
                     solution=solution,
@@ -85,12 +88,13 @@ class ConsultationPipeline:
 
         if must_generate(context):
             return solution_response()
-        assessment = assessor.assess(
-            context,
-            time_remaining=remaining(),
-            is_active=is_active,
-            timings=timings,
-        )
+        with observability.span("assessment"):
+            assessment = assessor.assess(
+                context,
+                time_remaining=remaining(),
+                is_active=is_active,
+                timings=timings,
+            )
         if must_generate(context) or assessment.decision == "GENERATE_SOLUTION":
             return solution_response(assessment.memory_candidates)
         try:

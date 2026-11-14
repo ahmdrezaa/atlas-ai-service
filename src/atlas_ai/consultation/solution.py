@@ -10,6 +10,7 @@ import grpc
 from pydantic import BeforeValidator, Field, StringConstraints, WithJsonSchema
 
 from atlas.ai.v1 import ai_pb2
+from atlas_ai import observability
 from atlas_ai.consultation.assessment import (
     ConsultationFailure,
     ContextAssessor,
@@ -41,6 +42,11 @@ from atlas_ai.consultation.models import (
     SuccessIndicator,
 )
 from atlas_ai.consultation.prompts import SOLUTION_PROMPT
+from atlas_ai.consultation.relevance import (
+    RELEVANCE_PROMPT_VERSION,
+    RelevanceSettings,
+    check_relevance,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +54,7 @@ Text = Annotated[str, StringConstraints(min_length=1, max_length=3000)]
 Label = Annotated[
     Literal["", "low", "medium", "high", "rendah", "sedang", "tinggi"],
     BeforeValidator(lambda value: "" if value is None else value),
-    # Gemini enums require nonempty strings. Provider null means unspecified;
+    # Provider enums require nonempty strings. Provider null means unspecified;
     # normalize to the existing legal protobuf empty label before local validation.
     WithJsonSchema(
         {
@@ -393,24 +399,40 @@ def solution_to_proto(
     time_remaining: float | None = None,
     is_active: Callable[[], bool] | None = None,
     timings: dict[str, float] | None = None,
+    refine: Callable[[GeneratedSolution, float | None], GeneratedSolution]
+    | None = None,
 ) -> ai_pb2.Solution:
+    """Validate and map a generated Solution.
+
+    ``refine`` (optional) runs after pruning and before the final grounding pass,
+    with the remaining budget; production uses it for the B2 relevance check.
+    """
     started = time.monotonic()
     stage_started = time.monotonic() if timings is not None else 0
     try:
         # Fabrication (non-verbatim quotes, invented reference IDs) rejects the output.
-        check_fabrication(solution, context)
+        with observability.span("validation.fabrication"):
+            check_fabrication(solution, context)
     finally:
         if timings is not None:
             timings["solution.structural"] = time.monotonic() - stage_started
     stage_started = time.monotonic() if timings is not None else 0
     try:
         # Drop weakly grounded items; the remainder must then pass every check.
-        solution, dropped = prune_solution(solution, context)
+        with observability.span("validation.grounding"):
+            solution, dropped = prune_solution(solution, context)
         if dropped:
             # Claim IDs and reason codes only; never generated or source text.
             logger.info(
                 "solution_pruned dropped=%s",
                 ",".join(f"{key}={why[:80]}" for key, why in dropped),
+            )
+        if refine is not None:
+            solution = refine(
+                solution,
+                None
+                if time_remaining is None
+                else time_remaining - (time.monotonic() - started),
             )
         validate_grounding(
             solution,
@@ -433,10 +455,41 @@ def solution_to_proto(
 
 class SolutionGenerator:
     def __init__(
-        self, assessor: ContextAssessor, *, timings: dict[str, float] | None = None
+        self,
+        assessor: ContextAssessor,
+        *,
+        timings: dict[str, float] | None = None,
+        relevance: RelevanceSettings | None = None,
     ):
         self.assessor = assessor
         self.timings = timings
+        self.relevance = relevance or RelevanceSettings.from_env()
+
+    def _relevance(self, context, is_active):
+        def refine(solution, remaining):
+            started = time.monotonic()
+            solution, status, off_topic = check_relevance(
+                solution,
+                context,
+                self.assessor.settings,
+                self.assessor.model_factory,
+                self.relevance,
+                time_remaining=remaining,
+                is_active=is_active,
+                timings=self.timings,
+            )
+            if self.timings is not None:
+                self.timings["solution.relevance"] = time.monotonic() - started
+            # Item IDs and status only; never generated or source text.
+            logger.info(
+                "solution_relevance version=%s status=%s off_topic=%s",
+                RELEVANCE_PROMPT_VERSION,
+                status,
+                ",".join(off_topic) or "-",
+            )
+            return solution
+
+        return refine
 
     def generate(
         self,
@@ -475,6 +528,7 @@ class SolutionGenerator:
             else time_remaining - (time.monotonic() - started),
             is_active=is_active,
             timings=self.timings,
+            refine=self._relevance(context, is_active),
         )
         if time_remaining is not None and time.monotonic() - started >= time_remaining:
             raise ConsultationFailure(

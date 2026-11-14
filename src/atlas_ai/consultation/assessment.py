@@ -1,4 +1,4 @@
-"""One Gemini assessment invocation plus deterministic question policy."""
+"""One LLM assessment invocation plus deterministic question policy."""
 
 import re
 import unicodedata
@@ -8,7 +8,7 @@ from typing import Literal, TypeVar
 
 import grpc
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -22,9 +22,9 @@ from atlas_ai.consultation.models import ConsultationContext
 from atlas_ai.consultation.prompts import ASSESSMENT_PROMPT
 from atlas_ai.llm import (
     AIFailure,
-    GeminiSettings,
+    LLMSettings,
     compact_provider_schema,
-    invoke_gemini_structured,
+    invoke_llm_structured,
 )
 
 __all__ = [
@@ -32,7 +32,7 @@ __all__ = [
     "AssessmentQuestion",
     "ConsultationFailure",
     "ContextAssessor",
-    "GeminiSettings",
+    "LLMSettings",
     "SufficiencyAssessment",
     "compact_provider_schema",
     "invoke_structured",
@@ -40,7 +40,11 @@ __all__ = [
     "validate_question",
 ]
 
-QUESTION_LIMIT = 4  # Conservative cumulative cap until Go supplies cycle scope.
+# G2 (decided 2026-11-14): at most 4 questions per discussion cycle (since the last
+# Solution) and 8 per session. Go's question_count is session-wide and never reset,
+# so the cycle count is derived from the messages Go sends.
+QUESTION_LIMIT = 4  # per cycle; name kept for existing imports
+SESSION_QUESTION_LIMIT = 8
 OutputModel = TypeVar("OutputModel", bound=BaseModel)
 
 
@@ -82,10 +86,24 @@ class SufficiencyAssessment(BaseModel):
         return self
 
 
+def cycle_question_count(context: ConsultationContext) -> int:
+    """AI questions asked since the most recent Solution message (the current cycle)."""
+    count = 0
+    for message in context.conversation_history:
+        if message.role != ai_pb2.MESSAGE_ROLE_ATLAS_AI:
+            continue
+        if message.solution is not None:
+            count = 0  # A Solution closes the previous cycle.
+        elif message.topic_key or message.content.strip():
+            count += 1
+    return count
+
+
 def must_generate(context: ConsultationContext) -> bool:
     return (
         context.event == ai_pb2.CONSULTATION_EVENT_GENERATE_NOW
-        or context.question_count >= QUESTION_LIMIT
+        or cycle_question_count(context) >= QUESTION_LIMIT
+        or context.question_count >= SESSION_QUESTION_LIMIT
     )
 
 
@@ -139,9 +157,7 @@ def validate_question(
 
 
 class ContextAssessor:
-    def __init__(
-        self, settings: GeminiSettings, model_factory: Callable = ChatGoogleGenerativeAI
-    ):
+    def __init__(self, settings: LLMSettings, model_factory: Callable = ChatOpenAI):
         self.settings = settings
         self.model_factory = model_factory
 
@@ -156,7 +172,7 @@ class ContextAssessor:
         if must_generate(context):
             return SufficiencyAssessment(
                 decision="GENERATE_SOLUTION",
-                reason="Generation forced by event or cumulative question cap; evidence not assessed.",
+                reason="Generation forced by event or question cap (cycle/session); evidence not assessed.",
                 problem_evidence_sufficient=False,
                 missing_operational_information=[],
                 relevant_business_constraints=[],
@@ -179,7 +195,7 @@ class ContextAssessor:
 
 def invoke_structured(
     context: ConsultationContext,
-    settings: GeminiSettings,
+    settings: LLMSettings,
     model_factory: Callable,
     prompt_template: ChatPromptTemplate,
     schema: type[OutputModel],
@@ -191,13 +207,13 @@ def invoke_structured(
     provider_schema: dict | None = None,
     timings: dict[str, float] | None = None,
 ) -> OutputModel:
-    """Consultation adapter over the shared Gemini boundary in ``atlas_ai.llm``."""
+    """Consultation adapter over the shared LLM boundary in ``atlas_ai.llm``."""
     if input_data is not None:
         data = dict(input_data)
     else:
         data = context.model_dump(mode="json", exclude={"sources"})
         data["event_name"] = ai_pb2.ConsultationEvent.Name(context.event)
-    return invoke_gemini_structured(
+    return invoke_llm_structured(
         settings,
         model_factory,
         prompt_template,

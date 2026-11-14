@@ -111,3 +111,25 @@ question "Berapa jumlah total staf yang bertugas untuk melayani kasir pada jam s
 `request_id` again → `replayed=true` (Go idempotency, no second AI call) → `POST …/save` → `ARCHIVED` with
 2 owner-confirmed memories (`Kasir kami hanya 1 orang.`, `Jam ramai pukul 17.00 sampai 19.00.`).
 G5 confirmed in practice: an earlier failed reply released the session lock and the retry succeeded.
+
+## 8. Fase 1 run (2026-11-14) — current build (G2, retry, observability, B2, bakery prompts)
+
+Real Go API, same compose environment. Per-RPC records come from the new structured log
+(`atlas_ai.rpc`, one JSON line per RPC: request_id from Go `x-request-id`, status, spans, Gemini tokens, retries).
+
+| RPC (request_id) | Result | Gemini calls (stage, attempts, status, tokens in/out, ms) |
+| --- | --- | --- |
+| ProcessFeedback `job-affa68ff` | OK, new planet | extraction 1 OK 1894/79 1565 |
+| ProcessFeedback `job-49e3c7d9` | OK, merged | extraction 1 OK 1893/74 1522; match 1 OK 411/70 1119 |
+| ProcessFeedback `job-2d645fd7` | OK, merged | extraction 1 OK 1889/91 1468; match 1 OK 409/52 894 |
+| START | OK (question) | assessment **2** OK 2084/163 5183 — rescued by the retry |
+| OWNER_REPLY ×2 | UNAVAILABLE | assessment 2 × Google 503 (provider overload) |
+| GENERATE_NOW | OK, `SOLUTION_READY` | solution **2** OK 2551/1095 9892 (rescued by the retry); relevance 1 OK 445/64 4385 |
+| Save | `ARCHIVED` | no AI call (by design) |
+
+- 3 stale-bread complaints → **1 planet** (judge merged both; judge timeout now 20 s so its retry fits).
+- Bakery solution: 3 verbatim customer findings, tentative hypothesis (cooling/packing moisture), relevant
+  recommendation (check bread temperature at packing, seal tightness), proposed indicator.
+- Failures were provider 503s after the one bounded retry; Go answered "temporarily unavailable" and the session
+  stayed retryable (G5). No memory candidates this run because the owner reply never succeeded.
+- Earlier the same day the OWNER_REPLY → solution → idempotent replay → Save + 2 memories path passed (§7).

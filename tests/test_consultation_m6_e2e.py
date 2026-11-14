@@ -10,7 +10,7 @@ from httpx import ReadTimeout
 from pydantic import SecretStr
 
 from atlas.ai.v1 import ai_pb2
-from atlas_ai.consultation.assessment import GeminiSettings
+from atlas_ai.consultation.assessment import LLMSettings
 from atlas_ai.consultation.context import prepare_context
 from atlas_ai.consultation.solution import GeneratedSolution, solution_to_proto
 from scripts.consultation_live_readiness import run_case
@@ -137,7 +137,7 @@ def mock_boundary(
 
 
 def settings():
-    return GeminiSettings(model="mock-not-live", api_key=SecretStr("test-only"))
+    return LLMSettings(model="mock-not-live", api_key=SecretStr("test-only"))
 
 
 @pytest.mark.parametrize("scenario", list("ABCDE"))

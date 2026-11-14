@@ -1,0 +1,20 @@
+# Local integration with the Go backend (atlas-backend-core, compose.dev.yaml).
+# Start Go first (it creates the network), then:
+#   docker compose -f compose.yaml -f compose.integration.yaml up --build
+# In Go's .env: DOCKER_AI_GRPC_ADDR=atlas-ai:50051 and AI_GRPC_TOKEN = our GRPC_AUTH_TOKEN.
+# See docs/local-testing.md.
+services:
+  atlas-ai:
+    networks:
+      default:
+      atlas-backend:
+        # The name Go dials (DOCKER_AI_GRPC_ADDR=atlas-ai:50051).
+        aliases:
+          - atlas-ai
+
+networks:
+  atlas-backend:
+    # Created by `docker compose -f compose.dev.yaml up` in atlas-backend-core
+    # (project name atlas-backend-dev).
+    name: atlas-backend-dev_default
+    external: true

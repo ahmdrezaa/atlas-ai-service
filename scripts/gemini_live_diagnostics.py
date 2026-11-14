@@ -1,4 +1,7 @@
-"""One explicit live request per invocation; synthetic data and allowlisted telemetry.
+"""HISTORICAL (Gemini era, M5-M7): kept for reproducibility only; the service
+now uses OpenAI and google-genai is not installed.
+
+One explicit live request per invocation; synthetic data and allowlisted telemetry.
 
 No automatic retries, model switching, prompt/grounding changes, or private inputs.
 Run with PYTHONPATH=src after installing the existing project dependencies.
@@ -15,10 +18,7 @@ from typing import Literal
 
 import grpc
 import httpx
-from google import genai
-from google.genai import types
 from langchain_core.exceptions import OutputParserException
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langsmith import tracing_context
 from pydantic import BaseModel, ConfigDict, ValidationError
 
@@ -26,7 +26,7 @@ from atlas.ai.v1 import ai_pb2
 from atlas_ai.consultation.assessment import (
     ConsultationFailure,
     ContextAssessor,
-    GeminiSettings,
+    LLMSettings,
     validate_question,
 )
 from atlas_ai.consultation.context import prepare_context
@@ -215,6 +215,9 @@ class Capture:
             options["api_version"] = api_version
         if thinking is not None:
             options["thinking_config"] = {"thinking_level": thinking}
+        # Historical Gemini harness: google-genai is no longer a dependency.
+        from langchain_google_genai import ChatGoogleGenerativeAI
+
         model = ChatGoogleGenerativeAI(**kwargs, **options)
         self.requests.append(
             {
@@ -287,6 +290,9 @@ class Capture:
 
 
 def run_stage(stage, settings, *, api_version=None, thinking=None):
+    from google import genai
+    from google.genai import types
+
     capture = Capture()
     started = time.perf_counter()
     row = {
@@ -443,14 +449,14 @@ def main():
     if len(ledger["invocations"]) >= 8:
         parser.error("Bounded diagnostic request limit reached; no request sent")
     load_environment(args.env_file)
-    data = GeminiSettings.from_env().model_dump()
+    data = LLMSettings.from_env().model_dump()
     if args.model:
         data["model"] = args.model
     if args.timeout is not None:
         data["timeout_seconds"] = args.timeout
     if args.output_tokens is not None:
         data["max_output_tokens"] = args.output_tokens
-    settings = GeminiSettings.model_validate(data)
+    settings = LLMSettings.model_validate(data)
     if not settings.model or not settings.api_key.get_secret_value():
         parser.error("GEMINI_MODEL and GEMINI_API_KEY required; no request sent")
     ledger["packages"] = {

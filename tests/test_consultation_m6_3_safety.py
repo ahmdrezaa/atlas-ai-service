@@ -14,7 +14,7 @@ from atlas.ai.v1 import ai_pb2, ai_pb2_grpc
 from atlas_ai.consultation.assessment import (
     ConsultationFailure,
     ContextAssessor,
-    GeminiSettings,
+    LLMSettings,
 )
 from atlas_ai.consultation.context import prepare_context
 from atlas_ai.consultation.grounding import ACCEPTED_LABELS, validate_grounding
@@ -201,7 +201,7 @@ def test_blank_output_on_authenticated_grpc_is_internal_not_request_error(event)
     service = AtlasAIService()
     service.consultation_pipeline = ConsultationPipeline(
         ContextAssessor(
-            GeminiSettings(model="mock-not-live", api_key=SecretStr("test-only")),
+            LLMSettings(model="mock-not-live", api_key=SecretStr("test-only")),
             factory,
         )
     )

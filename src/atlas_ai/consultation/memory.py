@@ -78,6 +78,7 @@ _GENERIC = {
     "bukan",
     "punya",
     "hanya",
+    "cuma",
     "toko",
     "belum",
     "kedai",
@@ -129,7 +130,8 @@ def _signature(text: str) -> tuple[tuple[str, ...], str] | None:
     roles = {
         word
         for word in words
-        if word in {"barista", "kasir", "staf", "karyawan", "pegawai"}
+        # "baker" added for the bakery MVP (owners say "baker kami 2 orang").
+        if word in {"barista", "kasir", "staf", "karyawan", "pegawai", "baker"}
     }
     numbers = [word for word in words if word.isdigit()]
     if (
@@ -141,7 +143,7 @@ def _signature(text: str) -> tuple[tuple[str, ...], str] | None:
         if not (
             re.search(rf"\b\d+ (?:orang )?{role}\b", normal)
             or re.search(
-                rf"\b{role}(?: (?:kami|kita|saya|ada|berjumlah|sebanyak|hanya|shift|pagi|sore|malam))* \d+\b",
+                rf"\b{role}(?: (?:kami|kita|saya|ada|berjumlah|sebanyak|hanya|cuma|shift|pagi|sore|malam))* \d+\b",
                 normal,
             )
             or f"jumlah {role} " in normal

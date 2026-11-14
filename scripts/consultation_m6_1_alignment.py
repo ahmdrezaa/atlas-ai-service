@@ -13,7 +13,7 @@ from pathlib import Path
 from google.protobuf.json_format import MessageToDict, ParseDict
 
 from atlas.ai.v1 import ai_pb2
-from atlas_ai.consultation.assessment import ConsultationFailure, GeminiSettings
+from atlas_ai.consultation.assessment import ConsultationFailure, LLMSettings
 from atlas_ai.consultation.context import prepare_context
 from atlas_ai.consultation.grounding import (
     cited_sources,
@@ -120,8 +120,8 @@ def run_live(args, ledger, parser):
     if not 40 <= args.turn_budget <= 45:
         parser.error("Use the audited 40-45s development budget within a 60s RPC")
     load_environment(args.env_file)
-    production = GeminiSettings.from_env()
-    settings = GeminiSettings.model_validate(
+    production = LLMSettings.from_env()
+    settings = LLMSettings.model_validate(
         {
             **production.model_dump(),
             "model": args.model or production.model,

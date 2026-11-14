@@ -8,7 +8,7 @@ import pytest
 from pydantic import SecretStr, TypeAdapter
 
 from atlas.ai.v1 import ai_pb2, ai_pb2_grpc
-from atlas_ai.consultation.assessment import ContextAssessor, GeminiSettings
+from atlas_ai.consultation.assessment import ContextAssessor, LLMSettings
 from atlas_ai.consultation.context import prepare_context
 from atlas_ai.consultation.memory import (
     MemoryProposals,
@@ -484,9 +484,7 @@ def test_next_question_carries_candidates_in_the_same_assessment_invocation(
         output
     )
     response = ConsultationPipeline(
-        ContextAssessor(
-            GeminiSettings(model="mock", api_key=SecretStr("test")), factory
-        )
+        ContextAssessor(LLMSettings(model="mock", api_key=SecretStr("test")), factory)
     ).run(request)
     assert response.HasField("next_question")
     assert response.memory_candidates[0].source_owner_message_ids == [owner.id]

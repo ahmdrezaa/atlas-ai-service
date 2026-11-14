@@ -1,19 +1,13 @@
-# Base image Python
-FROM python:3.11-slim
+# syntax=docker/dockerfile:1
+# Targets:
+#   prod (default, last stage): runtime deps only, non-root, E5 bundled, healthcheck.
+#   dev: adds test/lint tools; used by compose.yaml and the test suite.
+ARG PYTHON_IMAGE=python:3.11-slim
 
-# Environment Python
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
-
-# Direktori kerja di dalam container
-WORKDIR /app
-
-# Multilingual E5 Small (official ONNX export), pinned revision + sha256.
-# Bundled at build time and placed before the project install so code changes
-# do not re-download it. The service never downloads models at runtime.
+# --- E5 embedding model: pinned revision + sha256, never downloaded at runtime ----
+FROM ${PYTHON_IMAGE} AS models
 ARG E5_REVISION=614241f622f53c4eeff9890bdc4f31cfecc418b3
-ENV FEEDBACK_EMBEDDING_MODEL_DIR=/opt/models/multilingual-e5-small \
-    HF_HUB_OFFLINE=1
+ENV FEEDBACK_EMBEDDING_MODEL_DIR=/opt/models/multilingual-e5-small
 RUN python - <<'PY'
 import hashlib, os, urllib.request
 revision = os.environ["E5_REVISION"]
@@ -36,15 +30,49 @@ for name, expected in files.items():
     print("verified", name)
 PY
 
-# Salin konfigurasi project dan source code
-COPY pyproject.toml ./
+# --- Dependencies from uv.lock (exact versions + hashes) --------------------------
+FROM ${PYTHON_IMAGE} AS builder
+RUN python -m pip install --no-cache-dir "uv==0.13.6"
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
+    UV_PYTHON=/usr/local/bin/python \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
+WORKDIR /build
+COPY pyproject.toml uv.lock ./
+# Third-party dependencies first (cached layer), then the project itself.
+RUN uv sync --frozen --no-dev --no-install-project
 COPY src/ ./src/
+RUN uv sync --frozen --no-dev --no-editable
 
-# Install project beserta development dependencies
-RUN python -m pip install --no-cache-dir ".[dev]"
+FROM builder AS builder-dev
+RUN uv sync --frozen --extra dev --no-editable
 
-# Port Python gRPC Server
+# --- Shared runtime settings -------------------------------------------------------
+FROM ${PYTHON_IMAGE} AS runtime
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH=/opt/venv/bin:$PATH \
+    FEEDBACK_EMBEDDING_MODEL_DIR=/opt/models/multilingual-e5-small \
+    HF_HUB_OFFLINE=1 \
+    ORT_DISABLE_TELEMETRY=1
+COPY --from=models /opt/models /opt/models
+WORKDIR /app
 EXPOSE 50051
 
-# Menjalankan AI Service
+# --- dev: test and lint tools, source mounted by the test runner -------------------
+FROM runtime AS dev
+COPY --from=builder-dev /opt/venv /opt/venv
+COPY pyproject.toml ./
+COPY src/ ./src/
+CMD ["python", "-m", "atlas_ai.server"]
+
+# --- prod: runtime only, non-root ----------------------------------------------------
+FROM runtime AS prod
+COPY --from=builder /opt/venv /opt/venv
+RUN groupadd --system --gid 10001 atlas \
+    && useradd --system --uid 10001 --gid atlas --no-create-home --shell /usr/sbin/nologin atlas
+USER 10001:10001
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
+    CMD ["python", "-m", "atlas_ai.healthcheck"]
 CMD ["python", "-m", "atlas_ai.server"]

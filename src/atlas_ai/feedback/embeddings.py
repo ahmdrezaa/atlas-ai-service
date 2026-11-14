@@ -52,7 +52,12 @@ class EmbeddingSettings(BaseModel):
 
 def _load_runtime(model_dir: Path, threads: int):
     """Real ONNX session + tokenizer; imported lazily so tests can inject fakes."""
+    # onnxruntime >=1.31 ships Microsoft 1DS usage telemetry; the service sends
+    # nothing outward except the LLM call. The variable must be set before import.
+    os.environ.setdefault("ORT_DISABLE_TELEMETRY", "1")
     import onnxruntime
+
+    onnxruntime.disable_telemetry_events()
     from tokenizers import Tokenizer
 
     options = onnxruntime.SessionOptions()

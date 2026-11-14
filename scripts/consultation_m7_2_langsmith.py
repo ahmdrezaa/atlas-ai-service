@@ -34,7 +34,7 @@ from atlas.ai.v1 import ai_pb2
 from atlas_ai.consultation.assessment import (
     ConsultationFailure,
     ContextAssessor,
-    GeminiSettings,
+    LLMSettings,
 )
 from atlas_ai.consultation.context import prepare_context
 from atlas_ai.consultation.grounding import (
@@ -347,7 +347,7 @@ def require_configuration(gemini=False):
         if missing:
             raise EvaluationError("MISSING_GEMINI_CONFIGURATION", missing)
         try:
-            return GeminiSettings.from_env()
+            return LLMSettings.from_env()
         except ConsultationFailure:
             raise EvaluationError(
                 "INVALID_GEMINI_CONFIGURATION",

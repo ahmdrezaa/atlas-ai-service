@@ -8,16 +8,23 @@ from pydantic import SecretStr
 from atlas.ai.v1 import ai_pb2
 from atlas_ai.consultation.assessment import (
     ContextAssessor,
-    GeminiSettings,
+    LLMSettings,
     SufficiencyAssessment,
 )
 from atlas_ai.consultation.solution import GeneratedSolution
 
 
+@pytest.fixture(autouse=True)
+def _relevance_check_off_by_default(monkeypatch):
+    """Tests written before B2 count provider calls exactly; the relevance check
+    (on by default in production) is exercised in test_consultation_relevance.py."""
+    monkeypatch.setenv("CONSULTATION_RELEVANCE_CHECK", "false")
+
+
 @pytest.fixture(scope="module")
 def generate_assessor():
     assessor = Mock(spec=ContextAssessor)
-    assessor.settings = GeminiSettings(model="mock-gemini")
+    assessor.settings = LLMSettings(model="mock-gemini")
     assessor.assess = Mock(
         return_value=SufficiencyAssessment(
             decision="GENERATE_SOLUTION",
@@ -128,7 +135,7 @@ def solution_assessor(solution_payload):
 
     factory.return_value.with_structured_output.side_effect = structured
     return ContextAssessor(
-        GeminiSettings(model="mock-gemini", api_key=SecretStr("test-only")), factory
+        LLMSettings(model="mock-gemini", api_key=SecretStr("test-only")), factory
     )
 
 

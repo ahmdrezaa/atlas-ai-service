@@ -18,10 +18,10 @@ from atlas_ai.feedback.embeddings import (
 from atlas_ai.feedback.extractor import FeedbackExtractor
 from atlas_ai.feedback.pipeline import FeedbackPipeline
 from atlas_ai.grpc_service import AtlasAIService
-from atlas_ai.llm import AIFailure, GeminiSettings
+from atlas_ai.llm import AIFailure, LLMSettings
 from atlas_ai.server import SERVICE_NAME, create_server, warm_up
 
-SETTINGS = GeminiSettings(model="mock-gemini", api_key=SecretStr("test-only"))
+SETTINGS = LLMSettings(model="mock-gemini", api_key=SecretStr("test-only"))
 TOKEN = "test-only-token"
 
 TEXTURE = {

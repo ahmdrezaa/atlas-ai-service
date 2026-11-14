@@ -7,6 +7,7 @@ from uuid import uuid4
 import grpc
 import pytest
 from httpx import ReadTimeout
+from openai_offline import OfflineOpenAI
 from pydantic import SecretStr, ValidationError
 from solution_policy import rejected_or_absent
 
@@ -14,7 +15,7 @@ from atlas.ai.v1 import ai_pb2
 from atlas_ai.consultation.assessment import (
     ConsultationFailure,
     ContextAssessor,
-    GeminiSettings,
+    LLMSettings,
 )
 from atlas_ai.consultation.context import prepare_context
 from atlas_ai.consultation.pipeline import ConsultationPipeline
@@ -161,7 +162,7 @@ def test_all_sections_required(solution_payload, field, missing):
 
 
 def test_generation_no_evidence_does_not_invoke_provider(request_factory):
-    assessor = ContextAssessor(GeminiSettings(), Mock())
+    assessor = ContextAssessor(LLMSettings(), Mock())
     request = request_factory(ai_pb2.CONSULTATION_EVENT_GENERATE_NOW)
     with pytest.raises(ConsultationFailure) as error:
         ConsultationPipeline(assessor).run(request)
@@ -237,7 +238,7 @@ def test_generation_errors_not_invalid_argument(solution_request, result, code):
     else:
         invoke.return_value = result
     assessor = ContextAssessor(
-        GeminiSettings(model="mock", api_key=SecretStr("test")), factory
+        LLMSettings(model="mock", api_key=SecretStr("test")), factory
     )
     with pytest.raises(ConsultationFailure) as error:
         ConsultationPipeline(assessor).run(solution_request)
@@ -249,7 +250,7 @@ def test_revision_uses_latest_owner_but_historical_ids_are_not_sources(
     solution_request, solution_payload
 ):
     solution_request.event = ai_pb2.CONSULTATION_EVENT_CONTINUE_DISCUSSION
-    solution_request.question_count = 4
+    solution_request.question_count = 8  # session cap (G2) forces generation
     solution_request.messages.add(
         id=str(uuid4()),
         role=ai_pb2.MESSAGE_ROLE_OWNER,
@@ -264,7 +265,7 @@ def test_revision_uses_latest_owner_but_historical_ids_are_not_sources(
         solution_payload
     )
     assessor = ContextAssessor(
-        GeminiSettings(model="mock", api_key=SecretStr("test")), factory
+        LLMSettings(model="mock", api_key=SecretStr("test")), factory
     )
     ConsultationPipeline(assessor).run(solution_request)
     prompt = (
@@ -308,34 +309,17 @@ def test_solution_on_real_grpc_wire(solution_request, solution_assessor):
         server.stop(0).wait(timeout=5)
 
 
-def test_real_sdk_structured_solution_offline(
-    solution_request, solution_payload, monkeypatch
-):
-    from google.genai import types
-
+def test_real_sdk_structured_solution_offline(solution_request, solution_payload):
     solution_request.event = ai_pb2.CONSULTATION_EVENT_GENERATE_NOW
-    provider = Mock(
-        return_value=types.GenerateContentResponse(
-            candidates=[
-                types.Candidate(
-                    content=types.Content(
-                        role="model",
-                        parts=[types.Part(text=json.dumps(solution_payload))],
-                    ),
-                    finish_reason="STOP",
-                )
-            ]
-        )
-    )
-    monkeypatch.setattr("google.genai.models.Models.generate_content", provider)
+    provider = OfflineOpenAI(solution_payload)
     assessor = ContextAssessor(
-        GeminiSettings(model="offline-test", api_key=SecretStr("test-only"))
+        LLMSettings(model="offline-test", api_key=SecretStr("test-only")), provider
     )
     response = ConsultationPipeline(assessor).run(solution_request)
     assert response.HasField("solution")
-    config = provider.call_args.kwargs["config"]
-    assert config.response_mime_type == "application/json"
-    assert not config.tools
+    (request,) = provider.requests
+    assert request["response_format"]["json_schema"]["strict"] is True
+    assert "tools" not in request
 
 
 def test_total_deadline_shared_between_both_calls(

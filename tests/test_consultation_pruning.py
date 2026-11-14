@@ -153,6 +153,49 @@ def test_untentative_hypothesis_is_dropped_when_another_remains(
     ]
 
 
+def test_metric_may_name_a_condition_but_not_state_a_result(
+    solution_request, solution_payload
+):
+    # Live probe (cafe_packaging START): a metric naming damaged packaging.
+    solution_payload["success_indicators"][0]["metric"] = "Keluhan kemasan rusak"
+    assert (
+        mapped(solution_request, solution_payload).success_indicators[0].metric
+        == "Keluhan kemasan rusak"
+    )
+    solution_payload["success_indicators"][0]["metric"] = "Keluhan kemasan menurun"
+    with pytest.raises(ConsultationFailure, match="success_indicators"):
+        mapped(solution_request, solution_payload)
+
+
+def test_current_practice_in_a_tentative_hypothesis(solution_request, solution_payload):
+    text = (
+        "Hipotesis: metode penyegelan kemasan saat ini mungkin belum cukup kuat "
+        "menghadapi guncangan selama perjalanan."
+    )
+    solution_payload["hypotheses"][0]["statement"] = text
+    assert mapped(solution_request, solution_payload).hypotheses[0].statement == text
+
+
+@pytest.mark.parametrize(
+    "description,accepted",
+    [
+        ("Usulan: pastikan roti sudah benar-benar dingin sebelum dikemas.", True),
+        # Known limitation: "suhunya sudah turun" (a condition) is still blocked.
+        ("Atur jadwal kemas; penjualan sudah meningkat sejak minggu lalu.", False),
+        ("Atur jadwal kemas agar target tercapai.", False),
+    ],
+)
+def test_sudah_as_condition_vs_achieved_result(
+    solution_request, solution_payload, description, accepted
+):
+    solution_payload["recommendations"][0]["description"] = description
+    if accepted:
+        assert mapped(solution_request, solution_payload).recommendations
+    else:
+        with pytest.raises(ConsultationFailure):
+            mapped(solution_request, solution_payload)
+
+
 def test_negated_verification_word_is_tentative(solution_request, solution_payload):
     text = (
         "Hipotesis: alur pesanan mungkin belum terverifikasi ulang sebelum disiapkan."

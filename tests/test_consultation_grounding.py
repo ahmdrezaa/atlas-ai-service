@@ -9,7 +9,7 @@ from pydantic import SecretStr
 from atlas_ai.consultation.assessment import (
     ConsultationFailure,
     ContextAssessor,
-    GeminiSettings,
+    LLMSettings,
 )
 from atlas_ai.consultation.evaluation import (
     VERIFIER_PROMPT_VERSION,
@@ -220,7 +220,7 @@ def test_grounding_time_counts_against_deadline(safe_solution, monkeypatch):
 @pytest.fixture
 def verifier_assessor():
     return ContextAssessor(
-        GeminiSettings(model="mock-verifier", api_key=SecretStr("secret-test-key")),
+        LLMSettings(model="mock-verifier", api_key=SecretStr("secret-test-key")),
         Mock(),
     )
 

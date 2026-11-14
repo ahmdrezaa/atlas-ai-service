@@ -8,7 +8,7 @@ from google.protobuf.json_format import ParseDict
 from pydantic import SecretStr
 
 from atlas.ai.v1 import ai_pb2
-from atlas_ai.consultation.assessment import GeminiSettings
+from atlas_ai.consultation.assessment import LLMSettings
 from atlas_ai.consultation.context import prepare_context
 from atlas_ai.consultation.evaluation import load_dataset
 from atlas_ai.consultation.grounding import GroundingClaim, evaluate_claim
@@ -140,7 +140,7 @@ def test_development_headroom_is_checked_before_provider_access(monkeypatch):
     )
     row = run_case(
         "solution",
-        GeminiSettings(model="mock", api_key=SecretStr("test"), timeout_seconds=45),
+        LLMSettings(model="mock", api_key=SecretStr("test"), timeout_seconds=45),
         rpc_timeout=50,
     )
     assert row["status"] == "FAILED"

@@ -113,7 +113,7 @@ def test_assessment_question_and_metadata_on_wire(
     assert response.WhichOneof("result") == "next_question"
     assert response.next_question.topic_key == "budget"
     assert response.model_id == "mock-gemini"
-    assert response.prompt_version == "consultation-assessment-v4"
+    assert response.prompt_version == "consultation-assessment-v6"
     assert not response.memory_candidates
 
 

@@ -16,7 +16,7 @@ from pathlib import Path
 from google.protobuf.json_format import ParseDict
 
 from atlas.ai.v1 import ai_pb2
-from atlas_ai.consultation.assessment import GeminiSettings
+from atlas_ai.consultation.assessment import LLMSettings
 from atlas_ai.consultation.context import prepare_context
 from scripts.consultation_live_readiness import case_request, run_case
 from scripts.gemini_live_diagnostics import load_environment, run_stage
@@ -319,7 +319,7 @@ def main():
     ):
         parser.error("Wrong ledger or duplicate ID; no request sent")
     load_environment(args.env_file)
-    production = GeminiSettings.from_env()
+    production = LLMSettings.from_env()
     data = production.model_dump()
     if args.model:
         data["model"] = args.model
@@ -329,7 +329,7 @@ def main():
         data.update(
             timeout_seconds=min(data["timeout_seconds"], 10), max_output_tokens=256
         )
-    settings = GeminiSettings.model_validate(data)
+    settings = LLMSettings.model_validate(data)
     if not settings.model or not settings.api_key.get_secret_value().strip():
         parser.error("Missing configuration; no request sent")
     if not attempt_allowed(

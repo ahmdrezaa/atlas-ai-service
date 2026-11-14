@@ -12,7 +12,7 @@ from google.protobuf.json_format import ParseDict
 from pydantic import SecretStr
 
 from atlas.ai.v1 import ai_pb2, ai_pb2_grpc
-from atlas_ai.consultation.assessment import ContextAssessor, GeminiSettings
+from atlas_ai.consultation.assessment import ContextAssessor, LLMSettings
 from atlas_ai.consultation.context import prepare_context
 from atlas_ai.consultation.pipeline import ConsultationPipeline
 from atlas_ai.grpc_service import AtlasAIService
@@ -63,7 +63,7 @@ def mock_rpc():
         service = AtlasAIService()
         service.consultation_pipeline = ConsultationPipeline(
             ContextAssessor(
-                GeminiSettings(model="synthetic-mock", api_key=SecretStr("test-only")),
+                LLMSettings(model="synthetic-mock", api_key=SecretStr("test-only")),
                 factory,
             )
         )

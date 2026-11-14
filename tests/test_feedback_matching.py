@@ -17,10 +17,10 @@ from atlas_ai.feedback.matching import (
 )
 from atlas_ai.feedback.models import ValidatedOpinion
 from atlas_ai.feedback.prompts import MATCH_PROMPT
-from atlas_ai.llm import AIFailure, GeminiSettings
+from atlas_ai.llm import AIFailure, LLMSettings
 
 SETTINGS = MatchSettings(threshold=0.8, top_k=2, judge_timeout_seconds=10)
-GEMINI = GeminiSettings(model="mock-gemini", api_key=SecretStr("test-only"))
+GEMINI = LLMSettings(model="mock-gemini", api_key=SecretStr("test-only"))
 
 
 def unit(*components):
@@ -247,7 +247,7 @@ def test_cancellation_is_not_swallowed():
 def test_insufficient_budget_skips_judge():
     judge, factory = judge_returning([{"opinion_index": 0, "issue_id": QUEUE_ID}])
     assignments, stats = run(
-        [opinion("Antrean Kasir Terlalu Lama")], request_with(ISSUES), judge, budget=9
+        [opinion("Antrean Kasir Terlalu Lama")], request_with(ISSUES), judge, budget=1.2
     )
     assert assignments[0].existing_issue_id == ""
     assert stats.judge_status == "skipped_budget"
@@ -343,7 +343,7 @@ def test_match_settings_from_env(monkeypatch):
         monkeypatch.delenv(name, raising=False)
     settings = MatchSettings.from_env()
     assert (settings.threshold, settings.top_k, settings.judge_timeout_seconds) == (
-        0.88,
+        0.85,
         3,
         10,
     )

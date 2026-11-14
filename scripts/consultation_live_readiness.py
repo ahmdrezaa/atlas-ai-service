@@ -17,7 +17,7 @@ from atlas.ai.v1 import ai_pb2, ai_pb2_grpc
 from atlas_ai.consultation.assessment import (
     ConsultationFailure,
     ContextAssessor,
-    GeminiSettings,
+    LLMSettings,
 )
 from atlas_ai.consultation.context import prepare_context
 from atlas_ai.consultation.grounding import evaluate_claim, solution_claims
@@ -432,8 +432,8 @@ def main():
     if args.case == "grpc" and not prerequisites_passed:
         parser.error("Both direct live paths must pass before live gRPC testing")
     load_environment(args.env_file)
-    original = GeminiSettings.from_env()
-    settings = GeminiSettings.model_validate(
+    original = LLMSettings.from_env()
+    settings = LLMSettings.model_validate(
         {**original.model_dump(), "model": MODEL, "timeout_seconds": args.turn_budget}
     )
     if not settings.api_key.get_secret_value():

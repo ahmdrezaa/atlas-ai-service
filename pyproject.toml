@@ -15,7 +15,8 @@ dependencies = [
     "pydantic>=2,<3",
     "langchain",
     "langchain-core>=1.8,<2",
-    "langchain-google-genai>=4.5,<5",
+    "langchain-openai==1.7.3",
+    "openai>=2.45,<3.42",
     "httpx>=0.28,<1",
     "langsmith",
     "numpy>=2,<3",
@@ -41,3 +42,9 @@ pythonpath = ["src"]
 # Generated protobuf stubs: never lint or auto-fix (an "unused" import there is
 # required to register google/protobuf/timestamp.proto).
 extend-exclude = ["src/atlas/ai/v1/ai_pb2.py", "src/atlas/ai/v1/ai_pb2_grpc.py"]
+
+[tool.uv]
+# Reproducible builds: resolve only releases at least ~2 weeks old at lock time.
+# langchain-core is exempt because the project already requires >=1.8 (2026-11-11).
+exclude-newer = "2026-10-31T00:00:00Z"
+exclude-newer-package = { langchain-core = "2026-11-12T00:00:00Z" }

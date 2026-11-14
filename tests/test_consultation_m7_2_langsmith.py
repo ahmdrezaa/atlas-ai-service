@@ -17,6 +17,14 @@ from langsmith.utils import (
 
 from scripts import consultation_m7_2_langsmith as m
 
+# Historical harness: the M7.2 experiment is pinned (by hash) to the v8 solution
+# prompt and its M7.1 fixture bundle, and the runner refuses any other prompt. The
+# bakery MVP prompt (v9, 2026-11-14) supersedes it; its records stay unmodified.
+pytestmark = pytest.mark.skipif(
+    m.SOLUTION_PROMPT_VERSION != "consultation-solution-v8",
+    reason="historical M7.2 harness bound to consultation-solution-v8",
+)
+
 PREDEFINED = {
     c["id"]: c["predefined_output_not_model_generated"]
     for c in json.loads(

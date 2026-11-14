@@ -17,9 +17,9 @@ from atlas_ai.feedback.prompts import (
     FEEDBACK_PROMPT_VERSION,
     FEW_SHOT_EXAMPLES,
 )
-from atlas_ai.llm import AIFailure, GeminiSettings
+from atlas_ai.llm import AIFailure, LLMSettings
 
-SETTINGS = GeminiSettings(model="mock-gemini", api_key=SecretStr("test-only"))
+SETTINGS = LLMSettings(model="mock-gemini", api_key=SecretStr("test-only"))
 
 # PRD v1.1 acceptance scenario inputs must not leak into the few-shot prompt.
 PRD_SCENARIOS = [
@@ -91,7 +91,7 @@ def test_multi_opinion_happy_path(feedback_request_factory):
     assert [o.sentiment for o in outcome.opinions] == ["POSITIVE", "NEGATIVE"]
     assert outcome.opinions[1].variant == "coklat"
     kwargs = factory.call_args.kwargs
-    assert kwargs["temperature"] == 0 and kwargs["max_retries"] == 0
+    assert kwargs["max_retries"] == 0 and "temperature" not in kwargs
     schema = factory.return_value.with_structured_output.call_args[0][0]
     assert schema["title"] == "ProviderExtraction"
 
@@ -140,9 +140,9 @@ def test_provider_errors_are_sanitized(feedback_request_factory, exc, code):
 def test_missing_configuration_does_not_call_model(feedback_request_factory):
     factory = Mock()
     with pytest.raises(AIFailure) as error:
-        FeedbackExtractor(GeminiSettings(), factory).extract(feedback_request_factory())
+        FeedbackExtractor(LLMSettings(), factory).extract(feedback_request_factory())
     assert error.value.code == grpc.StatusCode.FAILED_PRECONDITION
-    assert "FEEDBACK_GEMINI_MODEL" in str(error.value)
+    assert "FEEDBACK_MODEL" in str(error.value)
     factory.assert_not_called()
 
 
@@ -237,25 +237,37 @@ def test_few_shot_opinion_text_adds_no_unnamed_attribute():
 
 
 def test_prompt_version():
-    assert FEEDBACK_PROMPT_VERSION == "feedback-extraction-v3"
+    assert FEEDBACK_PROMPT_VERSION == "feedback-extraction-v4"
 
 
 def test_settings_from_env_are_separate_from_consultation(monkeypatch):
-    monkeypatch.setenv("GEMINI_MODEL", "consultation-model")
-    monkeypatch.setenv("GEMINI_API_KEY", "shared-key")
-    monkeypatch.delenv("FEEDBACK_GEMINI_MODEL", raising=False)
-    monkeypatch.delenv("FEEDBACK_GEMINI_API_KEY", raising=False)
+    for name in (
+        "FEEDBACK_MODEL",
+        "FEEDBACK_EXTRACTION_TIMEOUT_SECONDS",
+        "FEEDBACK_MAX_OUTPUT_TOKENS",
+        "FEEDBACK_PRICE_INPUT_PER_1M_USD",
+        "FEEDBACK_PRICE_OUTPUT_PER_1M_USD",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("CONSULTATION_MODEL", "consultation-model")
+    monkeypatch.setenv("CONSULTATION_TIMEOUT_SECONDS", "45")
+    monkeypatch.setenv("CONSULTATION_PRICE_INPUT_PER_1M_USD", "1.00")
+    monkeypatch.setenv("OPENAI_API_KEY", "shared-key")
     settings = feedback_settings_from_env()
     assert settings.model == ""  # never falls back to the Path B model
     assert settings.api_key.get_secret_value() == "shared-key"
     assert settings.timeout_seconds == 20
     assert settings.max_output_tokens == 1024
+    assert settings.price_input_per_1m is None  # Path B price never applies
 
-    monkeypatch.setenv("FEEDBACK_GEMINI_MODEL", "feedback-model")
-    monkeypatch.setenv("FEEDBACK_GEMINI_API_KEY", "feedback-key")
+    monkeypatch.setenv("FEEDBACK_MODEL", "feedback-model")
+    monkeypatch.setenv("FEEDBACK_EXTRACTION_TIMEOUT_SECONDS", "15")
+    monkeypatch.setenv("FEEDBACK_PRICE_INPUT_PER_1M_USD", "0.10")
+    monkeypatch.setenv("FEEDBACK_PRICE_OUTPUT_PER_1M_USD", "0.50")
     settings = feedback_settings_from_env()
     assert settings.model == "feedback-model"
-    assert settings.api_key.get_secret_value() == "feedback-key"
+    assert settings.timeout_seconds == 15
+    assert (settings.price_input_per_1m, settings.price_output_per_1m) == (0.10, 0.50)
 
 
 def test_invalid_feedback_env_is_sanitized(monkeypatch):

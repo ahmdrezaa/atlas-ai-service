@@ -12,7 +12,7 @@ import pytest
 from pydantic import SecretStr
 
 from atlas.ai.v1 import ai_pb2, ai_pb2_grpc
-from atlas_ai.consultation.assessment import ContextAssessor, GeminiSettings
+from atlas_ai.consultation.assessment import ContextAssessor, LLMSettings
 from atlas_ai.consultation.context import prepare_context
 from atlas_ai.consultation.pipeline import ConsultationPipeline
 from atlas_ai.consultation.prompts import (
@@ -28,6 +28,7 @@ from atlas_ai.consultation.solution import (
     solution_provider_schema,
 )
 from atlas_ai.grpc_service import AtlasAIService
+from atlas_ai.llm import strict_provider_schema
 from atlas_ai.server import BearerAuthInterceptor
 from scripts.consultation_m7_1_quality import (
     BASELINE,
@@ -54,7 +55,7 @@ def test_predefined_solutions_exercise_actual_acceptance_guards(scenario, varian
     assert result["accepted"] == (variant == "valid")
     assert request.SerializeToString() == before
     if result["accepted"]:
-        assert result["response"]["prompt_version"] == "consultation-solution-v8"
+        assert result["response"]["prompt_version"] == "consultation-solution-v9"
         assert set(result["response"]["solution"]) == {
             "findings",
             "customer_evidence",
@@ -93,7 +94,7 @@ def test_prompt_version_and_provider_local_wire_schemas_are_compatible():
     def canonical(value):
         return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
 
-    assert SOLUTION_PROMPT_VERSION == "consultation-solution-v8"
+    assert SOLUTION_PROMPT_VERSION == "consultation-solution-v9"
     assert canonical(solution_provider_schema()) == BASELINE["provider_schema_sha256"]
     assert (
         canonical(GeneratedSolutionTurn.model_json_schema())
@@ -107,14 +108,16 @@ def test_prompt_version_and_provider_local_wire_schemas_are_compatible():
 
 
 def test_base_assessment_and_memory_prompts_are_unchanged():
+    # Drift guard. Base and assessment prompts were deliberately rewritten for the
+    # bakery MVP (assessment-v6 incl. G2 per-cycle limit, 2026-11-14); the memory prompt is unchanged.
     for prompt, expected in (
         (
             BASE_SYSTEM_PROMPT,
-            "f3ab36e95c932dc52698248740f80e0caa59e71607dc154f440e78cef6b44395",
+            "c448cfccdeb0a563bcc9a3e02b50982adf66bf951bb0789c1fb3fca5127f8acb",
         ),
         (
             ASSESSMENT_SYSTEM_PROMPT,
-            "9af492c20d6aa7268fadd5e854025d672a49b8afcf3d2c1d5f3a8b53cbbfc502",
+            "ed5ba9c6a8935f3e3258a6dcfa226aae3b74d50426cc3929fff042c786e62476",
         ),
         (
             MEMORY_SYSTEM_PROMPT,
@@ -131,7 +134,14 @@ def test_prompt_explains_reasoning_responsibility_without_requiring_proven_cause
     assert (
         "Every nonempty target and timeframe starts 'Usulan:'" in SOLUTION_SYSTEM_PROMPT
     )
-    assert "isian coklatnya sedikit" in SOLUTION_SYSTEM_PROMPT
+    assert "bagian dalamnya masih basah" in SOLUTION_SYSTEM_PROMPT
+
+
+def test_prompt_example_does_not_leak_evaluation_fixtures():
+    # The bakery example must not be one of the fixtures the prompt is evaluated on.
+    for scenario in SCENARIOS:
+        for text in (scenario["feedback"], scenario["excerpt"]):
+            assert text not in SOLUTION_SYSTEM_PROMPT, scenario["id"]
 
 
 def test_request_injection_remains_only_in_human_data_and_does_not_change_prompts():
@@ -215,7 +225,9 @@ def test_capture_review_requires_known_synthetic_case_mapping(captures):
 
 
 @pytest.mark.parametrize("event", [1, 2, 3, 4, 5])
-def test_v8_prompt_and_version_reach_provider_and_authenticated_grpc_response(event):
+def test_current_prompt_and_version_reach_provider_and_authenticated_grpc_response(
+    event,
+):
     request, output = fixture(SCENARIOS[0])
     request.event = event
     if event == ai_pb2.CONSULTATION_EVENT_SKIP_QUESTION:
@@ -234,12 +246,12 @@ def test_v8_prompt_and_version_reach_provider_and_authenticated_grpc_response(ev
     factory = Mock()
 
     def structured(schema, **kwargs):
-        assert kwargs == {"method": "json_schema"}
+        assert kwargs == {"method": "json_schema", "strict": True, "include_raw": True}
 
         def invoke(prompt, **unused):
             observed.append((schema["title"], prompt.to_messages()))
             if schema["title"] == "GeneratedSolutionTurn":
-                assert schema == solution_provider_schema()
+                assert schema == strict_provider_schema(solution_provider_schema())
                 assert prompt.to_messages()[1].content == SOLUTION_SYSTEM_PROMPT
                 return copy.deepcopy(output)
             return copy.deepcopy(assessment)
@@ -250,7 +262,7 @@ def test_v8_prompt_and_version_reach_provider_and_authenticated_grpc_response(ev
     service = AtlasAIService()
     service.consultation_pipeline = ConsultationPipeline(
         ContextAssessor(
-            GeminiSettings(model="mock-not-live", api_key=SecretStr("test-only")),
+            LLMSettings(model="mock-not-live", api_key=SecretStr("test-only")),
             factory,
         )
     )
@@ -268,7 +280,7 @@ def test_v8_prompt_and_version_reach_provider_and_authenticated_grpc_response(ev
                 request, timeout=30, metadata=(("authorization", "Bearer test-only"),)
             )
         assert response.WhichOneof("result") == "solution"
-        assert response.prompt_version == "consultation-solution-v8"
+        assert response.prompt_version == "consultation-solution-v9"
         assert response.model_id == "mock-not-live"
         assert (
             ai_pb2.ProcessConsultationTurnResponse.FromString(

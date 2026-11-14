@@ -16,7 +16,7 @@ from atlas.ai.v1 import ai_pb2, ai_pb2_grpc
 from atlas_ai.consultation.assessment import (
     ConsultationFailure,
     ContextAssessor,
-    GeminiSettings,
+    LLMSettings,
 )
 from atlas_ai.consultation.context import prepare_context
 from atlas_ai.consultation.grounding import (
@@ -222,7 +222,7 @@ def test_prompt_measurement_schedule_is_a_proposal_not_current_memory_evidence()
         mapped(request, payload).success_indicators[0].timeframe
         == indicator["timeframe"]
     )
-    assert SOLUTION_PROMPT_VERSION == "consultation-solution-v8"
+    assert SOLUTION_PROMPT_VERSION == "consultation-solution-v9"
     assert "it has no reference" in SOLUTION_SYSTEM_PROMPT
     assert "without numbers, clock ranges" in SOLUTION_SYSTEM_PROMPT
 
@@ -349,7 +349,7 @@ def test_exact_b_solution_and_owner_candidate_on_authenticated_grpc_all_events(e
     service = AtlasAIService()
     service.consultation_pipeline = ConsultationPipeline(
         ContextAssessor(
-            GeminiSettings(model="mock-not-live", api_key=SecretStr("test-only")),
+            LLMSettings(model="mock-not-live", api_key=SecretStr("test-only")),
             factory,
         )
     )
